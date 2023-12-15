@@ -24,50 +24,7 @@ importers:
         specifier: latest
         version: 1.11.2
 
-  apps/cybotrade:
-    dependencies:
-      '@repo/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      next:
-        specifier: ^14.0.3
-        version: 14.0.3(react-dom@18.2.0)(react@18.2.0)
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
-      '@next/eslint-plugin-next':
-        specifier: ^14.0.2
-        version: 14.0.2
-      '@repo/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../../packages/typescript-config
-      '@types/eslint':
-        specifier: ^8.44.7
-        version: 8.44.7
-      '@types/node':
-        specifier: ^17.0.12
-        version: 17.0.45
-      '@types/react':
-        specifier: ^18.0.22
-        version: 18.2.5
-      '@types/react-dom':
-        specifier: ^18.0.7
-        version: 18.2.3
-      eslint:
-        specifier: ^8.53.0
-        version: 8.54.0
-      typescript:
-        specifier: ^5.2.2
-        version: 5.2.2
-
-  apps/web:
+  apps/analysis:
     dependencies:
       '@repo/ui':
         specifier: workspace:*
@@ -117,7 +74,7 @@ importers:
         version: 10.4.16(postcss@8.4.32)
       eslint:
         specifier: ^8.53.0
-        version: 8.53.0
+        version: 8.54.0
       postcss:
         specifier: ^8.4.32
         version: 8.4.32
@@ -1404,6 +1361,7 @@ packages:
   /browserslist@4.22.1:
     resolution: {integrity: sha512-FEVc202+2iuClEhZhrWy6ZiAcRLvNMyYcxZ8raemul1DYVOVdFsbqckWLdsixQZCpJlwe77Z3UTalE7jsjnKfQ==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
+    hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001563
       electron-to-chromium: 1.4.583

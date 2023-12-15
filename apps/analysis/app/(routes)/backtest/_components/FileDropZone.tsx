@@ -69,7 +69,7 @@ const FileDropZone = ({ className }: { className?: string }) => {
   };
 
   const handleUpload = (file: File) => {
-    const maxFileSize = 5000000;
+    const maxFileSize = 5000000000;
     const fileTypes = ['application/json', 'text/plain'];
     const existingFiles = data.fileList.map((f) => f.name);
     if (file && !existingFiles.includes(file.name)) {
@@ -77,7 +77,7 @@ const FileDropZone = ({ className }: { className?: string }) => {
         return toast.error('please upload the supported file type');
       }
       if (file.size > maxFileSize) {
-        return toast.error('please upload a file less than 10GB');
+        return toast.error('please upload a file less than 5GB');
       }
       setMode('uploading');
       dispatch({ type: 'ADD_FILE_TO_LIST', file });
