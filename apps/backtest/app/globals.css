@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@100;200;300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+    font-family: 'Neue Machina';
+    font-weight: 300;
+    src: url('/fonts/NeueMachina/NeueMachina-Light.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Neue Machina';
+    src: url('/fonts/NeueMachina/NeueMachina-Regular.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Neue Machina';
+    font-weight: 800;
+    src: url('/fonts/NeueMachina/NeueMachina-Ultrabold.otf') format('opentype');
+}
+
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+html,
+body {
+    max-width: 100vw;
+    overflow-x: hidden;
+    @apply bg-background-light dark:bg-background-dark;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: #a6a6a6;
+    border-radius: 10px;
+}
+
+.remove-all {
+    all: unset;
+}
+
+.number-input-hide-arrows::-webkit-outer-spin-button,
+.number-input-hide-arrows::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.number-input-hide-arrow[type='number'] {
+    -moz-appearance: textfield;
+    appearance: none;
+}
+
+#strategy-template-code > pre::-webkit-scrollbar {
+    display: none;
+}
