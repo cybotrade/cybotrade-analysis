@@ -15,3 +15,4 @@ export * from './copy';
 export * from './checked';
 export * from './crown';
 export * from './upload';
+export * from './cross-solid';
