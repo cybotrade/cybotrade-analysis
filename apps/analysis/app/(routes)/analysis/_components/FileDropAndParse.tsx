@@ -1,10 +1,11 @@
-import { DragEvent, useEffect, useReducer, useState } from 'react';
-import { toast } from 'react-hot-toast';
+'use client';
 
-import { Upload } from '@app/_assets/icons';
+import { DragEvent, useEffect, useReducer, useState } from 'react';
+
+import { CrossSolid, Upload } from '@app/_assets/icons';
 import { Attachment } from '@app/_assets/icons/attachment';
-import ProgressLoader from '@app/_components/loadingIndicator';
-import { Button } from '@app/_components/ui/button';
+import ProgressBar from '@app/_components/progressBar';
+import { Button } from '@app/_components/ui/Button';
 
 interface State {
   inDropZone: boolean;
@@ -21,7 +22,16 @@ interface AddFileToListAction {
   file: File;
 }
 
-type Action = SetInDropZoneAction | AddFileToListAction;
+interface ResetAction {
+  type: 'RESET';
+}
+
+type Action = SetInDropZoneAction | AddFileToListAction | ResetAction;
+
+interface FileDropZoneProps {
+  className?: string;
+  onChange: (file: File, result: object) => void;
+}
 
 const reducer = (state: State, action: Action) => {
   switch (action.type) {
@@ -32,17 +42,20 @@ const reducer = (state: State, action: Action) => {
         ...state,
         fileList: state.fileList.concat(action.file),
       };
+    case 'RESET':
+      return { inDropZone: false, fileList: [] };
     default:
       return state;
   }
 };
 
-const FileDropZone = ({ className }: { className?: string }) => {
+const FileDropAndParse: React.FC<FileDropZoneProps> = ({ className, onChange }) => {
   const [uploadPercentage, setUploadPercentage] = useState(0);
   const [analysingPercentage, setAnalysingPercentage] = useState(0);
-  const [mode, setMode] = useState<'preUpload' | 'uploading' | 'postUpload' | 'analysing'>(
-    'preUpload',
-  );
+  const [errorMessage, setErrorMessage] = useState('Failed');
+  const [mode, setMode] = useState<
+    'PRE_UPLOAD' | 'UPLOADING' | 'POST_UPLOAD' | 'ANALYSING' | 'ERROR'
+  >('PRE_UPLOAD');
   const [file, setFile] = useState<File>();
   const [data, dispatch] = useReducer(reducer, {
     inDropZone: false,
@@ -69,17 +82,25 @@ const FileDropZone = ({ className }: { className?: string }) => {
   };
 
   const handleUpload = (file: File) => {
-    const maxFileSize = 5000000000;
+    const maxFileSize = 5000000000; // 5GB
     const fileTypes = ['application/json', 'text/plain'];
     const existingFiles = data.fileList.map((f) => f.name);
     if (file && !existingFiles.includes(file.name)) {
       if (!fileTypes.includes(file.type)) {
-        return toast.error('please upload the supported file type');
+        const errorMessage = 'please upload the supported file type';
+        setMode('ERROR');
+        setErrorMessage(errorMessage);
+        // return toast.error(errorMessage);
+        return;
       }
       if (file.size > maxFileSize) {
-        return toast.error('please upload a file less than 5GB');
+        const errorMessage = `file is too big (max ${maxFileSize / 1000000000}GB)`;
+        setMode('ERROR');
+        setErrorMessage(errorMessage);
+        return;
+        // return toast.error(errorMessage);
       }
-      setMode('uploading');
+      setMode('UPLOADING');
       dispatch({ type: 'ADD_FILE_TO_LIST', file });
     }
   };
@@ -103,36 +124,41 @@ const FileDropZone = ({ className }: { className?: string }) => {
     dispatch({ type: 'SET_IN_DROP_ZONE', inDropZone: false });
   };
 
-  const handleAnalysis = () => {
-    setMode('analysing');
+  const handleAnalysis = async () => {
+    setMode('ANALYSING');
     if (file) {
       try {
         const fileReader = new FileReader();
         fileReader.onload = (e) => {
           const content = e.target?.result;
-          console.log('json', content);
+          const jsonObject = JSON.parse(content as string);
+          onChange(file, jsonObject);
         };
-
+        fileReader.onerror = (error) => {
+          throw error;
+        };
         fileReader.readAsText(file);
       } catch (error) {
         console.error('Error reading the file:', error);
+        setMode('ERROR');
+        setErrorMessage('fail reading the file');
       }
     }
   };
 
   // to remove, just a simulation
   useEffect(() => {
-    if (mode === 'uploading' && uploadPercentage < 100) {
+    if (mode === 'UPLOADING' && uploadPercentage < 100) {
       setTimeout(() => {
         setUploadPercentage((prev) => prev + 1);
-      }, 30);
+      }, 10);
     }
-    if (mode === 'uploading' && uploadPercentage === 100) {
-      setMode('postUpload');
+    if (mode === 'UPLOADING' && uploadPercentage === 100) {
+      setMode('POST_UPLOAD');
     }
   }, [mode, uploadPercentage]);
   useEffect(() => {
-    if (mode === 'analysing' && analysingPercentage < 100) {
+    if (mode === 'ANALYSING' && analysingPercentage < 100) {
       setTimeout(() => {
         setAnalysingPercentage((prev) => prev + 1);
       }, 40);
@@ -140,9 +166,17 @@ const FileDropZone = ({ className }: { className?: string }) => {
   }, [mode, analysingPercentage]);
   // end remove
 
+  const reset = () => {
+    setMode('PRE_UPLOAD');
+    dispatch({ type: 'RESET' });
+    setErrorMessage('');
+    setUploadPercentage(0);
+    setAnalysingPercentage(0);
+  };
+
   const renderContent = () => {
     switch (mode) {
-      case 'preUpload':
+      case 'PRE_UPLOAD':
         return (
           <div
             className="border border-primary border-dashed min-h-full flex justify-center items-center flex-col gap-4 p-7 rounded-md"
@@ -173,17 +207,17 @@ const FileDropZone = ({ className }: { className?: string }) => {
             </div>
           </div>
         );
-      case 'uploading':
+      case 'UPLOADING':
         return (
           <div className="border border-primary min-h-full rounded-md flex flex-col justify-end p-7 bg-gradient-to-r from-[#FFEFDC] to-white dark:bg-gradient-to-r dark:from-[#2E1C05] dark:to-[#73501A] gap-2">
             <p>
               Uploading <span>{file?.name}</span>
             </p>
             <div className="text-xs text-brand-gray">{uploadPercentage}% | Second remaining</div>
-            <ProgressLoader percent={`${uploadPercentage}%`} />
+            <ProgressBar percent={`${uploadPercentage}%`} />
           </div>
         );
-      case 'postUpload':
+      case 'POST_UPLOAD':
         return (
           <div className="border border-primary min-h-full rounded-md flex flex-col justify-center items-center p-7 bg-[#FFEFDC] dark:bg-[#73501A] gap-4">
             <div className="flex items-center gap-3">
@@ -198,12 +232,24 @@ const FileDropZone = ({ className }: { className?: string }) => {
             </Button>
           </div>
         );
-      case 'analysing':
+      case 'ANALYSING':
         return (
           <div className="border border-primary min-h-full rounded-md flex flex-col justify-end p-7 bg-gradient-to-r from-[#FFEFDC] to-white dark:bg-gradient-to-r dark:from-[#2E1C05] dark:to-[#73501A] gap-2">
             <p className="text-xl max-w-[190px]">Please do not close the window</p>
             <div className="text-xs text-brand-gray">{analysingPercentage}% | Second remaining</div>
-            <ProgressLoader percent={`${analysingPercentage}%`} />
+            <ProgressBar percent={`${analysingPercentage}%`} />
+          </div>
+        );
+      case 'ERROR':
+        return (
+          <div className="border border-primary min-h-full rounded-md flex flex-col justify-end p-7 bg-gradient-to-r from-[#FFEFDC] to-white dark:bg-gradient-to-r dark:from-[#2E1C05] dark:to-[#73501A] gap-2">
+            <p className="text-xl">{file?.name}</p>
+            <div className="flex justify-between">
+              <p className="text-xs text-red-400 py-1 px-4 rounded-full border border-red-400 bg-white flex items-center">
+                Error: {errorMessage}
+              </p>
+              <CrossSolid className="hover:opacity-70 cursor-pointer" onClick={reset} />
+            </div>
           </div>
         );
     }
@@ -211,7 +257,7 @@ const FileDropZone = ({ className }: { className?: string }) => {
 
   return (
     <div
-      className={`h-64 w-[500px] bg-white rounded-md p-4 shadow-lg ${className} ${
+      className={`relative h-64 w-[500px] bg-white rounded-md p-4 shadow-lg ${className} ${
         data.inDropZone ? 'opacity-70 bg-brand-gray/30' : 'opacity-100'
       }`}
     >
@@ -220,4 +266,4 @@ const FileDropZone = ({ className }: { className?: string }) => {
   );
 };
 
-export default FileDropZone;
+export default FileDropAndParse;
