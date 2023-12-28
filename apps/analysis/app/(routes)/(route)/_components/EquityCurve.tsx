@@ -1,6 +1,4 @@
-// import { type RouterOutput } from '@server/trpc';
 import { Kline } from 'binance';
-import Decimal from 'decimal.js';
 import { ColorType, createChart } from 'lightweight-charts';
 import type {
   IChartApi,
@@ -16,9 +14,8 @@ import { Interval } from '@cybotrade/core';
 
 import { Loading } from '@app/_components/loading';
 import { calculateEquity } from '@app/_lib/calculation';
-import { intervalToMilliseconds } from '@app/_lib/utils';
 
-import { IBackTestData, IClosedTrade } from '../type';
+import { IBackTestData } from '../type';
 
 interface IEquityData {
   value: number;
@@ -27,74 +24,25 @@ interface IEquityData {
 
 export const EquityCurve = ({
   backtestData,
-  symbol,
-  interval,
+  klineData,
 }: {
   backtestData: IBackTestData;
   symbol: string;
   interval: Interval;
+  klineData: Kline[];
 }) => {
   const { resolvedTheme } = useTheme();
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
-  const [klineData, setKlineData] = useState<Kline[]>([]);
-  const [endTime, setEndTime] = useState<number | null>(null);
   const [equityData, setEquityData] = useState<IEquityData[]>([]);
 
   let chart: IChartApi | null = null;
 
-  const timeArr = backtestData.trades.map((trade) => new Date(trade.time).getTime());
-  const startTime = Math.min(...timeArr);
-
-  const fetchCompleteKlineData = async (pEndTime: string) => {
-    const req = await fetch(
-      '/api/candle?' +
-        new URLSearchParams({
-          symbol,
-          interval,
-          endTime: pEndTime,
-        }),
-      {
-        method: 'GET',
-      },
-    );
-
-    if (!req.ok) {
-      throw new Error(`HTTP error! Status: ${req.status}`);
-    }
-    const res: Kline[] = await req.json();
-    setKlineData((prev) => {
-      const filteredPrev: Kline[] = endTime ? prev.filter((r) => r[0] !== +endTime) : [];
-      return [...res, ...filteredPrev];
-    });
-  };
-
   useEffect(() => {
-    setEndTime(Math.max(...timeArr));
-  }, []);
-  useEffect(() => {
-    if (klineData.length > 0 && backtestData.trades.length > 0) {
+    if (klineData && klineData.length > 0 && backtestData.trades.length > 0) {
       const equityData = calculateEquity({ klineData: klineData, trades: backtestData.trades });
       setEquityData(equityData);
     }
   }, [klineData]);
-  useEffect(() => {
-    if (
-      klineData.length > 0 &&
-      endTime &&
-      endTime - intervalToMilliseconds(interval) * 500 > startTime
-    ) {
-      setEndTime(klineData[0] ? +klineData[0][0] : null);
-    }
-  }, [endTime, klineData]);
-  useEffect(() => {
-    if (endTime) {
-      const adjustedEndTime =
-        klineData.length > 0
-          ? endTime.toString()
-          : (endTime + intervalToMilliseconds(interval) * 100).toString();
-      fetchCompleteKlineData(adjustedEndTime);
-    }
-  }, [endTime]);
 
   const orders = useMemo(() => {
     const markers: {
@@ -109,7 +57,7 @@ export const EquityCurve = ({
       backtestData?.trades.map((trade) => {
         const { price, quantity, side, time } = trade;
         markers.push({
-          time: (new Date(time).getTime() / 1000) as UTCTimestamp,
+          time: (+time / 1000) as UTCTimestamp,
           position: side === 'Sell' ? 'belowBar' : ('aboveBar' as SeriesMarkerPosition),
           color: side === 'Sell' ? '#ff4976' : '#4bffb5',
           shape: side === 'Sell' ? 'arrowDown' : ('arrowUp' as SeriesMarkerShape),

@@ -5,7 +5,6 @@ import type {
   CandlestickData,
   IChartApi,
   ISeriesApi,
-  LogicalRange,
   MouseEventParams,
   SeriesMarkerPosition,
   SeriesMarkerShape,
@@ -16,16 +15,17 @@ import { useTheme } from 'next-themes';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 
-import { Interval } from '@cybotrade/core';
-
-import { Loading } from '@app/_components/loading';
-import { intervalToMilliseconds } from '@app/_lib/utils';
-
 import { IBackTestData } from '../type';
 
 const socketUrl = 'wss://stream.binance.com:9443/stream';
 
-export const CandleChart = ({ backtestData }: { backtestData: IBackTestData }) => {
+export const CandleChart = ({
+  backtestData,
+  klineData,
+}: {
+  backtestData: IBackTestData;
+  klineData: Kline[];
+}) => {
   const { resolvedTheme } = useTheme();
   const [binanceKlineData, setBinanceKlineData] = useState<
     {
@@ -36,99 +36,7 @@ export const CandleChart = ({ backtestData }: { backtestData: IBackTestData }) =
       close: number;
     }[]
   >([]);
-  const klineDataPerFetch = 500;
   const { sendJsonMessage } = useWebSocket(socketUrl);
-  const [klineData, setKlineData] = useState<Kline[]>([]);
-  const [isFetchingKlineData, setIsFetchingKlineData] = useState<boolean>(true);
-  const [fetchedKlineDate, setFetchedKlineDate] = useState<number | undefined>();
-  const [lastLogicalRange, setLastLogicalRange] = useState<LogicalRange | null>(null);
-  const [symbol, setSymbol] = useState<string>();
-  const [interval, setInterval] = useState<Interval>();
-  const [startTime, setStartTime] = useState<number>();
-
-  useEffect(() => {
-    const symbol = backtestData ? backtestData.symbol.split('/').join('') : 'BTCUSDT';
-    setSymbol(symbol);
-
-    const interval = backtestData
-      ? Interval[backtestData.intervals[0] as unknown as keyof typeof Interval]
-      : Interval.OneDay;
-    setInterval(interval);
-
-    const startTime = backtestData
-      ? parseInt(backtestData?.trades[0]?.time.toString() || '')
-      : undefined;
-    setStartTime(startTime);
-    const fetchCompleteKlineData = async (pStartTime: string) => {
-      setIsFetchingKlineData(true);
-      try {
-        const req = await fetch(
-          '/api/candle?' +
-            new URLSearchParams({
-              symbol,
-              interval,
-              startTime: pStartTime,
-              endTime: new Date().getTime().toString(),
-            }),
-          {
-            method: 'GET',
-          },
-        );
-        if (!req.ok) {
-          throw new Error(`HTTP error! Status: ${req.status}`);
-        }
-        const res: Kline[] = await req.json();
-        setKlineData(res);
-        setIsFetchingKlineData(false);
-        return res;
-      } catch (error) {
-        console.error('Error fetching kline data:', error);
-        setIsFetchingKlineData(false);
-        return [];
-      }
-    };
-
-    fetchCompleteKlineData(
-      (new Date().getTime() - intervalToMilliseconds(interval) * klineDataPerFetch).toString(),
-    );
-
-    return () => {
-      setKlineData([]);
-    };
-  }, [backtestData]);
-
-  useEffect(() => {
-    if (!isFetchingKlineData || !interval || !symbol || !klineData || !startTime || !chart) return;
-    const currentFetchedKlineStartDate = klineData[0]?.[0] ?? 0;
-
-    setLastLogicalRange(chart.timeScale().getVisibleLogicalRange());
-    if (fetchedKlineDate === currentFetchedKlineStartDate) return;
-    if (fetchedKlineDate && fetchedKlineDate < startTime) return;
-    const nextStartTime =
-      (fetchedKlineDate || currentFetchedKlineStartDate) -
-      intervalToMilliseconds(interval) * klineDataPerFetch;
-
-    const fetchCompleteKlineData = async (pStartTime: string) => {
-      const req = await fetch(
-        '/api/candle?' +
-          new URLSearchParams({
-            symbol,
-            interval,
-            startTime: pStartTime,
-            endTime: new Date().getTime().toString(), //to change
-          }),
-        {
-          method: 'GET',
-        },
-      );
-      const res: Kline[] = await req.json();
-      setKlineData((prev) => [...prev, ...res]);
-      setFetchedKlineDate(res[0]?.[0]);
-      setIsFetchingKlineData(false);
-      return res;
-    };
-    fetchCompleteKlineData(nextStartTime.toString());
-  }, [isFetchingKlineData]);
 
   const orders = useMemo(() => {
     const markers: {
@@ -144,7 +52,7 @@ export const CandleChart = ({ backtestData }: { backtestData: IBackTestData }) =
       trades?.map((trade) => {
         const { price, quantity, side, time } = trade;
         markers.push({
-          time: (new Date(time).getTime() / 1000) as UTCTimestamp,
+          time: (+time / 1000) as UTCTimestamp,
           position: side === 'Sell' ? 'belowBar' : ('aboveBar' as SeriesMarkerPosition),
           color: side === 'Sell' ? '#ff4976' : '#4bffb5',
           shape: side === 'Sell' ? 'arrowDown' : ('arrowUp' as SeriesMarkerShape),
@@ -173,22 +81,16 @@ export const CandleChart = ({ backtestData }: { backtestData: IBackTestData }) =
   }, []);
 
   useEffect(() => {
-    if (klineData.length < 1) return;
-    const historicalData = klineData.map(([time, open, high, low, close]) => ({
-      time: (time / 1000) as UTCTimestamp,
-      open: parseFloat(open as string),
-      high: parseFloat(high as string),
-      low: parseFloat(low as string),
-      close: parseFloat(close as string),
-    }));
-    setBinanceKlineData((prev) => {
-      const arr = [...historicalData, ...prev];
-      arr.sort((a, b) => (a.time as number) - (b.time as number));
-      return arr.filter((data, index) => {
-        if (index === arr.map((d) => d.time).lastIndexOf(data.time)) return true;
-        else return false;
-      });
-    });
+    if (klineData && klineData.length < 1) return;
+    setBinanceKlineData(
+      klineData.map(([time, open, high, low, close]) => ({
+        time: (time / 1000) as UTCTimestamp,
+        open: parseFloat(open as string),
+        high: parseFloat(high as string),
+        low: parseFloat(low as string),
+        close: parseFloat(close as string),
+      })),
+    );
   }, [klineData]);
 
   const chartContainerRef: any = useRef<HTMLDivElement>(null);
@@ -238,29 +140,13 @@ export const CandleChart = ({ backtestData }: { backtestData: IBackTestData }) =
         wickDownColor: '#838ca1',
       });
       candleSeries.setData(binanceKlineData);
-      const logicalRange = chart.timeScale().getVisibleLogicalRange();
-      if (fetchedKlineDate && interval && logicalRange && lastLogicalRange) {
-        chart.timeScale().setVisibleLogicalRange({
-          from: lastLogicalRange.from + 500,
-          to: lastLogicalRange.to + 500,
-        });
-      }
-      candleSeries.setMarkers(orders);
       setCandleSeries(candleSeries);
+      candleSeries.setMarkers(orders);
 
       const handleResize = () => {
         chart.applyOptions({ width: chartContainerRef.current?.clientWidth });
       };
       window.addEventListener('resize', handleResize);
-
-      const subs = (newVisibleTimeRange: any) => {
-        if (!newVisibleTimeRange) return;
-        const chartStartTime = (newVisibleTimeRange.from as number) * 1000;
-        if (chartStartTime <= parseInt(binanceKlineData[0]?.time as string) * 1000) {
-          !isFetchingKlineData && setIsFetchingKlineData(true);
-        } else setIsFetchingKlineData(false);
-      };
-      chart.timeScale().subscribeVisibleTimeRangeChange(subs);
 
       const toolTipWidth = 80;
       const toolTipHeight = 80;
@@ -305,7 +191,6 @@ export const CandleChart = ({ backtestData }: { backtestData: IBackTestData }) =
       return () => {
         setChart(undefined);
         window.removeEventListener('resize', handleResize);
-        chart.timeScale().unsubscribeVisibleTimeRangeChange(subs);
         chart.remove();
       };
     }
@@ -356,13 +241,6 @@ export const CandleChart = ({ backtestData }: { backtestData: IBackTestData }) =
       chart.unsubscribeCrosshairMove(event);
     };
   }, [candleSeries, isTooltipVisible]);
-
-  if (isFetchingKlineData && klineData.length === 0)
-    return (
-      <div className="flex justify-center items-center h-96">
-        <Loading description="Loading ..." />
-      </div>
-    );
 
   return (
     <div className="h-96">

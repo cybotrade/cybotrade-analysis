@@ -5,7 +5,7 @@ import { DragEvent, useEffect, useReducer, useState } from 'react';
 import { CrossSolid, Upload } from '@app/_assets/icons';
 import { Attachment } from '@app/_assets/icons/attachment';
 import ProgressBar from '@app/_components/progressBar';
-import { Button } from '@app/_components/ui/Button';
+import { Button } from '@app/_components/ui/button';
 
 interface State {
   inDropZone: boolean;
