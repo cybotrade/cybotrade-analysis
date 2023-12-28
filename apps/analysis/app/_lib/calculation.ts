@@ -4,7 +4,7 @@ import { UTCTimestamp } from 'lightweight-charts';
 
 import { OrderSide } from '@cybotrade/core';
 
-import { IBackTestData, IClosedTrade, ITrade } from '@app/(routes)/analysis/type';
+import { IClosedTrade, ITrade } from '@app/(routes)/(route)/type';
 
 export type Performance = {
   finalBalance: Decimal;
@@ -453,54 +453,6 @@ export const calculatePerformance = ({
   };
 };
 
-export function transformTrades(trades: ITrade[]) {
-  let currentQuantity = 0;
-  let totalCost = 0;
-  let transformedTrades = [];
-  for (const trade of trades) {
-    if (trade.side === 'Buy') {
-      const entryPrice = currentQuantity === 0 ? trade.price : totalCost / currentQuantity;
-      transformedTrades.push({
-        quantity: trade.quantity,
-        entryQuantity: currentQuantity,
-        side: 'Buy',
-        entryPrice: entryPrice,
-        entryTime: trade.time,
-        // transformedTrades.length > 0
-        //   ? transformedTrades[transformedTrades.length - 1].exitTime
-        //   : null,
-        exitPrice: trade.price,
-        exitTime: trade.time,
-      });
-
-      // Update current position and total cost
-      currentQuantity += +trade.quantity;
-      totalCost += +trade.quantity * +trade.price;
-    } else if (trade.side === 'Sell') {
-      // Calculate entryPrice based on previous position and total cost
-      const entryPrice = currentQuantity === 0 ? trade.price : totalCost / currentQuantity;
-      transformedTrades.push({
-        quantity: trade.quantity,
-        entryQuantity: currentQuantity,
-        side: 'Sell',
-        entryPrice: entryPrice,
-        entryTime: trade.time,
-        // transformedTrades.length > 0
-        //   ? transformedTrades[transformedTrades.length - 1].exitTime
-        //   : trade.time,
-        exitPrice: trade.price,
-        exitTime: trade.time,
-      });
-
-      // Update current position and total cost
-      currentQuantity -= +trade.quantity;
-      totalCost -= +trade.quantity * +trade.price;
-    }
-  }
-
-  return transformedTrades;
-}
-
 export const transformToClosedTrades = (inputTrades: ITrade[]) => {
   let globalEntryPrice: number = 0;
   let globalEntryTime: Date | null = null;
@@ -513,7 +465,7 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
 
     if (index === 0) {
       globalEntryPrice = price;
-      globalEntryTime = time as Date;
+      globalEntryTime = new Date(+time) as Date;
       globalSide = side as OrderSide;
       position = quantity;
       return;
@@ -529,14 +481,14 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
           entryPrice: new Decimal(globalEntryPrice),
           entryTime: new Date(globalEntryTime ?? 0),
           exitPrice: new Decimal(price),
-          exitTime: time as Date,
+          exitTime: new Date(+time),
           quantity: new Decimal(position),
           side: side as OrderSide,
         });
 
         position = quantity - position;
         globalEntryPrice = price;
-        globalEntryTime = time as Date;
+        globalEntryTime = new Date(time);
         globalSide = side as OrderSide;
         return;
       }
@@ -544,7 +496,7 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
         entryPrice: new Decimal(globalEntryPrice),
         entryTime: new Date(globalEntryTime ?? 0),
         exitPrice: new Decimal(price),
-        exitTime: time as Date,
+        exitTime: new Date(+time),
         quantity: new Decimal(quantity),
         side: side as OrderSide,
       });
@@ -571,11 +523,10 @@ export const calculateEquity = ({
     const candleClosePrice = kline[4];
     const candleCloseTime = kline[6];
     const tradeOnCandle = trades.find(
-      (trade) =>
-        new Date(trade.time).getTime() <= kline[6] && new Date(trade.time).getTime() >= kline[0],
+      (trade) => +trade.time <= kline[6] && +trade.time >= kline[0],
     );
     if (tradeOnCandle) {
-      const { quantity, side, price, time } = tradeOnCandle;
+      const { quantity, side, price } = tradeOnCandle;
 
       if (globalEntryPrice === null) {
         globalEntryPrice = price;

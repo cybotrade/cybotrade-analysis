@@ -1,6 +1,6 @@
 import { Tabs, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
 import clsx from 'clsx';
-import { isAfter, isBefore, sub, subDays } from 'date-fns';
+import { isAfter, isBefore, sub } from 'date-fns';
 import Decimal from 'decimal.js';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
@@ -24,7 +24,7 @@ export const ResultBreakdown = ({ closedTrades }: { closedTrades: IClosedTrade[]
       years?: number | undefined;
     }) => {
       let startDate: Date;
-      const endDate = closedTrades[closedTrades.length - 1]?.exitTime;
+      const endDate = new Date(+closedTrades[closedTrades.length - 1]?.exitTime);
       if (!endDate) return;
 
       if (timeframe.days) {
@@ -37,7 +37,8 @@ export const ResultBreakdown = ({ closedTrades }: { closedTrades: IClosedTrade[]
         startDate = new Date(0);
       }
       const filteredClosedTrades = closedTrades.filter(
-        (t) => isAfter(new Date(t.exitTime), startDate) && isBefore(new Date(t.exitTime), endDate),
+        (t) =>
+          isAfter(new Date(+t.exitTime), startDate) && isBefore(new Date(+t.exitTime), endDate),
       );
 
       return calculatePerformance({
