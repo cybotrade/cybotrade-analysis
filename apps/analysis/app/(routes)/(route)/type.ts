@@ -6,7 +6,7 @@ export interface ITrade {
   quantity: number;
   side: OrderSide | string;
   price: number;
-  time: Date | string;
+  time: string;
 }
 export interface IBackTestData {
   id: string;
@@ -15,6 +15,8 @@ export interface IBackTestData {
   intervals: Interval[] | string[];
   trades: ITrade[];
   version: string;
+  start_time: string;
+  end_time: string;
 }
 
 export interface IClosedTrade {
