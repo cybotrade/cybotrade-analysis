@@ -1,11 +1,10 @@
-import clsx from 'clsx';
 import { isAfter, isBefore, sub } from 'date-fns';
 import Decimal from 'decimal.js';
 import { FolderSearch } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 
 import TrendBlockView from '@app/(routes)/(route)/_components/trend/TrendBlockView';
-import Histogram from '@app/_components/chart/Histogram';
+import { Grid as GridIcon, Horizontal as HorizontalIcon } from '@app/_assets/icons';
 import {
   Select,
   SelectContent,
@@ -171,7 +170,23 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades }) => {
       })}
     >
       <div className="px-8 py-8 max-w-[1300px]">
-        <div></div>
+        <div className="max-w-fit ml-auto p-3 mb-10 flex items-center gap-4 border border-[#DFDFDF] rounded-md">
+          <HorizontalIcon
+            className={cn(
+              'w-5 h-5 text-[#8A8A8A] cursor-pointer',
+              view === 'scroll' && 'text-[#B28249]',
+            )}
+            onClick={() => setView('scroll')}
+          />
+          <div className="h-[15px] border border-r-0 border-[#DFDFDF]"></div>
+          <GridIcon
+            className={cn(
+              'w-5 h-5 text-[#8A8A8A] cursor-pointer',
+              view === 'block' && 'text-[#B28249]',
+            )}
+            onClick={() => setView('block')}
+          />
+        </div>
         <div className="max-w-fit ml-auto flex items-center justify-end pb-10">
           <div className="mr-6 whitespace-nowrap">Sort By</div>
 
@@ -232,14 +247,16 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades }) => {
             </SelectContent>
           </Select>
         </div>
-        {/* First Row */}
-        <TrendBlockView
-          selectedMonth={selectedMonth}
-          selectedYear={selectedYear}
-          drawdownsWithPercentiles={drawdownsWithPercentiles}
-          profitArray={profitArray}
-          tradeArray={tradeArray}
-        />
+        {view === 'block' && (
+          <TrendBlockView
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            drawdownsWithPercentiles={drawdownsWithPercentiles}
+            profitArray={profitArray}
+            tradeArray={tradeArray}
+          />
+        )}
+        {view === 'scroll' && null}
       </div>
     </div>
   );

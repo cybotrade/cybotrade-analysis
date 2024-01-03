@@ -1,6 +1,4 @@
 import TrendChartCard from '@app/(routes)/(route)/_components/trend/TrendChartCard';
-import Histogram from '@app/_components/chart/Histogram';
-import { cn } from '@app/lib/utils';
 
 type TrendBlockViewProps = {
   selectedMonth: string;
@@ -19,6 +17,7 @@ const TrendBlockView = ({
 }: TrendBlockViewProps) => {
   return (
     <div className="grid grid-cols-trend-chart place-content-between gap-y-8">
+      {/* First Row */}
       <TrendChartCard
         label="Month Max DD"
         data={drawdownsWithPercentiles}

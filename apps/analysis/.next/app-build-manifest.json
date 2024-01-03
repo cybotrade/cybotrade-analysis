@@ -1,0 +1,15 @@
+{
+  "pages": {
+    "/(routes)/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(routes)/layout.css",
+      "static/chunks/app/(routes)/layout.js"
+    ],
+    "/(routes)/(route)/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(routes)/(route)/page.js"
+    ]
+  }
+}
