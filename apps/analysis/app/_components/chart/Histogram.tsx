@@ -456,7 +456,7 @@ const Histogram: React.FC<HistogramProps> = ({
   const barBorderRadius = 5;
 
   return (
-    <div ref={containerRef} className="px-9 h-[300px]">
+    <div ref={containerRef} className="h-[300px]">
       {chartSize.width && chartSize.height && (
         <>
           {arrayType === 'maxDD' && (
