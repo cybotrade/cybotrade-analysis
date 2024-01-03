@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import useDrawer from '@app/_hooks/useDrawer';
 
 import BackTestResultsDrawer from './_components/BackTestResults';
 import FileDropAndParse from './_components/FileDropAndParse';
@@ -17,7 +16,6 @@ const FloatCard = ({ text, className }: { text: string; className: string }) => 
 
 const Backtest = () => {
   const [data, setData] = useState<IBackTestData[] | undefined>(undefined);
-  const { close, isOpen, open } = useDrawer();
 
   return (
     <div className="bg-gradient-to-b from-[#FFEFDC] to-white dark:bg-gradient-to-b dark:from-[#2E1C05] dark:to-[#73501A] text-black dark:text-white rounded-lg border border-[#E1C3A0] flex flex-col justify-center items-center gap-6 relative p-8">
@@ -33,8 +31,7 @@ const Backtest = () => {
           setData(value as IBackTestData[]);
         }}
       />
-      {data && <BackTestResultsDrawer onOpen={open} open={isOpen} onClose={close} data={data} />}
-
+      {data && <BackTestResultsDrawer data={data} />}
       {/* Background element */}
       <div className="rounded-full h-[815px] min-w-[815px] border border-primary-light2 absolute top-[-235px] left-[-216px]"></div>
       <div className="rounded-full h-[815px] min-w-[815px] border border-primary-light2 absolute bottom-[-336px] right-[-175px]"></div>

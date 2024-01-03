@@ -9,9 +9,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@app/_components/ui/Accordion';
-import Drawer from '@app/_components/ui/Drawer';
+import useDrawer from '@app/_hooks/useDrawer';
 import { transformToClosedTrades } from '@app/_lib/calculation';
 import { sortByTimestamp } from '@app/_lib/utils';
+import { Sheet, SheetContent, SheetTrigger } from '@app/ui/sheet';
 
 import { IBackTestData, ITrade } from '../type';
 import { CandleChart } from './CandleChart';
@@ -21,15 +22,12 @@ import { ResultBreakdown } from './ResultBreakdown';
 import { Trend } from './Trend';
 
 interface IBackTestResultsDrawer {
-  onOpen: () => void;
-  open: boolean;
-  onClose: () => void;
   data: IBackTestData[] | undefined;
 }
 
 const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [open, setOpen] = useState(false);
+  const { close, isOpen, open } = useDrawer();
   const { data } = props;
   if (!data) return null;
   const backtestData = {
@@ -92,7 +90,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
 
   useEffect(() => {
     if (data && klineData && klineData?.length > 0) {
-      setOpen(true);
+      open();
     }
   }, [data, klineData]);
   const resultContents = [
@@ -127,20 +125,44 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
   ];
 
   return (
-    <Drawer header={false} onClose={props.onClose} open={open} onOpen={props.onOpen} size={'lg'}>
-      <Accordion type="multiple" defaultValue={['candle-chart']}>
-        {resultContents.map((item) => (
-          <AccordionItem value={item.value} data-accordion-item={item.value} key={item.value}>
-            <AccordionTrigger className="rounded-xl border font-normal">
-              <div>{item.label}</div>
-            </AccordionTrigger>
-            <AccordionContent className="p-0 dark:bg-[#473E2D]" id={item.value}>
-              <div id={`${item.value}-content`}>{item.content}</div>
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-    </Drawer>
+    // <Drawer
+    //   header={false}
+    //   onClose={props.onClose}
+    //   open={open}
+    //   onOpen={props.onOpen}
+    //   size={'lg'}
+    //   className="relative"
+    // >
+    <Sheet key={'1'} open={isOpen} onOpenChange={() => (isOpen ? close() : open())}>
+      <SheetContent
+        side={'right'}
+        className="min-w-[70%] overflow-y-scroll overflow-x-clip"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        overlayChildren={
+          <Sheet key={'2'}>
+            <SheetTrigger className="fixed left-0">Open</SheetTrigger>
+            <SheetContent side={'left'} className="min-w-[30%]" overlayClassName="hidden">
+              second sheet
+            </SheetContent>
+          </Sheet>
+        }
+      >
+        {/* <BackTestResults data={data} /> */}
+        <Accordion type="multiple" defaultValue={['candle-chart']}>
+          {resultContents.map((item) => (
+            <AccordionItem value={item.value} data-accordion-item={item.value} key={item.value}>
+              <AccordionTrigger className="rounded-xl border font-normal">
+                <div>{item.label}</div>
+              </AccordionTrigger>
+              <AccordionContent className="p-0 dark:bg-[#473E2D]" id={item.value}>
+                <div id={`${item.value}-content`}>{item.content}</div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </SheetContent>
+    </Sheet>
+    // </Drawer>
   );
 };
 

@@ -151,7 +151,7 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({ className, onChange }) 
     if (mode === 'UPLOADING' && uploadPercentage < 100) {
       setTimeout(() => {
         setUploadPercentage((prev) => prev + 1);
-      }, 10);
+      }, 0);
     }
     if (mode === 'UPLOADING' && uploadPercentage === 100) {
       setMode('POST_UPLOAD');
@@ -161,7 +161,7 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({ className, onChange }) 
     if (mode === 'ANALYSING' && analysingPercentage < 100) {
       setTimeout(() => {
         setAnalysingPercentage((prev) => prev + 1);
-      }, 40);
+      }, 0);
     }
   }, [mode, analysingPercentage]);
   // end remove
