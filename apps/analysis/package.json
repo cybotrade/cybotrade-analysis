@@ -22,7 +22,8 @@
     "@trpc/server": "^10.44.1",
     "binance": "^2.8.14",
     "chart.js": "^4.4.1",
-    "clsx": "^2.0.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
     "date-fns": "^3.0.5",
     "decimal.js": "^10.4.3",
     "lightweight-charts": "^4.1.1",
@@ -36,6 +37,8 @@
     "react-hot-toast": "^2.4.1",
     "react-use-websocket": "^4.5.0",
     "rsuite": "^5.48.0",
+    "tailwind-merge": "^2.2.0",
+    "tailwindcss-animate": "^1.0.7",
     "zod": "^3.22.4"
   },
   "devDependencies": {
