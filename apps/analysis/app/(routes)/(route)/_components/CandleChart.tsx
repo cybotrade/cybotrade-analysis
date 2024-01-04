@@ -1,4 +1,3 @@
-// import { type RouterOutput } from '@server/trpc';
 import { type Kline } from 'binance';
 import type {
   CandlestickData,
