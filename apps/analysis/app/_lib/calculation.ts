@@ -8,12 +8,12 @@ import { IClosedTrade, ITrade } from '@app/(routes)/(route)/type';
 
 export type Performance = {
   finalBalance: Decimal;
-  initialCapital: number;
+  initialCapital: Decimal;
   totalTrades: number;
   totalLosingTrades: number;
   totalWinningTrades: number;
-  // bestTradePnl: Decimal;
-  // worstTradePnl: Decimal;
+  bestTradePnl: Decimal;
+  worstTradePnl: Decimal;
   averagePnl: Decimal;
   highestWinningStreak: number;
   highestLosingStreak: number;
@@ -41,8 +41,8 @@ export type Performance = {
   // };
 
   roi: Decimal;
-  // largestRoi: Decimal;
-  // smallestRoi: Decimal;
+  largestRoi: Decimal;
+  smallestRoi: Decimal;
 
   openedTrades: {
     id: string;
@@ -330,20 +330,20 @@ export const calculatePerformance = ({
   }));
   const winningTrades = closedTrades.filter((trade) => pnlFromTrade(trade).greaterThan(0));
   const losingTrades = closedTrades.filter((trade) => pnlFromTrade(trade).lessThan(0));
-  // const bestTradePnl = (() => {
-  //   try {
-  //     return Decimal.max(...pnls);
-  //   } catch (e) {
-  //     return new Decimal(0);
-  //   }
-  // })();
-  // const worstTradePnl = (() => {
-  //   try {
-  //     return Decimal.min(...pnls);
-  //   } catch (e) {
-  //     return new Decimal(0);
-  //   }
-  // })();
+  const bestTradePnl = (() => {
+    try {
+      return Decimal.max(...pnls);
+    } catch (e) {
+      return new Decimal(0);
+    }
+  })();
+  const worstTradePnl = (() => {
+    try {
+      return Decimal.min(...pnls);
+    } catch (e) {
+      return new Decimal(0);
+    }
+  })();
   const totalProfit = winningTrades.reduce(
     (acc, trade) => acc.add(pnlFromTrade(trade)),
     new Decimal(0),
@@ -370,7 +370,6 @@ export const calculatePerformance = ({
     const closeDate = new Date(trade.exitTime).toISOString().split('T')[0];
     tradesPerDay[closeDate] = (tradesPerDay[closeDate] || 0) + 1;
   });
-
   const tradingTime =
     closedTrades.length > 0
       ? closedTrades[0].entryTime.getTime() -
@@ -383,19 +382,20 @@ export const calculatePerformance = ({
       ? 0
       : totalTradesPerDay.reduce((sum, count) => sum + count, 0) / totalTradesPerDay.length;
   const adjustedRiskFree = (1 + riskFreeRate) ** (tradingDays / 365) - 1;
+
   return {
     // to calculate average total trade per day
     totalTradesPerDay,
     averageTotalTradesPerDay,
 
     finalBalance,
-    initialCapital,
+    initialCapital: new Decimal(initialCapital),
     totalTrades: closedTrades.length,
 
     totalWinningTrades: pnls.filter((pnl) => pnl.greaterThan(0)).length,
     totalLosingTrades: pnls.filter((pnl) => pnl.lessThan(0)).length,
-    // bestTradePnl,
-    // worstTradePnl,
+    bestTradePnl,
+    worstTradePnl,
     averagePnl: mean({ values: pnls }),
     highestWinningStreak: streak(pnls, (pnl) => pnl.greaterThan(0)),
     highestLosingStreak: streak(pnls, (pnl) => pnl.lessThan(0)),
@@ -444,9 +444,8 @@ export const calculatePerformance = ({
       initialCapital === 0
         ? new Decimal(0)
         : new Decimal(finalBalance.sub(initialCapital)).div(initialCapital),
-    // largestRoi: initialCapital === 0 ? new Decimal(0) : bestTradePnl.div(initialCapital), // Currently not using
-    // smallestRoi: initialCapital === 0 ? new Decimal(0) : worstTradePnl.div(initialCapital), // Currently not using
-
+    largestRoi: initialCapital === 0 ? new Decimal(0) : bestTradePnl.div(initialCapital),
+    smallestRoi: initialCapital === 0 ? new Decimal(0) : worstTradePnl.div(initialCapital),
     drawdowns,
     closedTrades,
     openedTrades,
@@ -510,9 +509,11 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
 export const calculateEquity = ({
   klineData,
   trades,
+  initialCapital = 0,
 }: {
   klineData: Kline[];
   trades: ITrade[];
+  initialCapital: number;
 }): { value: number; time: UTCTimestamp }[] => {
   const equityData: { value: number; time: UTCTimestamp }[] = [];
   let globalEntryPrice: number | null = null;
@@ -555,11 +556,11 @@ export const calculateEquity = ({
     equityData.push({
       value:
         position === 0
-          ? accumulatePnl
+          ? initialCapital + accumulatePnl
           : new Decimal(
               (+candleClosePrice - (globalEntryPrice ? +globalEntryPrice : 0)) * +position +
                 accumulatePnl,
-            ).toNumber(),
+            ).toNumber() + initialCapital,
       time: (candleCloseTime / 1000) as UTCTimestamp,
     });
   });

@@ -4,10 +4,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 type ErrorPageProps = {
-  error: any;
+  error: Error & { digest?: string };
+  reset: () => void;
 };
 
-export const ErrorPage: React.FC<ErrorPageProps> = ({ error }) => {
+export const Error: React.FC<ErrorPageProps> = ({ error, reset }) => {
+  console.log('error', error);
+
   return (
     <div className="h-screen w-full flex flex-col justify-center items-center gap-5">
       <Image src="/images/Cable.png" width={80} height={80} alt="cable" />
@@ -20,7 +23,8 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({ error }) => {
       <Link
         href="/"
         rel="noopener noreferrer"
-        // target="_blank"
+        replace
+        onClick={() => reset()}
         className="font-sans text-black font-bold bg-primary px-6 py-2 flex justify-center items-center rounded-lg hover:opacity-80 w-[330px] h-[60px]"
       >
         Back to Home
