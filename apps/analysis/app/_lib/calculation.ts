@@ -12,8 +12,8 @@ export type Performance = {
   totalTrades: number;
   totalLosingTrades: number;
   totalWinningTrades: number;
-  // bestTradePnl: Decimal;
-  // worstTradePnl: Decimal;
+  bestTradePnl: Decimal;
+  worstTradePnl: Decimal;
   averagePnl: Decimal;
   highestWinningStreak: number;
   highestLosingStreak: number;
@@ -41,8 +41,8 @@ export type Performance = {
   // };
 
   roi: Decimal;
-  // largestRoi: Decimal;
-  // smallestRoi: Decimal;
+  largestRoi: Decimal;
+  smallestRoi: Decimal;
 
   openedTrades: {
     id: string;
@@ -330,20 +330,20 @@ export const calculatePerformance = ({
   }));
   const winningTrades = closedTrades.filter((trade) => pnlFromTrade(trade).greaterThan(0));
   const losingTrades = closedTrades.filter((trade) => pnlFromTrade(trade).lessThan(0));
-  // const bestTradePnl = (() => {
-  //   try {
-  //     return Decimal.max(...pnls);
-  //   } catch (e) {
-  //     return new Decimal(0);
-  //   }
-  // })();
-  // const worstTradePnl = (() => {
-  //   try {
-  //     return Decimal.min(...pnls);
-  //   } catch (e) {
-  //     return new Decimal(0);
-  //   }
-  // })();
+  const bestTradePnl = (() => {
+    try {
+      return Decimal.max(...pnls);
+    } catch (e) {
+      return new Decimal(0);
+    }
+  })();
+  const worstTradePnl = (() => {
+    try {
+      return Decimal.min(...pnls);
+    } catch (e) {
+      return new Decimal(0);
+    }
+  })();
   const totalProfit = winningTrades.reduce(
     (acc, trade) => acc.add(pnlFromTrade(trade)),
     new Decimal(0),
@@ -394,8 +394,8 @@ export const calculatePerformance = ({
 
     totalWinningTrades: pnls.filter((pnl) => pnl.greaterThan(0)).length,
     totalLosingTrades: pnls.filter((pnl) => pnl.lessThan(0)).length,
-    // bestTradePnl,
-    // worstTradePnl,
+    bestTradePnl,
+    worstTradePnl,
     averagePnl: mean({ values: pnls }),
     highestWinningStreak: streak(pnls, (pnl) => pnl.greaterThan(0)),
     highestLosingStreak: streak(pnls, (pnl) => pnl.lessThan(0)),
@@ -444,9 +444,8 @@ export const calculatePerformance = ({
       initialCapital === 0
         ? new Decimal(0)
         : new Decimal(finalBalance.sub(initialCapital)).div(initialCapital),
-    // largestRoi: initialCapital === 0 ? new Decimal(0) : bestTradePnl.div(initialCapital), // Currently not using
-    // smallestRoi: initialCapital === 0 ? new Decimal(0) : worstTradePnl.div(initialCapital), // Currently not using
-
+    largestRoi: initialCapital === 0 ? new Decimal(0) : bestTradePnl.div(initialCapital),
+    smallestRoi: initialCapital === 0 ? new Decimal(0) : worstTradePnl.div(initialCapital),
     drawdowns,
     closedTrades,
     openedTrades,
