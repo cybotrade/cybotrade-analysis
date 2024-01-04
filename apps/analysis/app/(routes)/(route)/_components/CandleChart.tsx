@@ -1,6 +1,5 @@
 // import { type RouterOutput } from '@server/trpc';
 import { type Kline } from 'binance';
-import clsx from 'clsx';
 import type {
   CandlestickData,
   IChartApi,
@@ -14,6 +13,8 @@ import { ColorType, createChart } from 'lightweight-charts';
 import { useTheme } from 'next-themes';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
+
+import { cn } from '@app/_lib/utils';
 
 import { IBackTestData } from '../type';
 
@@ -247,7 +248,7 @@ export const CandleChart = ({
       <div className="w-full h-full px-3 py-4" ref={chartContainerRef}>
         <div className="h-0">
           <div
-            className={clsx(
+            className={cn(
               'z-50 border w-fit rounded-md px-3 py-1 relative bg-white text-black dark:bg-[#37332A] dark:text-white',
               isTooltipVisible ? 'block' : '-z-10 hidden',
             )}

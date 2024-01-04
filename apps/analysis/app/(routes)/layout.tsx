@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import 'rsuite/dist/rsuite.min.css';
 
 import Header from '@app/_components/header';
 import { ClientProvider } from '@app/_providers/client';

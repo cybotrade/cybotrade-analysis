@@ -1,34 +1,47 @@
 import { Kline } from 'binance';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 import { Interval } from '@cybotrade/core';
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@app/_components/ui/Accordion';
-import useDrawer from '@app/_hooks/useDrawer';
+import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
 import { transformToClosedTrades } from '@app/_lib/calculation';
-import { sortByTimestamp } from '@app/_lib/utils';
-import { Sheet, SheetContent, SheetTrigger } from '@app/ui/sheet';
+import { cn, sortByTimestamp } from '@app/_lib/utils';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
+import { Sheet, SheetContent, SheetTrigger } from '@app/_ui/Sheet';
 
 import { IBackTestData, ITrade } from '../type';
 import { CandleChart } from './CandleChart';
 import { EquityCurve } from './EquityCurve';
 import { MonteCarlo } from './MonteCarlo';
 import { ResultBreakdown } from './ResultBreakdown';
+import SettingsForm, { SettingsValue } from './SettingsForm';
 import { Trend } from './Trend';
 
 interface IBackTestResultsDrawer {
   data: IBackTestData[] | undefined;
+  drawer: IDrawer;
 }
 
 const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const { close, isOpen, open } = useDrawer();
-  const { data } = props;
+  const settingDrawer = useDrawer();
+  const [userSettings, setUserSettings] = useState<SettingsValue>({
+    initial_capital: 10000,
+    order_size_unit: undefined,
+    order_size_value: undefined,
+    leverage: undefined,
+    fees: undefined,
+    take_profit: [{ value: undefined }, { value: undefined }],
+    stop_lost: [{ value: undefined }, { value: undefined }],
+    entry: [{ value: undefined }, { value: undefined }],
+  });
+
+  const onSettingsFormUpdate = (values: SettingsValue) => {
+    setUserSettings(values);
+  };
+
+  const { data, drawer } = props;
   if (!data) return null;
   const backtestData = {
     ...data[selectedIndex],
@@ -90,9 +103,10 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
 
   useEffect(() => {
     if (data && klineData && klineData?.length > 0) {
-      open();
+      drawer.open();
     }
   }, [data, klineData]);
+
   const resultContents = [
     {
       value: 'candle-chart',
@@ -108,13 +122,19 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
           symbol={symbol}
           interval={interval}
           klineData={klineData ?? []}
+          initialCapital={userSettings.initial_capital}
         />
       ),
     },
     {
       value: 'result-breakdown',
       label: 'Result Breakdown',
-      content: <ResultBreakdown closedTrades={closedTrades} />,
+      content: (
+        <ResultBreakdown
+          closedTrades={closedTrades}
+          initialCapital={userSettings.initial_capital}
+        />
+      ),
     },
     { value: 'trend', label: 'Trend', content: <Trend closedTrades={closedTrades} /> },
     {
@@ -125,29 +145,52 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
   ];
 
   return (
-    // <Drawer
-    //   header={false}
-    //   onClose={props.onClose}
-    //   open={open}
-    //   onOpen={props.onOpen}
-    //   size={'lg'}
-    //   className="relative"
-    // >
-    <Sheet key={'1'} open={isOpen} onOpenChange={() => (isOpen ? close() : open())}>
+    <Sheet
+      key={'1'}
+      open={drawer.isOpen}
+      onOpenChange={() => (drawer.isOpen ? drawer.close() : drawer.open())}
+    >
       <SheetContent
         side={'right'}
         className="min-w-[70%] overflow-y-scroll overflow-x-clip"
         onPointerDownOutside={(e) => e.preventDefault()}
         overlayChildren={
-          <Sheet key={'2'}>
-            <SheetTrigger className="fixed left-0">Open</SheetTrigger>
-            <SheetContent side={'left'} className="min-w-[30%]" overlayClassName="hidden">
-              second sheet
+          <Sheet
+            key={'2'}
+            open={settingDrawer.isOpen}
+            onOpenChange={() =>
+              settingDrawer.isOpen ? settingDrawer.close() : settingDrawer.open()
+            }
+          >
+            <SheetTrigger
+              className={cn(
+                'absolute m-8 bottom-0 bg-white rounded-full border-2 border-primary-light p-4 shadow-xl hover:bg-primary duration-200',
+                settingDrawer.isOpen ? 'opacity-0' : 'opacity-100',
+              )}
+            >
+              <ChevronRight
+                onClick={settingDrawer.open}
+                color="#E1C3A0"
+                strokeWidth={2.5}
+                className="h-5 w-5"
+              />
+            </SheetTrigger>
+            <SheetContent
+              side={'left'}
+              className="min-w-[31%] rounded-r-lg"
+              overlayClassName="hidden"
+            >
+              <div
+                onClick={settingDrawer.close}
+                className="absolute z-50 h-[58px] w-[58px] mb-8 bottom-0 right-0 translate-x-1/2 bg-white rounded-full border-2 border-primary-light duration-200 flex items-center justify-center shadow-xl cursor-pointer hover:bg-primary"
+              >
+                <ChevronLeft color="#E1C3A0" strokeWidth={2.5} className="h=[20px]" />
+              </div>
+              <SettingsForm onUpdate={onSettingsFormUpdate} values={userSettings} />
             </SheetContent>
           </Sheet>
         }
       >
-        {/* <BackTestResults data={data} /> */}
         <Accordion type="multiple" defaultValue={['candle-chart']}>
           {resultContents.map((item) => (
             <AccordionItem value={item.value} data-accordion-item={item.value} key={item.value}>
@@ -162,7 +205,6 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
         </Accordion>
       </SheetContent>
     </Sheet>
-    // </Drawer>
   );
 };
 

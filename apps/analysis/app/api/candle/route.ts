@@ -35,5 +35,3 @@ export const GET = async (req: Request) => {
 
   return NextResponse.json(kline);
 };
-//1682726400000
-// 1682740800000 ...

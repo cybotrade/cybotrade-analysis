@@ -1,14 +1,9 @@
 import { Kline } from 'binance';
 import { ColorType, createChart } from 'lightweight-charts';
-import type {
-  IChartApi,
-  SeriesMarkerPosition,
-  SeriesMarkerShape,
-  UTCTimestamp,
-} from 'lightweight-charts';
+import type { IChartApi, UTCTimestamp } from 'lightweight-charts';
 import { FolderSearch } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Interval } from '@cybotrade/core';
 
@@ -25,11 +20,13 @@ interface IEquityData {
 export const EquityCurve = ({
   backtestData,
   klineData,
+  initialCapital,
 }: {
   backtestData: IBackTestData;
   symbol: string;
   interval: Interval;
   klineData: Kline[];
+  initialCapital?: number;
 }) => {
   const { resolvedTheme } = useTheme();
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
@@ -39,35 +36,14 @@ export const EquityCurve = ({
 
   useEffect(() => {
     if (klineData && klineData.length > 0 && backtestData.trades.length > 0) {
-      const equityData = calculateEquity({ klineData: klineData, trades: backtestData.trades });
+      const equityData = calculateEquity({
+        klineData: klineData,
+        trades: backtestData.trades,
+        initialCapital: initialCapital ? initialCapital : 10000,
+      });
       setEquityData(equityData);
     }
-  }, [klineData]);
-
-  const orders = useMemo(() => {
-    const markers: {
-      time: UTCTimestamp;
-      position: SeriesMarkerPosition;
-      color: string;
-      shape: SeriesMarkerShape;
-      text: string;
-      id: string;
-    }[] = [];
-    if (backtestData) {
-      backtestData?.trades.map((trade) => {
-        const { price, quantity, side, time } = trade;
-        markers.push({
-          time: (+time / 1000) as UTCTimestamp,
-          position: side === 'Sell' ? 'belowBar' : ('aboveBar' as SeriesMarkerPosition),
-          color: side === 'Sell' ? '#ff4976' : '#4bffb5',
-          shape: side === 'Sell' ? 'arrowDown' : ('arrowUp' as SeriesMarkerShape),
-          text: `${side.toUpperCase()} ${quantity}\n${price}`,
-          id: `${new Date(time).getTime()}`,
-        });
-      });
-    }
-    return markers.sort((a, b) => a.time - b.time);
-  }, [backtestData]);
+  }, [klineData, initialCapital]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -84,7 +60,7 @@ export const EquityCurve = ({
           textColor: resolvedTheme === 'dark' ? '#ffffff' : '#000000',
         },
         width: chartContainerRef.current.clientWidth,
-        height: 500,
+        height: 370,
         grid: {
           vertLines: {
             color: 'rgba(0, 0, 0, 0)',
@@ -105,7 +81,6 @@ export const EquityCurve = ({
         lineType: 2,
       });
       if (chart && newSeries) newSeries.setData(equityData);
-      newSeries.setMarkers(orders);
 
       window.addEventListener('resize', handleResize);
 
@@ -124,24 +99,18 @@ export const EquityCurve = ({
     );
 
   return (
-    <div className={resolvedTheme === 'dark' ? 'dark' : ''}>
-      <div className="w-full h-[600px] rounded-xl ">
-        <div className="flex mx-[60px] pt-12 items-center ">
-          <div className="w-5 h-5 rounded-full bg-[#55AEFF] dark:bg-[#107394] border dark:border-white mr-4"></div>
-          <div className="text-lg mr-10 text-black dark:text-white">Account Balance</div>
-          <div className="w-5 h-5 rounded-full bg-[#2BB89F] dark:bg-[#00FC65] border dark:border-white mr-4"></div>
-          <div className="text-lg text-black dark:text-white">Account Equity</div>
-        </div>
+    <div className={`p-4 ${resolvedTheme === 'dark' ? 'dark' : ''}`}>
+      <div className="w-full h-96 rounded-xlflex items-center justify-center">
         {!backtestData ? (
           <Loading description={'Loading data...'} />
         ) : backtestData ? (
           <>
-            <div className="pb-12 mx-[60px]">
+            <div className="pl-12 h-full w-full">
               <div ref={chartContainerRef} />
             </div>
           </>
         ) : (
-          <div className="flex flex-col justify-center items-center w-full h-96 ">
+          <div className="flex flex-col justify-center items-center w-full h-full ">
             <div className="icon">
               <FolderSearch className="w-24 h-24" />
             </div>

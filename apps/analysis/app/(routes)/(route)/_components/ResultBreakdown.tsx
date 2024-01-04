@@ -1,19 +1,22 @@
-import { Tabs, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
-import clsx from 'clsx';
-import { isAfter, isBefore, sub } from 'date-fns';
 import Decimal from 'decimal.js';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
-import React, { Fragment, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { calculatePerformance } from '@app/_lib/calculation';
+import { cn } from '@app/_lib/utils';
 
 import { IClosedTrade } from '../type';
 
-export const ResultBreakdown = ({ closedTrades }: { closedTrades: IClosedTrade[] }) => {
+export const ResultBreakdown = ({
+  closedTrades,
+  initialCapital = 10000,
+}: {
+  closedTrades: IClosedTrade[];
+  initialCapital?: number;
+}) => {
   const { theme } = useTheme();
-
-  const [selectDay, setSelectDay] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState('all');
 
   const performanceAll = useMemo(() => {
     if (!closedTrades) return null;
@@ -23,48 +26,48 @@ export const ResultBreakdown = ({ closedTrades }: { closedTrades: IClosedTrade[]
       months?: number | undefined;
       years?: number | undefined;
     }) => {
-      let startDate: Date;
-      const endDate = new Date(+closedTrades[closedTrades.length - 1]?.exitTime);
-      if (!endDate) return;
+      // let startDate: Date;
+      // const endDate = new Date(+closedTrades[closedTrades.length - 1]?.exitTime);
+      // if (!endDate) return;
 
-      if (timeframe.days) {
-        startDate = sub(endDate, { days: timeframe.days });
-      } else if (timeframe.months) {
-        startDate = sub(endDate, { months: timeframe.months });
-      } else if (timeframe.years) {
-        startDate = sub(endDate, { years: timeframe.years });
-      } else {
-        startDate = new Date(0);
-      }
-      const filteredClosedTrades = closedTrades.filter(
-        (t) =>
-          isAfter(new Date(+t.exitTime), startDate) && isBefore(new Date(+t.exitTime), endDate),
-      );
-
+      // if (timeframe.days) {
+      //   startDate = sub(endDate, { days: timeframe.days });
+      // } else if (timeframe.months) {
+      //   startDate = sub(endDate, { months: timeframe.months });
+      // } else if (timeframe.years) {
+      //   startDate = sub(endDate, { years: timeframe.years });
+      // } else {
+      //   startDate = new Date(0);
+      // }
+      // const filteredClosedTrades = closedTrades.filter(
+      //   (t) =>
+      //     isAfter(new Date(+t.exitTime), startDate) && isBefore(new Date(+t.exitTime), endDate),
+      // );
       return calculatePerformance({
         history: {
-          closedTrades: filteredClosedTrades,
+          // closedTrades: filteredClosedTrades,
+          closedTrades,
           openedTrades: [],
         },
         parameters: {
           comission: 0,
-          initialCapital: 0,
+          initialCapital,
           riskFreeRate: 0.02,
         },
       });
     };
     return {
       all: calculatePerformanceForTimeframe({}),
-      '90D': calculatePerformanceForTimeframe({ days: 90 }),
-      '7D': calculatePerformanceForTimeframe({ days: 7 }),
-      '1M': calculatePerformanceForTimeframe({ months: 1 }),
-      '3M': calculatePerformanceForTimeframe({ months: 3 }),
-      '1Y': calculatePerformanceForTimeframe({ years: 1 }),
+      // '90D': calculatePerformanceForTimeframe({ days: 90 }),
+      // '7D': calculatePerformanceForTimeframe({ days: 7 }),
+      // '1M': calculatePerformanceForTimeframe({ months: 1 }),
+      // '3M': calculatePerformanceForTimeframe({ months: 3 }),
+      // '1Y': calculatePerformanceForTimeframe({ years: 1 }),
     };
   }, [closedTrades]);
 
   const performanceData =
-    performanceAll && performanceAll[selectDay as keyof typeof performanceAll];
+    performanceAll && performanceAll[selectedPeriod as keyof typeof performanceAll];
 
   return (
     <div className="px-[56px] py-[46px]">
@@ -82,18 +85,31 @@ export const ResultBreakdown = ({ closedTrades }: { closedTrades: IClosedTrade[]
           <div className="flex flex-col items-center gap-5 px-8 my-4 font-sora">
             <div className="text-center">
               <h6 className="font-normal">Total Return on Account $</h6>
-              <h6 className="text-primary text-lg font-extrabold">+USDT 2731.03</h6>
+              <h6 className="text-primary text-lg font-extrabold">
+                +USDT {performanceData && performanceData.netProfit.toFixed(2)}
+              </h6>
             </div>
             <div className="p-4">
               <div
-                className={clsx(
+                className={cn(
                   'flex items-center justify-center rounded-full w-[10rem] h-[10rem]',
                   'border border-primary ring-1 ring-offset-[14px] ring-primary',
                   'bg-gradient-to-b from-[#FFEFDC] to-white dark:bg-gradient-to-b dark:from-[#2E1C05] dark:to-[#73501A]',
                 )}
               >
                 <h2 className="text-primary text-4xl font-extrabold">
-                  {performanceData && performanceData.netProfit.toFixed(2)}%
+                  {performanceData &&
+                    performanceData.netProfit
+                      .toDecimalPlaces(2)
+                      .div(
+                        performanceData?.initialCapital.toNumber() > 0
+                          ? performanceData?.initialCapital.toDecimalPlaces(2)
+                          : 1,
+                      )
+                      .mul(100)
+                      .toDecimalPlaces(2)
+                      .toNumber()}
+                  %
                 </h2>
               </div>
             </div>
@@ -128,12 +144,10 @@ export const ResultBreakdown = ({ closedTrades }: { closedTrades: IClosedTrade[]
             <div className="flex flex-col gap-3 w-full px-5">
               <div>
                 <div className="mb-5 py-2 capitalize">
-                  <h6 className="float-left font-normal">{selectDay} Win</h6>
-                  <span className="float-right font-normal">{selectDay} Lose</span>
+                  <h6 className="float-left font-normal">Win</h6>
+                  <span className="float-right font-normal">Lose</span>
                 </div>
-                <div className="w-full bg-gray-300 h-4 rounded-xl ">
-                  <div className="h-full rounded-xl bg-gradient-to-r from-[#87BF90] to-[#F2F2F2]"></div>
-                </div>
+                <div className="w-full h-3 rounded-full bg-gradient-to-r from-[#87BF90] to-[#F2F2F2]" />
                 <div className="pt-2">
                   <span className="float-left text-[#009C3E] dark:text-[#00FC65] font-bold font-sora text-xl">
                     {performanceData && performanceData.totalWinningTrades}
@@ -147,21 +161,27 @@ export const ResultBreakdown = ({ closedTrades }: { closedTrades: IClosedTrade[]
               <div className="border border-t-0 border-[#DFDFDF]"></div>
               <div className="flex justify-between items-center">
                 <div className="text-left">
-                  <h6 className="text-sm font-normal capitalize">{selectDay} Total Trades</h6>
+                  <h6 className="text-sm font-normal capitalize">Total Trades</h6>
                   <h6 className="text-lg font-extrabold">
                     {performanceData && performanceData.totalTrades}
                   </h6>
                 </div>
                 <div className="text-right">
-                  <h6 className="text-sm font-normal">7d Profit-to-Loss</h6>
-                  <h6 className="text-lg font-extrabold">1.3728 : 1</h6>
+                  <h6 className="text-sm font-normal">Profit-to-Loss</h6>
+                  <h6 className="text-lg font-extrabold">
+                    {performanceData &&
+                      performanceData.totalProfit.div(performanceData.totalLoss).toNumber()}{' '}
+                    : 1
+                  </h6>
                 </div>
               </div>
               <div className="border border-t-0 border-[#DFDFDF]"></div>
               <div className="flex justify-between items-center">
                 <div className="text-left">
-                  <h6 className="text-sm font-normal capitalize">7d Trading Frequency</h6>
-                  <h6 className="text-lg font-extrabold">37.63%</h6>
+                  <h6 className="text-sm font-normal capitalize">Trading Frequency</h6>
+                  <h6 className="text-lg font-extrabold">
+                    {performanceData && performanceData.averageTotalTradesPerDay * 100}%
+                  </h6>
                 </div>
               </div>
             </div>
@@ -183,7 +203,7 @@ export const ResultBreakdown = ({ closedTrades }: { closedTrades: IClosedTrade[]
                 <div className="text-left">
                   <h6 className="text-sm font-normal capitalize">Win Rate</h6>
                   <h6
-                    className={clsx(
+                    className={cn(
                       'text-lg font-extrabold',
                       performanceData && performanceData.winRate.greaterThanOrEqualTo(0)
                         ? 'text-[#009C3E] dark:text-[#00FC65]'
@@ -201,7 +221,7 @@ export const ResultBreakdown = ({ closedTrades }: { closedTrades: IClosedTrade[]
                 <div className="text-right">
                   <h6 className="text-sm font-normal">Profit Factor</h6>
                   <h6
-                    className={clsx(
+                    className={cn(
                       'text-lg font-extrabold',
                       performanceData && performanceData.profitFactor.greaterThanOrEqualTo(0)
                         ? 'text-[#009C3E] dark:text-[#00FC65]'
@@ -219,16 +239,26 @@ export const ResultBreakdown = ({ closedTrades }: { closedTrades: IClosedTrade[]
               <div className="flex justify-between items-center">
                 <div className="text-left">
                   <h6 className="text-sm font-normal capitalize">Largest ROI</h6>
-                  <h6 className="text-lg font-extrabold">
+                  <h6
+                    className={cn(
+                      'text-lg font-extrabold',
+                      performanceData && performanceData.largestRoi.greaterThanOrEqualTo(0)
+                        ? 'text-[#009C3E] dark:text-[#00FC65]'
+                        : 'text-[#FF4646] dark:text-[#FF6F6F]',
+                    )}
+                  >
+                    {performanceData && performanceData.largestRoi.greaterThanOrEqualTo(0)
+                      ? '+'
+                      : '-'}
                     {performanceData && performanceData.largestRoi.toFixed(2)}%
                   </h6>
                 </div>
                 <div className="text-right">
                   <h6 className="text-sm font-normal">Smallest ROI</h6>
                   <h6
-                    className={clsx(
+                    className={cn(
                       'text-lg font-extrabold',
-                      performanceData && performanceData.worstTradePnl.greaterThanOrEqualTo(0)
+                      performanceData && performanceData.smallestRoi.greaterThanOrEqualTo(0)
                         ? 'text-[#009C3E] dark:text-[#00FC65]'
                         : 'text-[#FF4646] dark:text-[#FF6F6F]',
                     )}
@@ -244,14 +274,24 @@ export const ResultBreakdown = ({ closedTrades }: { closedTrades: IClosedTrade[]
               <div className="flex justify-between items-center">
                 <div className="text-left">
                   <h6 className="text-sm font-normal capitalize">Best Trade</h6>
-                  <h6 className="text-lg font-extrabold">
-                    {performanceData && performanceData.bestTradePnl.toFixed(2)}%
+                  <h6
+                    className={cn(
+                      'text-lg font-extrabold',
+                      performanceData && performanceData.bestTradePnl.greaterThanOrEqualTo(0)
+                        ? 'text-[#009C3E] dark:text-[#00FC65]'
+                        : 'text-[#FF4646] dark:text-[#FF6F6F]',
+                    )}
+                  >
+                    {performanceData && performanceData.bestTradePnl.greaterThanOrEqualTo(0)
+                      ? '+'
+                      : '-'}
+                    {performanceData && performanceData.bestTradePnl.toFixed(2)}
                   </h6>
                 </div>
                 <div className="text-right">
                   <h6 className="text-sm font-normal">Worst Trade</h6>
                   <h6
-                    className={clsx(
+                    className={cn(
                       'text-lg font-extrabold',
                       performanceData && performanceData.worstTradePnl.greaterThanOrEqualTo(0)
                         ? 'text-[#009C3E] dark:text-[#00FC65]'
@@ -261,7 +301,7 @@ export const ResultBreakdown = ({ closedTrades }: { closedTrades: IClosedTrade[]
                     {performanceData && performanceData.worstTradePnl.greaterThanOrEqualTo(0)
                       ? '+'
                       : '-'}
-                    {performanceData && performanceData.worstTradePnl.toFixed(2)}%
+                    {performanceData && performanceData.worstTradePnl.toFixed(2)}
                   </h6>
                 </div>
               </div>
