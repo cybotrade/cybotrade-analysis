@@ -14,7 +14,11 @@ type ClientProviderProps = {
 
 export const ClientProvider: React.FC<ClientProviderProps> = ({ children }) => {
   return (
-    <ErrorBoundary fallback={<Error />}>
+    <ErrorBoundary
+      fallbackRender={({ error, resetErrorBoundary }) => (
+        <Error error={error} reset={resetErrorBoundary} />
+      )}
+    >
       <Suspense>
         <ThemeProvider
           attribute="class"

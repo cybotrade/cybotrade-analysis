@@ -69,7 +69,7 @@ const SettingsForm = ({
   return (
     <div className="w-full h-full p-4 text-black overflow-y-auto relative">
       <div className="text-xl">Settings</div>
-      <hr className="mt-2" />
+      <hr className="mt-2 mb-5" />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-2 gap-x-2 gap-y-4">
           <FormField
@@ -156,21 +156,26 @@ const SettingsForm = ({
               <FormItem className="col-span-2">
                 <FormLabel className="text-black mb-0 text-base">Fees</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="" {...field} suffix={<div>USDT</div>} />
+                  <Input
+                    type="number"
+                    placeholder=""
+                    {...field}
+                    suffix={<div className="text-gray-500 text-sm">USDT</div>}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
           <EntryForm<z.infer<typeof formSchema>>
-            label="TP(Take Profit)"
+            label="TP (Take Profit)"
             name="take_profit"
             form={form}
             className="col-span-2"
             buttonText="Add Another TP"
           />
           <EntryForm<z.infer<typeof formSchema>>
-            label="SL(Stop Lost)"
+            label="SL (Stop Lost)"
             name="stop_lost"
             form={form}
             className="col-span-2"
