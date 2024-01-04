@@ -15,8 +15,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 
 import { Loading } from '@app/_components/loading';
-import { Input } from '@app/_components/ui/Input';
 import { pnl } from '@app/_lib/calculation';
+import { Input } from '@app/_ui/Input';
 
 import { IClosedTrade } from '../type';
 

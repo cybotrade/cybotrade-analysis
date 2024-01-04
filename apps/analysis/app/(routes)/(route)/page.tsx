@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 
+import useDrawer from '@app/_hooks/useDrawer';
+
 import BackTestResultsDrawer from './_components/BackTestResults';
 import FileDropAndParse from './_components/FileDropAndParse';
 import { IBackTestData } from './type';
@@ -16,9 +18,10 @@ const FloatCard = ({ text, className }: { text: string; className: string }) => 
 
 const Backtest = () => {
   const [data, setData] = useState<IBackTestData[] | undefined>(undefined);
+  const drawer = useDrawer();
 
   return (
-    <div className="bg-gradient-to-b from-[#FFEFDC] to-white dark:bg-gradient-to-b dark:from-[#2E1C05] dark:to-[#73501A] text-black dark:text-white rounded-lg border border-[#E1C3A0] flex flex-col justify-center items-center gap-6 relative p-8">
+    <div className="bg-gradient-to-b from-[#FFEFDC] to-white dark:bg-gradient-to-b dark:from-[#2E1C05] dark:to-[#73501A] text-black dark:text-white rounded-lg border border-primary-light flex flex-col justify-center items-center gap-6 relative p-8">
       <div className="max-w-lg text-center z-10 flex flex-col gap-5">
         <p className="text-6xl font-semibold">Drop your json file to start</p>
         <p className="text-xl">
@@ -30,8 +33,9 @@ const Backtest = () => {
         onChange={(file, value) => {
           setData(value as IBackTestData[]);
         }}
+        onShowResult={drawer.open}
       />
-      {data && <BackTestResultsDrawer data={data} />}
+      {data && <BackTestResultsDrawer data={data} drawer={drawer} />}
       {/* Background element */}
       <div className="rounded-full h-[815px] min-w-[815px] border border-primary-light2 absolute top-[-235px] left-[-216px]"></div>
       <div className="rounded-full h-[815px] min-w-[815px] border border-primary-light2 absolute bottom-[-336px] right-[-175px]"></div>
