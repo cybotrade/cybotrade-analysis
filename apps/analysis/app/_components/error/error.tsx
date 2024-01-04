@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 type ErrorPageProps = {
   error: Error & { digest?: string };
@@ -9,6 +10,7 @@ type ErrorPageProps = {
 };
 
 export const Error: React.FC<ErrorPageProps> = ({ error, reset }) => {
+  const router = useRouter();
   console.log('error', error);
 
   return (

@@ -22,7 +22,7 @@ const EntryForm = <T extends FieldValues>({
 }: EntryFormProps<T>) => {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: name,
+    name: name as any, //temporary
   });
 
   return (
@@ -53,7 +53,7 @@ const EntryForm = <T extends FieldValues>({
         <span className="opacity-0">0</span>
         <Button
           onClick={() => {
-            append({ value: undefined });
+            append({ value: undefined } as any); //temporary
           }}
           variant={'outline'}
           className="w-max"
