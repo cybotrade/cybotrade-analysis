@@ -31,7 +31,7 @@ const EntryForm = <T extends FieldValues>({
     >
       {label && <div className="font-bold text-base text-black">{label}</div>}
       {fields.map((field, index) => (
-        <div className="flex items-center gap-2">
+        <div key={index} className="flex items-center gap-2">
           <span>{index + 1}</span>
           <Input
             className="flex-grow"
@@ -53,7 +53,7 @@ const EntryForm = <T extends FieldValues>({
         <span className="opacity-0">0</span>
         <Button
           onClick={() => {
-            append({ value: '' });
+            append({ value: undefined });
           }}
           variant={'outline'}
           className="w-max"
