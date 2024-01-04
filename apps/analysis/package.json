@@ -40,7 +40,6 @@
     "react-hook-form": "^7.49.2",
     "react-hot-toast": "^2.4.1",
     "react-use-websocket": "^4.5.0",
-    "rsuite": "^5.48.0",
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.22.4"
