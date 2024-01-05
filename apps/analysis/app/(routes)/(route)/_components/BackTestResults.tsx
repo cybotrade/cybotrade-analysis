@@ -40,6 +40,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
 
   const onSettingsFormUpdate = (values: SettingsValue) => {
     setUserSettings(values);
+    settingDrawer.close();
   };
 
   const { data, drawer, fetchedKlinePercentage } = props;
