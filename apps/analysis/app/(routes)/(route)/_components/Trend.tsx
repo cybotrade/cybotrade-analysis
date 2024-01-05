@@ -1,22 +1,30 @@
+import { isAfter, isBefore, sub } from 'date-fns';
 import Decimal from 'decimal.js';
 import { FolderSearch } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 
-import Histogram from '@app/_components/chart/Histogram';
+import TrendBlockView from '@app/(routes)/(route)/_components/trend/TrendBlockView';
+import { Grid as GridIcon, Horizontal as HorizontalIcon } from '@app/_assets/icons';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@app/_ui/Select';
 import { calculatePerformance } from '@app/_lib/calculation';
 import { cn } from '@app/_lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/_ui/Select';
 
 import { IClosedTrade } from '../type';
 
-export const Trend = ({
-  closedTrades,
-  initialCapital = 10000,
-}: {
+interface TrendProps {
   closedTrades: IClosedTrade[];
   initialCapital?: number;
-}) => {
-  const drawdowns = useMemo(
+}
+
+export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital=100000 }) => {
+  const [view, setView] = useState<'block' | 'scroll'>('block');
+    const drawdowns = useMemo(
     () =>
       closedTrades
         ? closedTrades.map(({ exitTime, entryPrice, exitPrice }, i) => ({
@@ -142,197 +150,99 @@ export const Trend = ({
   }, [closedTrades]);
 
   return (
-    <div className="py-8  h-auto max-w-[1060px] mx-auto">
-      <div className="flex justify-end items-center pb-10">
-        <div className="mr-6">Sort By</div>
+    <div
+      className={cn({
+        'bg-gradient-to-b from-[#D9D9D900] to-[#FFF4E7] dark:bg-[#37332A]': view === 'block',
+      })}
+    >
+      <div className="px-8 py-8 max-w-[1300px]">
+        <div className="max-w-fit ml-auto p-3 mb-10 flex items-center gap-4 border border-[#DFDFDF] rounded-md">
+          <HorizontalIcon
+            className={cn(
+              'w-5 h-5 text-[#8A8A8A] cursor-pointer',
+              view === 'scroll' && 'text-[#B28249]',
+            )}
+            onClick={() => setView('scroll')}
+          />
+          <div className="h-[15px] border border-r-0 border-[#DFDFDF]"></div>
+          <GridIcon
+            className={cn(
+              'w-5 h-5 text-[#8A8A8A] cursor-pointer',
+              view === 'block' && 'text-[#B28249]',
+            )}
+            onClick={() => setView('block')}
+          />
+        </div>
+        <div className="max-w-fit ml-auto flex items-center justify-end pb-10">
+          <div className="mr-6 whitespace-nowrap">Sort By</div>
 
-        <Select onValueChange={(selectedYearValue) => setSelectedYear(selectedYearValue)}>
-          <SelectTrigger className="w-[130px] mr-5 rounded-[40px] dark:bg-[#392910]">
-            <SelectValue placeholder="Year" defaultValue={selectedYear} />
-          </SelectTrigger>
-          <SelectContent className="h-[130px] overflow-auto dark:bg-[#392910]">
-            {(() => {
-              function generateYears() {
-                const currentYear = new Date().getFullYear();
-                const years = [];
-                for (let year = currentYear; year >= 2015; year--) {
-                  years.push(year.toString());
+          <Select onValueChange={(selectedYearValue) => setSelectedYear(selectedYearValue)}>
+            <SelectTrigger className="w-[130px] mr-5 rounded-[40px] dark:bg-[#392910]">
+              <SelectValue placeholder="Year" defaultValue={selectedYear} />
+            </SelectTrigger>
+            <SelectContent className="h-[130px] overflow-auto dark:bg-[#392910]">
+              {(() => {
+                function generateYears() {
+                  const currentYear = new Date().getFullYear();
+                  const years = [];
+                  for (let year = currentYear; year >= 2015; year--) {
+                    years.push(year.toString());
+                  }
+                  return years;
                 }
-                return years;
-              }
 
-              return generateYears().map((year) => (
-                <SelectItem key={year} value={year}>
-                  {year}
-                </SelectItem>
-              ));
-            })()}
-          </SelectContent>
-        </Select>
+                return generateYears().map((year) => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ));
+              })()}
+            </SelectContent>
+          </Select>
 
-        <Select onValueChange={(selectedMonthValue) => setSelectedMonth(selectedMonthValue)}>
-          <SelectTrigger className="w-[120px] rounded-[40px] mr-10 dark:bg-[#392910]">
-            <SelectValue placeholder="Month" defaultValue={selectedMonth} />
-          </SelectTrigger>
-          <SelectContent
-            className="h-[130px] overflow-auto dark:bg-[#392910] !z-50 hello
+          <Select onValueChange={(selectedMonthValue) => setSelectedMonth(selectedMonthValue)}>
+            <SelectTrigger className="w-[120px] rounded-[40px] dark:bg-[#392910]">
+              <SelectValue placeholder="Month" defaultValue={selectedMonth} />
+            </SelectTrigger>
+            <SelectContent
+              className="h-[130px] overflow-auto dark:bg-[#392910] !z-50 hello
           "
-          >
-            {(() => {
-              const months = [
-                'Jan',
-                'Feb',
-                'Mar',
-                'Apr',
-                'May',
-                'Jun',
-                'Jul',
-                'Aug',
-                'Sep',
-                'Oct',
-                'Nov',
-                'Dec',
-              ];
+            >
+              {(() => {
+                const months = [
+                  'Jan',
+                  'Feb',
+                  'Mar',
+                  'Apr',
+                  'May',
+                  'Jun',
+                  'Jul',
+                  'Aug',
+                  'Sep',
+                  'Oct',
+                  'Nov',
+                  'Dec',
+                ];
 
-              return months.map((month) => (
-                <SelectItem key={month} value={month}>
-                  {month}
-                </SelectItem>
-              ));
-            })()}
-          </SelectContent>
-        </Select>
-      </div>
-      {/* First Row */}
-      <div className="w-full">
-        <div className="flex pb-9 justify-center">
-          <div
-            className={cn(' border mr-9 rounded-xl bg-white dark:bg-[#473E2D]', 'w-1/3 h-[452px]')}
-          >
-            <div className="text-xl p-9 text-black dark:text-white">Month Max DD</div>
-            <Histogram
-              data={drawdownsWithPercentiles}
-              month={selectedMonth}
-              year={selectedYear}
-              type="Month"
-              profits={[]}
-              arrayType="maxDD"
-              trades={[]}
-            />
-          </div>
-          <div
-            className={cn(' border mr-9 rounded-xl bg-white dark:bg-[#473E2D]', 'w-1/3 h-[452px]')}
-          >
-            <div className="text-xl p-9 text-black dark:text-white">Day of Week Max DD</div>
-            <Histogram
-              data={drawdownsWithPercentiles}
-              month={selectedMonth}
-              year={selectedYear}
-              type="Week"
-              profits={[]}
-              arrayType="maxDD"
-              trades={[]}
-            />
-          </div>
-          <div className={cn(' border  rounded-xl bg-white dark:bg-[#473E2D]', 'w-1/3 h-[452px]')}>
-            <div className="text-xl p-9 text-black dark:text-white">Day of Month Max DD</div>
-            <Histogram
-              data={drawdownsWithPercentiles}
-              month={selectedMonth}
-              year={selectedYear}
-              type="Day"
-              profits={[]}
-              arrayType="maxDD"
-              trades={[]}
-            />
-          </div>
+                return months.map((month) => (
+                  <SelectItem key={month} value={month}>
+                    {month}
+                  </SelectItem>
+                ));
+              })()}
+            </SelectContent>
+          </Select>
         </div>
-        {/* Second Row */}
-        <div className="flex pb-9 justify-center">
-          <div
-            className={cn(' border mr-9 rounded-xl bg-white dark:bg-[#473E2D]', 'w-1/3 h-[452px]')}
-          >
-            <div className="text-xl p-9 text-black dark:text-white">Month Float Profit</div>
-            <Histogram
-              profits={profitArray}
-              month={selectedMonth}
-              year={selectedYear}
-              type="Month"
-              data={[]}
-              arrayType="Profit"
-              trades={[]}
-            />
-          </div>
-          <div
-            className={cn(' border mr-9 rounded-xl bg-white dark:bg-[#473E2D]', 'w-1/3 h-[452px]')}
-          >
-            <div className="text-xl p-9 text-black dark:text-white">Day of Week Float Profit</div>
-            <Histogram
-              profits={profitArray}
-              month={selectedMonth}
-              year={selectedYear}
-              type="Week"
-              data={[]}
-              arrayType="Profit"
-              trades={[]}
-            />
-          </div>
-          <div className={cn(' border  rounded-xl bg-white dark:bg-[#473E2D]', 'w-1/3 h-[452px]')}>
-            <div className="text-xl p-9 text-black dark:text-white">Day of Month Float Profit</div>
-            <Histogram
-              profits={profitArray}
-              month={selectedMonth}
-              year={selectedYear}
-              type="Day"
-              data={[]}
-              arrayType="Profit"
-              trades={[]}
-            />
-          </div>
-        </div>
-        {/* Third Row */}
-        <div className="flex pb-9 justify-center">
-          <div
-            className={cn(' border mr-9 rounded-xl bg-white dark:bg-[#473E2D]', 'w-1/3 h-[452px]')}
-          >
-            <div className="text-xl p-9 text-black dark:text-white">Month Trade Numbers</div>
-            <Histogram
-              trades={tradeArray}
-              month={selectedMonth}
-              year={selectedYear}
-              type="Month"
-              data={[]}
-              arrayType="Trade"
-              profits={[]}
-            />
-          </div>
-          <div
-            className={cn(' border mr-9 rounded-xl bg-white dark:bg-[#473E2D]', 'w-1/3 h-[452px]')}
-          >
-            <div className="text-xl p-9 text-black dark:text-white">Day of Week Trade Numbers</div>
-            <Histogram
-              trades={tradeArray}
-              month={selectedMonth}
-              year={selectedYear}
-              type="Week"
-              data={[]}
-              profits={[]}
-              arrayType="Trade"
-            />
-          </div>
-          <div className={cn(' border rounded-xl bg-white dark:bg-[#473E2D]', 'w-1/3 h-[452px]')}>
-            <div className="text-xl p-9 text-black dark:text-white">Day of Month Trade Numbers</div>
-            <Histogram
-              trades={tradeArray}
-              month={selectedMonth}
-              year={selectedYear}
-              type="Day"
-              data={[]}
-              profits={[]}
-              arrayType="Trade"
-            />
-          </div>
-        </div>
+        {view === 'block' && (
+          <TrendBlockView
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            drawdownsWithPercentiles={drawdownsWithPercentiles}
+            profitArray={profitArray}
+            tradeArray={tradeArray}
+          />
+        )}
+        {view === 'scroll' && null}
       </div>
     </div>
   );
