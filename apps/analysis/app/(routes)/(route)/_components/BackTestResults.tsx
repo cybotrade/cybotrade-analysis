@@ -21,6 +21,7 @@ import { Trend } from './Trend';
 interface IBackTestResultsDrawer {
   data: IBackTestData[] | undefined;
   drawer: IDrawer;
+  fetchedKlinePercentage: (percentage: number) => void;
 }
 
 const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
@@ -41,7 +42,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     setUserSettings(values);
   };
 
-  const { data, drawer } = props;
+  const { data, drawer, fetchedKlinePercentage } = props;
   if (!data) return null;
   const backtestData = {
     ...data[selectedIndex],
@@ -54,6 +55,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
   const closedTrades = backtestData ? transformToClosedTrades(backtestData.trades) : [];
 
   const [klineData, setKlineData] = useState<Kline[] | null>([]);
+  const [doneFetchingKline, setDoneFetchingKline] = useState(false);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -96,16 +98,26 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
       fetchKlineData({ startTime: backtestData.start_time, endTime: backtestData.end_time });
     }
     if (klineData && klineData[0] && klineData[0][0] > +backtestData.start_time) {
+      const fetchedPercentage = Math.round(
+        ((+backtestData.end_time - klineData[0][0]) /
+          (+backtestData.end_time - +backtestData.start_time)) *
+          100,
+      );
+      fetchedKlinePercentage(fetchedPercentage);
       fetchKlineData({ startTime: backtestData.start_time, endTime: klineData[0][0].toString() });
+    }
+    if (klineData && klineData[0] && klineData[0][0] < +backtestData.start_time) {
+      setDoneFetchingKline(true);
+      fetchedKlinePercentage(100);
     }
     return () => abortController.abort();
   }, [klineData]);
 
   useEffect(() => {
-    if (data && klineData && klineData?.length > 0) {
+    if (data && klineData && klineData?.length > 0 && doneFetchingKline) {
       drawer.open();
     }
-  }, [data, klineData]);
+  }, [data, klineData, doneFetchingKline]);
 
   const resultContents = [
     {

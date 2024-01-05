@@ -32,6 +32,7 @@ interface FileDropZoneProps {
   className?: string;
   onChange: (file: File, result: object) => void;
   onShowResult: () => void;
+  analysingProgress: number;
 }
 
 const reducer = (state: State, action: Action) => {
@@ -50,10 +51,14 @@ const reducer = (state: State, action: Action) => {
   }
 };
 
-const FileDropAndParse: React.FC<FileDropZoneProps> = ({ className, onChange, onShowResult }) => {
-  const router = useRouter();
+const FileDropAndParse: React.FC<FileDropZoneProps> = ({
+  className,
+  onChange,
+  onShowResult,
+  analysingProgress,
+}) => {
   const [uploadPercentage, setUploadPercentage] = useState(0);
-  const [analysingPercentage, setAnalysingPercentage] = useState(0);
+  // const [analysingPercentage, setAnalysingPercentage] = useState(0);
   const [errorMessage, setErrorMessage] = useState('Failed');
   const [mode, setMode] = useState<
     'PRE_UPLOAD' | 'UPLOADING' | 'POST_UPLOAD' | 'ANALYSING' | 'DONE_ANALYSING' | 'ERROR'
@@ -153,30 +158,30 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({ className, onChange, on
     if (mode === 'UPLOADING' && uploadPercentage < 100) {
       setTimeout(() => {
         setUploadPercentage((prev) => prev + 1);
-      }, 20);
+      }, 10);
     }
     if (mode === 'UPLOADING' && uploadPercentage === 100) {
       setMode('POST_UPLOAD');
     }
   }, [mode, uploadPercentage]);
+  // end remove
   useEffect(() => {
-    if (mode === 'ANALYSING' && analysingPercentage < 100) {
-      setTimeout(() => {
-        setAnalysingPercentage((prev) => prev + 1);
-      }, 20);
-    }
-    if (mode === 'ANALYSING' && analysingPercentage === 100) {
+    // if (mode === 'ANALYSING' && analysingPercentage < 100) {
+    //   setTimeout(() => {
+    //     setAnalysingPercentage((prev) => prev + 1);
+    //   }, 20);
+    // }
+    if (mode === 'ANALYSING' && analysingProgress === 100) {
       setMode('DONE_ANALYSING');
     }
-  }, [mode, analysingPercentage]);
-  // end remove
+  }, [mode, analysingProgress]);
 
   const reset = () => {
     setMode('PRE_UPLOAD');
     dispatch({ type: 'RESET' });
     setErrorMessage('');
     setUploadPercentage(0);
-    setAnalysingPercentage(0);
+    // setAnalysingPercentage(0);
   };
 
   const renderContent = () => {
@@ -241,8 +246,10 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({ className, onChange, on
         return (
           <div className="border border-primary min-h-full rounded-md flex flex-col justify-end p-7 bg-gradient-to-r from-[#FFEFDC] to-white dark:bg-gradient-to-r dark:from-[#2E1C05] dark:to-[#73501A] gap-2">
             <p className="text-xl max-w-[190px]">Please do not close the window</p>
-            <div className="text-xs text-brand-gray">{analysingPercentage}% | Second remaining</div>
-            <ProgressBar percent={`${analysingPercentage}%`} />
+            <div className="text-xs text-brand-gray">
+              {analysingProgress}%{/* | Second remaining */}
+            </div>
+            <ProgressBar percent={`${analysingProgress}%`} />
           </div>
         );
       case 'DONE_ANALYSING':
@@ -260,9 +267,7 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({ className, onChange, on
             </Button>
             <Button
               onClick={() => {
-                // setMode('PRE_UPLOAD');
-                router.refresh();
-                reset();
+                window.location.href = '/';
               }}
               variant={'outline'}
               className="w-full"
