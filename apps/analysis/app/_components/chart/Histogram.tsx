@@ -10,6 +10,8 @@ import { useTheme } from 'next-themes';
 import React, { useRef } from 'react';
 import { Bar } from 'react-chartjs-2';
 
+import { cn } from '@app/_lib/utils';
+
 interface HistogramProps {
   data: [number, number][];
   profits: [number, number][];
@@ -18,6 +20,7 @@ interface HistogramProps {
   month: string;
   type: string;
   arrayType: 'maxDD' | 'Profit' | 'Trade';
+  className: string;
 }
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
@@ -29,6 +32,7 @@ const Histogram: React.FC<HistogramProps> = ({
   month,
   type,
   arrayType,
+  className,
 }) => {
   // const { asPath } = useRouter();
   // const isArenaPath = asPath.includes('/arena/');
@@ -455,7 +459,7 @@ const Histogram: React.FC<HistogramProps> = ({
   const barBorderRadius = 5;
 
   return (
-    <div ref={containerRef} className="px-9 h-[300px]">
+    <div ref={containerRef} className={cn('h-[300px]', className)}>
       {chartSize.width && chartSize.height && (
         <>
           {arrayType === 'maxDD' && (

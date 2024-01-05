@@ -167,7 +167,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     >
       <SheetContent
         side={'right'}
-        className="min-w-[70%] overflow-y-scroll overflow-x-clip"
+        className="min-w-[75%] overflow-y-scroll overflow-x-clip"
         onPointerDownOutside={(e) => e.preventDefault()}
         overlayChildren={
           <Sheet
@@ -192,7 +192,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
             </SheetTrigger>
             <SheetContent
               side={'left'}
-              className="min-w-[31%] rounded-r-lg"
+              className="min-w-[26%] rounded-r-lg"
               overlayClassName="hidden"
             >
               <div

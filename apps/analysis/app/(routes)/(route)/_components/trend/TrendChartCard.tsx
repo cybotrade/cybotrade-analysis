@@ -13,18 +13,18 @@ type TrendChartCardProps = {
 };
 
 const TrendChartCard = ({
-                          label,
-                          data,
-                          month,
-                          year,
-                          type,
-                          profits,
-                          arrayType,
-                          trades,
-                        }: TrendChartCardProps) => {
+  label,
+  data,
+  month,
+  year,
+  type,
+  profits,
+  arrayType,
+  trades,
+}: TrendChartCardProps) => {
   return (
-    <div className={cn('border rounded-xl bg-white dark:bg-[#473E2D]', 'w-full max-h-[420px] p-9')}>
-      <div className="text-xl text-black dark:text-white mb-9">{label}</div>
+    <div className={cn('border rounded-xl bg-white dark:bg-[#473E2D] w-full max-h-[420px] py-6')}>
+      <div className="text-xl text-black dark:text-white mb-3 px-6">{label}</div>
       <Histogram
         data={data}
         month={month}
@@ -33,10 +33,10 @@ const TrendChartCard = ({
         profits={profits}
         arrayType={arrayType}
         trades={trades}
+        className="pr-4"
       />
     </div>
   );
 };
 
 export default TrendChartCard;
-

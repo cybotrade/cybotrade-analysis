@@ -1,19 +1,12 @@
-import { isAfter, isBefore, sub } from 'date-fns';
 import Decimal from 'decimal.js';
 import { FolderSearch } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 
 import TrendBlockView from '@app/(routes)/(route)/_components/trend/TrendBlockView';
 import { Grid as GridIcon, Horizontal as HorizontalIcon } from '@app/_assets/icons';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@app/_ui/Select';
 import { calculatePerformance } from '@app/_lib/calculation';
 import { cn } from '@app/_lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/_ui/Select';
 
 import { IClosedTrade } from '../type';
 
@@ -22,9 +15,9 @@ interface TrendProps {
   initialCapital?: number;
 }
 
-export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital=100000 }) => {
+export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100000 }) => {
   const [view, setView] = useState<'block' | 'scroll'>('block');
-    const drawdowns = useMemo(
+  const drawdowns = useMemo(
     () =>
       closedTrades
         ? closedTrades.map(({ exitTime, entryPrice, exitPrice }, i) => ({
@@ -155,29 +148,11 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital=10000
         'bg-gradient-to-b from-[#D9D9D900] to-[#FFF4E7] dark:bg-[#37332A]': view === 'block',
       })}
     >
-      <div className="px-8 py-8 max-w-[1300px]">
-        <div className="max-w-fit ml-auto p-3 mb-10 flex items-center gap-4 border border-[#DFDFDF] rounded-md">
-          <HorizontalIcon
-            className={cn(
-              'w-5 h-5 text-[#8A8A8A] cursor-pointer',
-              view === 'scroll' && 'text-[#B28249]',
-            )}
-            onClick={() => setView('scroll')}
-          />
-          <div className="h-[15px] border border-r-0 border-[#DFDFDF]"></div>
-          <GridIcon
-            className={cn(
-              'w-5 h-5 text-[#8A8A8A] cursor-pointer',
-              view === 'block' && 'text-[#B28249]',
-            )}
-            onClick={() => setView('block')}
-          />
-        </div>
-        <div className="max-w-fit ml-auto flex items-center justify-end pb-10">
-          <div className="mr-6 whitespace-nowrap">Sort By</div>
-
+      <div className="px-8 py-8 w-full flex flex-col gap-6">
+        <div className="flex items-center justify-end gap-4">
+          <div>Sort By</div>
           <Select onValueChange={(selectedYearValue) => setSelectedYear(selectedYearValue)}>
-            <SelectTrigger className="w-[130px] mr-5 rounded-[40px] dark:bg-[#392910]">
+            <SelectTrigger className="w-[120px] rounded-full dark:bg-[#392910]">
               <SelectValue placeholder="Year" defaultValue={selectedYear} />
             </SelectTrigger>
             <SelectContent className="h-[130px] overflow-auto dark:bg-[#392910]">
@@ -201,7 +176,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital=10000
           </Select>
 
           <Select onValueChange={(selectedMonthValue) => setSelectedMonth(selectedMonthValue)}>
-            <SelectTrigger className="w-[120px] rounded-[40px] dark:bg-[#392910]">
+            <SelectTrigger className="w-[120px] rounded-full dark:bg-[#392910]">
               <SelectValue placeholder="Month" defaultValue={selectedMonth} />
             </SelectTrigger>
             <SelectContent
@@ -232,6 +207,23 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital=10000
               })()}
             </SelectContent>
           </Select>
+          <div className="h-[40px] border border-[#DFDFDF] flex items-center p-3 gap-2">
+            <HorizontalIcon
+              className={cn(
+                'w-5 h-5 text-[#8A8A8A] cursor-pointer',
+                view === 'scroll' && 'text-[#B28249]',
+              )}
+              onClick={() => setView('scroll')}
+            />
+            <div className="h-[15px] border border-r-0 border-[#DFDFDF]"></div>
+            <GridIcon
+              className={cn(
+                'w-5 h-5 text-[#8A8A8A] cursor-pointer',
+                view === 'block' && 'text-[#B28249]',
+              )}
+              onClick={() => setView('block')}
+            />
+          </div>
         </div>
         {view === 'block' && (
           <TrendBlockView

@@ -19,9 +19,6 @@ const config = {
       },
     },
     extend: {
-      gridTemplateColumns: {
-        'trend-chart': 'repeat(3, 25rem)',
-      },
       colors: {
         primary: '#FC8D26',
         'primary-light': '#E1C3A0',
@@ -31,25 +28,6 @@ const config = {
           light: '#FFFAF6',
           dark: '#37332A',
         },
-
-        // sidebar: {
-        //     light: {
-        //         inactive: '#E1C3A0',
-        //         active: '#FC8D26',
-        //         bg: {
-        //             from: 'rgba(255, 241, 219, 0.25)',
-        //             to: '#F9EBD5',
-        //         },
-        //     },
-        //     dark: {
-        //         inactive: '#B28249',
-        //         active: '#995414',
-        //         bg: {
-        //             from: 'rgba(108, 69, 12, 0.25)',
-        //             to: '#7F5A20',
-        //         },
-        //     },
-        // },
       },
       fontFamily: {
         sans: ['Neue Machina', ...fontFamily.sans],

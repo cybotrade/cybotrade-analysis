@@ -16,7 +16,7 @@ const TrendBlockView = ({
   tradeArray,
 }: TrendBlockViewProps) => {
   return (
-    <div className="grid grid-cols-trend-chart place-content-between gap-y-8">
+    <div className="grid grid-cols-3 place-content-between gap-6">
       {/* First Row */}
       <TrendChartCard
         label="Month Max DD"
