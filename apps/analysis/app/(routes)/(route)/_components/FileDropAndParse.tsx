@@ -1,11 +1,11 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { DragEvent, useEffect, useReducer, useState } from 'react';
 
-import { CrossSolid, Upload } from '@app/_assets/icons';
-import { Attachment } from '@app/_assets/icons/attachment';
+import { Attachment, CrossSolid, Upload } from '@app/_assets/icons';
 import ProgressBar from '@app/_components/progressBar';
-import { Button } from '@app/_components/ui/button';
+import { Button } from '@app/_ui/Button';
 
 interface State {
   inDropZone: boolean;
@@ -31,6 +31,8 @@ type Action = SetInDropZoneAction | AddFileToListAction | ResetAction;
 interface FileDropZoneProps {
   className?: string;
   onChange: (file: File, result: object) => void;
+  onShowResult: () => void;
+  analysingProgress: number;
 }
 
 const reducer = (state: State, action: Action) => {
@@ -49,12 +51,17 @@ const reducer = (state: State, action: Action) => {
   }
 };
 
-const FileDropAndParse: React.FC<FileDropZoneProps> = ({ className, onChange }) => {
+const FileDropAndParse: React.FC<FileDropZoneProps> = ({
+  className,
+  onChange,
+  onShowResult,
+  analysingProgress,
+}) => {
   const [uploadPercentage, setUploadPercentage] = useState(0);
-  const [analysingPercentage, setAnalysingPercentage] = useState(0);
+  // const [analysingPercentage, setAnalysingPercentage] = useState(0);
   const [errorMessage, setErrorMessage] = useState('Failed');
   const [mode, setMode] = useState<
-    'PRE_UPLOAD' | 'UPLOADING' | 'POST_UPLOAD' | 'ANALYSING' | 'ERROR'
+    'PRE_UPLOAD' | 'UPLOADING' | 'POST_UPLOAD' | 'ANALYSING' | 'DONE_ANALYSING' | 'ERROR'
   >('PRE_UPLOAD');
   const [file, setFile] = useState<File>();
   const [data, dispatch] = useReducer(reducer, {
@@ -151,27 +158,30 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({ className, onChange }) 
     if (mode === 'UPLOADING' && uploadPercentage < 100) {
       setTimeout(() => {
         setUploadPercentage((prev) => prev + 1);
-      }, 0);
+      }, 10);
     }
     if (mode === 'UPLOADING' && uploadPercentage === 100) {
       setMode('POST_UPLOAD');
     }
   }, [mode, uploadPercentage]);
-  useEffect(() => {
-    if (mode === 'ANALYSING' && analysingPercentage < 100) {
-      setTimeout(() => {
-        setAnalysingPercentage((prev) => prev + 1);
-      }, 0);
-    }
-  }, [mode, analysingPercentage]);
   // end remove
+  useEffect(() => {
+    // if (mode === 'ANALYSING' && analysingPercentage < 100) {
+    //   setTimeout(() => {
+    //     setAnalysingPercentage((prev) => prev + 1);
+    //   }, 20);
+    // }
+    if (mode === 'ANALYSING' && analysingProgress === 100) {
+      setMode('DONE_ANALYSING');
+    }
+  }, [mode, analysingProgress]);
 
   const reset = () => {
     setMode('PRE_UPLOAD');
     dispatch({ type: 'RESET' });
     setErrorMessage('');
     setUploadPercentage(0);
-    setAnalysingPercentage(0);
+    // setAnalysingPercentage(0);
   };
 
   const renderContent = () => {
@@ -236,8 +246,34 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({ className, onChange }) 
         return (
           <div className="border border-primary min-h-full rounded-md flex flex-col justify-end p-7 bg-gradient-to-r from-[#FFEFDC] to-white dark:bg-gradient-to-r dark:from-[#2E1C05] dark:to-[#73501A] gap-2">
             <p className="text-xl max-w-[190px]">Please do not close the window</p>
-            <div className="text-xs text-brand-gray">{analysingPercentage}% | Second remaining</div>
-            <ProgressBar percent={`${analysingPercentage}%`} />
+            <div className="text-xs text-brand-gray">
+              {analysingProgress}%{/* | Second remaining */}
+            </div>
+            <ProgressBar percent={`${analysingProgress}%`} />
+          </div>
+        );
+      case 'DONE_ANALYSING':
+        return (
+          <div className="border border-primary min-h-full rounded-md flex flex-col justify-center items-center p-7 bg-[#FFEFDC] dark:bg-[#73501A] gap-4">
+            <div className="flex items-center gap-3">
+              <Attachment />
+              <div>
+                <p className="text-xl">{file?.name}</p>
+                <p className="text-xs text-brand-gray">{file?.size && file.size / 1000} kb</p>
+              </div>
+            </div>
+            <Button onClick={onShowResult} className="w-full">
+              Show Result
+            </Button>
+            <Button
+              onClick={() => {
+                window.location.href = '/';
+              }}
+              variant={'outline'}
+              className="w-full"
+            >
+              Upload New File
+            </Button>
           </div>
         );
       case 'ERROR':

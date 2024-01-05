@@ -15,8 +15,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 
 import { Loading } from '@app/_components/loading';
-import { Input } from '@app/_components/ui/Input';
-import { pnl } from '@app/_lib/calculation';
+import { inverseOrderSide, pnl } from '@app/_lib/calculation';
+import { Input } from '@app/_ui/Input';
 
 import { IClosedTrade } from '../type';
 
@@ -37,22 +37,18 @@ const random_hex_color_code = () => {
   return '#' + n.slice(0, 6);
 };
 
-export function getPercentile(series: number[] | undefined, percentile: number) {
-  if (!series) return 0;
-
+export function getPercentile(series: number[], percentile: number) {
   series.sort(function (a, b) {
     return a - b;
   });
 
-  const index = (percentile / 100) * series.length ?? 0;
+  const index = (percentile / 100) * series.length;
   let result;
-
   if (Math.floor(index) == index) {
-    result = ((series[index - 1] ?? 0) + (series[index] ?? 0)) / 2;
+    result = (series[index - 1] + series[index]) / 2;
   } else {
-    result = series[Math.floor(index)] ?? 0;
+    result = series[Math.floor(index)];
   }
-
   return result;
 }
 
@@ -63,12 +59,17 @@ type SimulationData = {
   monteCarloProfit: number;
 };
 type Trade = IClosedTrade & { pnl: Decimal };
-export const MonteCarlo = ({ closedTrades }: { closedTrades: IClosedTrade[] }) => {
+export const MonteCarlo = ({
+  closedTrades,
+  initialCapital = 10000,
+}: {
+  closedTrades: IClosedTrade[];
+  initialCapital?: number;
+}) => {
   const [meanDDResult, setMeanDDResult] = useState<number>(0);
   const [meanMaxProfit, setMeanMaxProfit] = useState<number>(0);
 
   const [numSimulations, setNumSimulations] = useState(10);
-  const [initialCapital, setInitialCapital] = useState(10000); // TODO: use parameters
   const [numSuccesses, setNumSuccesses] = useState(0);
 
   const [simulationRuns, setSimulationRuns] = useState<SimulationData[]>([]);
@@ -76,16 +77,16 @@ export const MonteCarlo = ({ closedTrades }: { closedTrades: IClosedTrade[] }) =
 
   const tradesWithProfit: Trade[] = useMemo(
     () =>
-      closedTrades
-        ? closedTrades.map((t: IClosedTrade) => ({
+      closedTrades && closedTrades.length > 0
+        ? closedTrades.map((t) => ({
             ...t,
             pnl: pnl({
               comission: new Decimal(0),
-              entryPrice: new Decimal(t.entryPrice),
-              entryQuantity: new Decimal(t.quantity),
-              exitPrice: new Decimal(t.exitPrice),
-              exitQuantity: new Decimal(t.quantity),
-              orderSide: t.side,
+              entryPrice: t.entryPrice,
+              entryQuantity: t.quantity,
+              exitPrice: t.exitPrice,
+              exitQuantity: t.quantity,
+              orderSide: inverseOrderSide(t.side),
             }),
           }))
         : [],
@@ -106,19 +107,17 @@ export const MonteCarlo = ({ closedTrades }: { closedTrades: IClosedTrade[] }) =
       let new_max_dd = 0;
       let new_peak_balance = initialCapital;
       for (let n = 0; n < new_list.length; n++) {
-        const trade_idx = new_list[n] ?? 0;
-        const t_profit = tradesWithProfit[trade_idx]?.pnl ?? 0;
+        const trade_idx = new_list[n];
+        const t_profit = tradesWithProfit[trade_idx].pnl;
         if (n == 0) {
           sim_balance_graph[i] = [initialCapital];
-          const last_balance =
-            (sim_balance_graph[i] ?? [])[(sim_balance_graph[i] ?? []).length - 1] ?? 0;
+          const last_balance = sim_balance_graph[i][sim_balance_graph[i].length - 1];
           const new_balance = Decimal.add(last_balance, t_profit);
-          (sim_balance_graph[i] ?? []).push(new_balance.toNumber());
+          sim_balance_graph[i].push(new_balance.toNumber());
         } else {
-          const last_balance =
-            (sim_balance_graph[i] ?? [])[(sim_balance_graph[i] ?? []).length - 1] ?? 0;
+          const last_balance = sim_balance_graph[i][sim_balance_graph[i].length - 1];
           const new_balance = Decimal.add(last_balance, t_profit);
-          (sim_balance_graph[i] ?? []).push(new_balance.toNumber());
+          sim_balance_graph[i].push(new_balance.toNumber());
           new_peak_balance = Math.max(new_peak_balance, new_balance.toNumber());
           new_max_dd = Math.max(new_max_dd, new_peak_balance - new_balance.toNumber());
         }
@@ -143,9 +142,9 @@ export const MonteCarlo = ({ closedTrades }: { closedTrades: IClosedTrade[] }) =
     // setSimulationRuns([...simulationRuns, simulationRun]);
     setSimulationRuns([simulationRun]);
     setRandomBorderColor(random_hex_color_code()); // Update random color
-  }, [tradesWithProfit, numSimulations]);
+  }, [tradesWithProfit, numSimulations, initialCapital]);
 
-  useEffect(() => runSimulation(), []);
+  useEffect(() => runSimulation(), [initialCapital]);
 
   const data = useMemo(() => {
     if (simulationRuns.length === 0) return null;
@@ -184,7 +183,7 @@ export const MonteCarlo = ({ closedTrades }: { closedTrades: IClosedTrade[] }) =
     },
   };
 
-  if (!closedTrades)
+  if (closedTrades.length < 1)
     return (
       <div className="h-[600px] flex justify-center items-center">
         <Loading description="Loading..."></Loading>

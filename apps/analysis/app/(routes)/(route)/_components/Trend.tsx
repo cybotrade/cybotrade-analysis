@@ -15,20 +15,26 @@ import {
 import { calculatePerformance } from '@app/_lib/calculation';
 import { cn } from '@app/lib/utils';
 
+
 import { IClosedTrade } from '../type';
 
-interface TrendProps {
+export const Trend = ({
+  closedTrades,
+  initialCapital = 10000,
+}: {
   closedTrades: IClosedTrade[];
 }
 
 export const Trend: React.FC<TrendProps> = ({ closedTrades }) => {
   const [view, setView] = useState<'block' | 'scroll'>('block');
+  initialCapital?: number;
+}) => {
   const drawdowns = useMemo(
     () =>
       closedTrades
         ? closedTrades.map(({ exitTime, entryPrice, exitPrice }, i) => ({
             timestamp: exitTime,
-            value: new Decimal(entryPrice).sub(exitPrice),
+            value: new Decimal(exitPrice).sub(entryPrice),
           }))
         : [],
     [closedTrades],
@@ -59,40 +65,22 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades }) => {
       months?: number | undefined;
       years?: number | undefined;
     }) => {
-      let startDate: Date;
-      const endDate = closedTrades[closedTrades.length - 1]?.exitTime;
-      if (!endDate) return;
-      if (timeframe.days) {
-        startDate = sub(endDate, { days: timeframe.days });
-      } else if (timeframe.months) {
-        startDate = sub(endDate, { months: timeframe.months });
-      } else if (timeframe.years) {
-        startDate = sub(endDate, { years: timeframe.years });
-      } else {
-        startDate = new Date(0);
-      }
-
-      const filteredClosedTrades = closedTrades.filter(
-        (t) => isAfter(new Date(t.exitTime), startDate) && isBefore(new Date(t.exitTime), endDate),
-      );
-
       return calculatePerformance({
         history: {
-          closedTrades: filteredClosedTrades,
+          closedTrades,
           openedTrades: [],
         },
         parameters: {
           comission: 0,
-          initialCapital: 0,
+          initialCapital,
           riskFreeRate: 0.02,
         },
       });
     };
-
     return {
       all: calculatePerformanceForTimeframe({}),
     };
-  }, [closedTrades]);
+  }, [closedTrades, initialCapital]);
 
   const maxDDArray = useMemo(
     () =>
@@ -133,11 +121,14 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades }) => {
         .filter((entry) => entry[0] <= timestamp)
         .map((entry) => entry[1]);
 
-      const dd95 = (getPercentile(sim_max_dd, 95) / (performance.all?.initialCapital ?? 0)) * 100;
+      const dd95 =
+        (getPercentile(sim_max_dd, 95) /
+          (performance.all?.initialCapital ? +performance.all?.initialCapital : 0)) *
+        100;
 
       return [timestamp, dd95];
     });
-  }, [drawdowns, maxDDArray, performance]);
+  }, [drawdowns, maxDDArray, performance, initialCapital]);
 
   const profitArray = useMemo(() => {
     return closedTrades.map((trade) => {
@@ -146,7 +137,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades }) => {
       const entryTime = new Date(trade.entryTime);
       const quantity = trade.quantity;
 
-      const pnl = new Decimal(entryPrice).sub(exitPrice).mul(quantity);
+      const pnl = new Decimal(exitPrice).sub(entryPrice).mul(quantity);
 
       // Return an array with timestamp and pnl
       return [entryTime.getTime(), pnl.toNumber()] as [number, number];

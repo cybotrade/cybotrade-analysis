@@ -258,7 +258,6 @@ const Histogram: React.FC<HistogramProps> = ({
         totalProfitByMonth[entryMonth].total += entry[1];
       }
     });
-
     return totalProfitByMonth;
   };
 
