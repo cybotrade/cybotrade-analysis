@@ -31,18 +31,36 @@ export const EquityCurve = ({
   const { resolvedTheme } = useTheme();
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const [equityData, setEquityData] = useState<IEquityData[]>([]);
-
+  const [isLoading, setIsLoading] = useState(true);
   let chart: IChartApi | null = null;
 
-  useEffect(() => {
+  const mapEquityData = async () => {
     if (klineData && klineData.length > 0 && backtestData.trades.length > 0) {
-      const equityData = calculateEquity({
-        klineData: klineData,
-        trades: backtestData.trades,
-        initialCapital: initialCapital ? initialCapital : 10000,
-      });
-      setEquityData(equityData);
+      setIsLoading(true);
+
+      const worker = new Worker(
+        new URL('@app/_workers/equityCalculator.worker.js', import.meta.url),
+      );
+
+      worker.onmessage = (event) => {
+        const result = event.data;
+
+        if ('error' in result) {
+          console.error('Error in web worker:', result.error);
+        } else {
+          setEquityData(result);
+          setIsLoading(false);
+        }
+
+        worker.terminate();
+      };
+
+      worker.postMessage({ klineData, trades: backtestData.trades, initialCapital });
     }
+  };
+
+  useEffect(() => {
+    mapEquityData();
   }, [klineData, initialCapital]);
 
   useEffect(() => {
@@ -91,7 +109,7 @@ export const EquityCurve = ({
     }
   }, [resolvedTheme === 'dark', equityData]);
 
-  if (!backtestData && klineData.length === 0)
+  if (isLoading)
     return (
       <div className="flex justify-center items-center h-96">
         <Loading description="Loading ..." />
@@ -101,9 +119,7 @@ export const EquityCurve = ({
   return (
     <div className={`p-4 ${resolvedTheme === 'dark' ? 'dark' : ''}`}>
       <div className="w-full h-96 rounded-xlflex items-center justify-center">
-        {!backtestData ? (
-          <Loading description={'Loading data...'} />
-        ) : backtestData ? (
+        {backtestData && equityData.length > 0 ? (
           <>
             <div className="pl-12 h-full w-full">
               <div ref={chartContainerRef} />

@@ -152,7 +152,9 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     {
       value: 'monte-carlo',
       label: 'Monte Carlo',
-      content: <MonteCarlo closedTrades={closedTrades} />,
+      content: (
+        <MonteCarlo closedTrades={closedTrades} initialCapital={userSettings.initial_capital} />
+      ),
     },
   ];
 
