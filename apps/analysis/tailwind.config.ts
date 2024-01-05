@@ -19,6 +19,9 @@ const config = {
       },
     },
     extend: {
+      gridTemplateColumns: {
+        'trend-chart': 'repeat(3, 25rem)',
+      },
       colors: {
         primary: '#FC8D26',
         'primary-light': '#E1C3A0',
