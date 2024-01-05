@@ -86,7 +86,10 @@ export const ResultBreakdown = ({
             <div className="text-center">
               <h6 className="font-normal">Total Return on Account $</h6>
               <h6 className="text-primary text-lg font-extrabold">
-                +USDT {performanceData && performanceData.netProfit.toFixed(2)}
+                {performanceData &&
+                  (performanceData.netProfit.greaterThanOrEqualTo(0)
+                    ? `+USDT ${performanceData.netProfit.toFixed(2)}`
+                    : `-USDT ${performanceData.netProfit.abs().toFixed(2)}`)}
               </h6>
             </div>
             <div className="p-4">
@@ -170,7 +173,10 @@ export const ResultBreakdown = ({
                   <h6 className="text-sm font-normal">Profit-to-Loss</h6>
                   <h6 className="text-lg font-extrabold">
                     {performanceData &&
-                      performanceData.totalProfit.div(performanceData.totalLoss).toNumber()}{' '}
+                      performanceData.totalProfit
+                        .div(performanceData.totalLoss)
+                        .toNumber()
+                        .toFixed(2)}{' '}
                     : 1
                   </h6>
                 </div>
@@ -180,7 +186,8 @@ export const ResultBreakdown = ({
                 <div className="text-left">
                   <h6 className="text-sm font-normal capitalize">Trading Frequency</h6>
                   <h6 className="text-lg font-extrabold">
-                    {performanceData && performanceData.averageTotalTradesPerDay * 100}%
+                    {performanceData && (performanceData.averageTotalTradesPerDay * 100).toFixed(2)}
+                    %
                   </h6>
                 </div>
               </div>
@@ -231,7 +238,7 @@ export const ResultBreakdown = ({
                     {performanceData && performanceData.profitFactor.greaterThanOrEqualTo(0)
                       ? '+'
                       : '-'}
-                    {performanceData && performanceData.profitFactor.toFixed(2)}%
+                    {performanceData && performanceData.profitFactor.abs().toFixed(2)}%
                   </h6>
                 </div>
               </div>
@@ -250,7 +257,7 @@ export const ResultBreakdown = ({
                     {performanceData && performanceData.largestRoi.greaterThanOrEqualTo(0)
                       ? '+'
                       : '-'}
-                    {performanceData && performanceData.largestRoi.toFixed(2)}%
+                    {performanceData && performanceData.largestRoi.abs().toFixed(2)}%
                   </h6>
                 </div>
                 <div className="text-right">
@@ -266,7 +273,7 @@ export const ResultBreakdown = ({
                     {performanceData && performanceData.smallestRoi.greaterThanOrEqualTo(0)
                       ? '+'
                       : '-'}
-                    {performanceData && performanceData.smallestRoi.toFixed(2)}%{' '}
+                    {performanceData && performanceData.smallestRoi.abs().toFixed(2)}%{' '}
                   </h6>
                 </div>
               </div>
@@ -285,7 +292,7 @@ export const ResultBreakdown = ({
                     {performanceData && performanceData.bestTradePnl.greaterThanOrEqualTo(0)
                       ? '+'
                       : '-'}
-                    {performanceData && performanceData.bestTradePnl.toFixed(2)}
+                    {performanceData && performanceData.bestTradePnl.abs().toFixed(2)}
                   </h6>
                 </div>
                 <div className="text-right">
@@ -301,7 +308,7 @@ export const ResultBreakdown = ({
                     {performanceData && performanceData.worstTradePnl.greaterThanOrEqualTo(0)
                       ? '+'
                       : '-'}
-                    {performanceData && performanceData.worstTradePnl.toFixed(2)}
+                    {performanceData && performanceData.worstTradePnl.abs().toFixed(2)}
                   </h6>
                 </div>
               </div>
