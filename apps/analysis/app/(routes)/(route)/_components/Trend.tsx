@@ -38,9 +38,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
   const [selectedYear, setSelectedYear] = useState(currentYear.toString());
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
-  const scrollbarAreaRef = useRef<HTMLDivElement>(null);
   const dotsRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
   const [embla, setEmbla] = useState<CarouselApi>();
   const [currentSlideIndex, setCurrentSlideIndex] = React.useState(0);
 
@@ -166,12 +164,14 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
       const activeDotIndex = Math.floor(scrollProgress * (numberOfDots - 1));
 
       dotsArray.forEach((dot) => {
-        dot.style.backgroundColor = '#D9D9D9'; // inactive color for dots
+        if (dot.textContent) dot.style.color = 'black'; // inactive color for labels
+        else dot.style.backgroundColor = '#D9D9D9'; // inactive color for dots
       });
 
       dotsArray.forEach((dot, index) => {
         if (index <= activeDotIndex) {
-          dot.style.backgroundColor = '#E59E2E'; // active color
+          if (dot.textContent) dot.style.color = '#E59E2E'; // active label color
+          else dot.style.backgroundColor = '#E59E2E'; // active dot color
         }
       });
     }
@@ -442,12 +442,22 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
           </CarouselContent>
           {view === 'scroll' && (
             <div className="mt-12 px-16">
-              <div className="w-full rounded-full border border-[#E1C3A0] px-4 py-2">
+              <div className="w-full rounded-full bg-white px-4 py-2">
                 <div className="scrollbar-area relative h-5">
                   <div ref={dotsRef} className="flex h-full items-center justify-between">
-                    {Array.from({ length: 50 }).map((_, i) => (
+                    <div className="block font-sans">Max Drawdown</div>
+                    {Array.from({ length: 10 }).map((_, i) => (
                       <div key={i} className="h-2 w-2 rounded-full bg-[#D9D9D9]"></div>
                     ))}
+                    <div className="block font-sans">Float Profit</div>
+                    {Array.from({ length: 30 }).map((_, i) => (
+                      <div key={i} className="h-2 w-2 rounded-full bg-[#D9D9D9]"></div>
+                    ))}
+                    <div className="block font-sans">Closed Profit</div>
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <div key={i} className="h-2 w-2 rounded-full bg-[#D9D9D9]"></div>
+                    ))}
+                    <div className="block font-sans">Trade Numbers</div>
                   </div>
                 </div>
               </div>
