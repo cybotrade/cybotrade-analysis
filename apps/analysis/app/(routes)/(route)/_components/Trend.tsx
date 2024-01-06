@@ -1,11 +1,14 @@
 import Decimal from 'decimal.js';
+import { WheelGesturesPlugin } from 'embla-carousel-wheel-gestures';
 import { FolderSearch } from 'lucide-react';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import TrendBlockView from '@app/(routes)/(route)/_components/trend/TrendBlockView';
 import { Grid as GridIcon, Horizontal as HorizontalIcon } from '@app/_assets/icons';
+import TrendChartCard from '@app/_components/trend/TrendChartCard';
 import { calculatePerformance } from '@app/_lib/calculation';
 import { cn } from '@app/_lib/utils';
+import { CarouselContainer, CarouselContent, CarouselItem } from '@app/_ui/Carousel';
+import { type CarouselApi } from '@app/_ui/Carousel';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/_ui/Select';
 
 import { IClosedTrade } from '../type';
@@ -34,6 +37,11 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
 
   const [selectedYear, setSelectedYear] = useState(currentYear.toString());
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+
+  const dotsRef = useRef<HTMLDivElement>(null);
+  const [embla, setEmbla] = useState<CarouselApi>();
+  const [currentSlideIndex, setCurrentSlideIndex] = React.useState(0);
+
   if (!closedTrades) {
     return (
       <div className="flex flex-col justify-center items-center w-full h-96 ">
@@ -142,13 +150,68 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
     );
   }, [closedTrades]);
 
+  const reset = () => {
+    setCurrentSlideIndex(1);
+    updateDots(0);
+  };
+
+  const updateDots = (scrollProgress: number) => {
+    const dotsContainer = dotsRef.current;
+
+    if (dotsContainer) {
+      const dotsArray = Array.from(dotsContainer.children) as HTMLDivElement[];
+      const numberOfDots = dotsArray.length;
+      const activeDotIndex = Math.floor(scrollProgress * (numberOfDots - 1));
+
+      dotsArray.forEach((dot) => {
+        if (dot.textContent) dot.style.color = 'black'; // inactive color for labels
+        else dot.style.backgroundColor = '#D9D9D9'; // inactive color for dots
+      });
+
+      dotsArray.forEach((dot, index) => {
+        if (index <= activeDotIndex) {
+          if (dot.textContent) dot.style.color = '#E59E2E'; // active label color
+          else dot.style.backgroundColor = '#E59E2E'; // active dot color
+        }
+      });
+    }
+  };
+
+  const onScroll = (emblaApi: CarouselApi) => {
+    updateDots(emblaApi.scrollProgress());
+  };
+
+  useEffect(() => {
+    if (!embla) {
+      return;
+    }
+
+    reset();
+
+    embla.on('scroll', onScroll);
+    embla.on('select', () => {
+      setCurrentSlideIndex(embla.selectedScrollSnap() + 1);
+    });
+  }, [embla]);
+
   return (
     <div
-      className={cn({
-        'bg-gradient-to-b from-[#D9D9D900] to-[#FFF4E7] dark:bg-[#37332A]': view === 'block',
-      })}
+      className={cn(
+        {
+          'bg-gradient-to-b from-[#D9D9D900] to-[#FFF4E7] dark:bg-[#37332A]': view === 'block',
+        },
+        view === 'scroll' &&
+          currentSlideIndex > 0 &&
+          'bg-gradient-to-b from-[#D9D9D900] to-[#FFEBEB] dark:bg-[#37332A]',
+        view === 'scroll' &&
+          currentSlideIndex > 3 &&
+          'bg-gradient-to-b from-[#D9D9D900] to-[#E0F2E2] dark:bg-[#37332A]',
+        view === 'scroll' &&
+          currentSlideIndex > 6 &&
+          'bg-gradient-to-b from-[#D9D9D900] to-[#DBE8EC] dark:bg-[#37332A]',
+      )}
     >
-      <div className="px-8 py-8 w-full flex flex-col gap-6">
+      <div className="px-8 py-8 w-full flex flex-col gap-10">
         <div className="flex items-center justify-end gap-4">
           <div>Sort By</div>
           <Select onValueChange={(selectedYearValue) => setSelectedYear(selectedYearValue)}>
@@ -213,7 +276,10 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
                 'w-5 h-5 text-[#8A8A8A] cursor-pointer',
                 view === 'scroll' && 'text-[#B28249]',
               )}
-              onClick={() => setView('scroll')}
+              onClick={() => {
+                reset();
+                setView('scroll');
+              }}
             />
             <div className="h-[15px] border border-r-0 border-[#DFDFDF]"></div>
             <GridIcon
@@ -221,20 +287,183 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
                 'w-5 h-5 text-[#8A8A8A] cursor-pointer',
                 view === 'block' && 'text-[#B28249]',
               )}
-              onClick={() => setView('block')}
+              onClick={() => {
+                reset();
+                setView('block');
+              }}
             />
           </div>
         </div>
-        {view === 'block' && (
-          <TrendBlockView
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-            drawdownsWithPercentiles={drawdownsWithPercentiles}
-            profitArray={profitArray}
-            tradeArray={tradeArray}
-          />
-        )}
-        {view === 'scroll' && null}
+
+        <CarouselContainer
+          opts={{
+            align: 'start',
+            loop: false,
+            skipSnaps: true,
+            active: view === 'scroll',
+          }}
+          plugins={[
+            WheelGesturesPlugin({
+              forceWheelAxis: 'y',
+            }),
+          ]}
+          setApi={setEmbla}
+        >
+          <CarouselContent
+            className={cn(
+              view === 'block' && 'grid grid-cols-3 place-content-between gap-6',
+              'ml-0',
+            )}
+          >
+            <CarouselItem className={cn('max-w-[437px] pl-0')}>
+              <TrendChartCard
+                label="Month Max DD"
+                data={drawdownsWithPercentiles}
+                month={selectedMonth}
+                year={selectedYear}
+                type="Month"
+                profits={[]}
+                arrayType="maxDD"
+                trades={[]}
+              />
+            </CarouselItem>
+            <CarouselItem
+              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+            >
+              <TrendChartCard
+                label="Day of Week Max DD"
+                data={drawdownsWithPercentiles}
+                month={selectedMonth}
+                year={selectedYear}
+                type="Week"
+                profits={[]}
+                arrayType="maxDD"
+                trades={[]}
+              />
+            </CarouselItem>
+            <CarouselItem
+              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+            >
+              <TrendChartCard
+                label="Day of Month Max DD"
+                data={drawdownsWithPercentiles}
+                month={selectedMonth}
+                year={selectedYear}
+                type="Day"
+                profits={[]}
+                arrayType="maxDD"
+                trades={[]}
+              />
+            </CarouselItem>
+            <CarouselItem
+              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+            >
+              <TrendChartCard
+                label="Month Float Profit"
+                data={[]}
+                month={selectedMonth}
+                year={selectedYear}
+                type="Month"
+                profits={profitArray}
+                arrayType="Profit"
+                trades={[]}
+              />
+            </CarouselItem>
+            <CarouselItem
+              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+            >
+              <TrendChartCard
+                label="Day of Week Float Profit"
+                data={[]}
+                month={selectedMonth}
+                year={selectedYear}
+                type="Week"
+                profits={profitArray}
+                arrayType="Profit"
+                trades={[]}
+              />
+            </CarouselItem>
+            <CarouselItem
+              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+            >
+              <TrendChartCard
+                label="Day of Month Float Profit"
+                data={[]}
+                month={selectedMonth}
+                year={selectedYear}
+                type="Day"
+                profits={profitArray}
+                arrayType="Profit"
+                trades={[]}
+              />
+            </CarouselItem>
+            <CarouselItem
+              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+            >
+              <TrendChartCard
+                label="Month Trade Numbers"
+                data={[]}
+                month={selectedMonth}
+                year={selectedYear}
+                type="Month"
+                profits={[]}
+                arrayType="Trade"
+                trades={tradeArray}
+              />
+            </CarouselItem>
+            <CarouselItem
+              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+            >
+              <TrendChartCard
+                label="Day of Week Trade Numbers"
+                data={[]}
+                month={selectedMonth}
+                year={selectedYear}
+                type="Week"
+                profits={[]}
+                arrayType="Trade"
+                trades={tradeArray}
+              />
+            </CarouselItem>
+            <CarouselItem
+              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+            >
+              <TrendChartCard
+                label="Day of Month Trade Numbers"
+                data={[]}
+                month={selectedMonth}
+                year={selectedYear}
+                type="Day"
+                profits={[]}
+                arrayType="Trade"
+                trades={tradeArray}
+              />
+            </CarouselItem>
+          </CarouselContent>
+          {view === 'scroll' && (
+            <div className="mt-12 px-16">
+              <div className="w-full rounded-full bg-white px-4 py-2">
+                <div className="scrollbar-area relative h-5">
+                  <div ref={dotsRef} className="flex h-full items-center justify-between">
+                    <div className="block font-sans">Max Drawdown</div>
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <div key={i} className="h-2 w-2 rounded-full bg-[#D9D9D9]"></div>
+                    ))}
+                    <div className="block font-sans">Float Profit</div>
+                    {Array.from({ length: 30 }).map((_, i) => (
+                      <div key={i} className="h-2 w-2 rounded-full bg-[#D9D9D9]"></div>
+                    ))}
+                    <div className="block font-sans">Closed Profit</div>
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <div key={i} className="h-2 w-2 rounded-full bg-[#D9D9D9]"></div>
+                    ))}
+                    <div className="block font-sans">Trade Numbers</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}{' '}
+        </CarouselContainer>
       </div>
     </div>
   );
