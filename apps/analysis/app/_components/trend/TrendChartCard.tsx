@@ -23,7 +23,12 @@ const TrendChartCard = ({
   trades,
 }: TrendChartCardProps) => {
   return (
-    <div className={cn('border rounded-xl bg-white dark:bg-[#473E2D] w-full max-h-[420px] py-6')}>
+    <div
+      className={cn(
+        'border rounded-xl bg-white dark:bg-[#473E2D] w-full mt-8 max-h-[430px] py-6',
+        'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300',
+      )}
+    >
       <div className="text-xl text-black dark:text-white mb-3 px-6">{label}</div>
       <Histogram
         data={data}
