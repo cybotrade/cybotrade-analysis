@@ -311,11 +311,16 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
         >
           <CarouselContent
             className={cn(
-              view === 'block' && 'grid grid-cols-3 place-content-between gap-6',
-              'ml-0',
+              view === 'block' ? 'grid grid-cols-3 place-content-between' : 'flex',
+              'ml-0 gap-6',
             )}
           >
-            <CarouselItem className={cn('max-w-[437px] pl-0')}>
+            <CarouselItem
+              className={cn(
+                view === 'scroll' &&
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+              )}
+            >
               <TrendChartCard
                 label="Month Max DD"
                 data={drawdownsWithPercentiles}
@@ -328,7 +333,10 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
               />
             </CarouselItem>
             <CarouselItem
-              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+              className={cn(
+                view === 'scroll' &&
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+              )}
             >
               <TrendChartCard
                 label="Day of Week Max DD"
@@ -342,7 +350,10 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
               />
             </CarouselItem>
             <CarouselItem
-              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+              className={cn(
+                view === 'scroll' &&
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+              )}
             >
               <TrendChartCard
                 label="Day of Month Max DD"
@@ -356,7 +367,10 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
               />
             </CarouselItem>
             <CarouselItem
-              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+              className={cn(
+                view === 'scroll' &&
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+              )}
             >
               <TrendChartCard
                 label="Month Float Profit"
@@ -370,7 +384,10 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
               />
             </CarouselItem>
             <CarouselItem
-              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+              className={cn(
+                view === 'scroll' &&
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+              )}
             >
               <TrendChartCard
                 label="Day of Week Float Profit"
@@ -384,7 +401,10 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
               />
             </CarouselItem>
             <CarouselItem
-              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+              className={cn(
+                view === 'scroll' &&
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+              )}
             >
               <TrendChartCard
                 label="Day of Month Float Profit"
@@ -398,7 +418,10 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
               />
             </CarouselItem>
             <CarouselItem
-              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+              className={cn(
+                view === 'scroll' &&
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+              )}
             >
               <TrendChartCard
                 label="Month Trade Numbers"
@@ -412,7 +435,10 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
               />
             </CarouselItem>
             <CarouselItem
-              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+              className={cn(
+                view === 'scroll' &&
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+              )}
             >
               <TrendChartCard
                 label="Day of Week Trade Numbers"
@@ -426,7 +452,10 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
               />
             </CarouselItem>
             <CarouselItem
-              className={cn('', view === 'scroll' ? 'max-w-[461px] pl-6' : 'max-w-[437px] p-0')}
+              className={cn(
+                view === 'scroll' &&
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+              )}
             >
               <TrendChartCard
                 label="Day of Month Trade Numbers"
@@ -446,15 +475,15 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
                 <div className="scrollbar-area relative h-5">
                   <div ref={dotsRef} className="flex h-full items-center justify-between">
                     <div className="block font-sans">Max Drawdown</div>
-                    {Array.from({ length: 10 }).map((_, i) => (
+                    {Array.from({ length: 14 }).map((_, i) => (
                       <div key={i} className="h-2 w-2 rounded-full bg-[#D9D9D9]"></div>
                     ))}
                     <div className="block font-sans">Float Profit</div>
-                    {Array.from({ length: 30 }).map((_, i) => (
+                    {/* {Array.from({ length: 24 }).map((_, i) => (
                       <div key={i} className="h-2 w-2 rounded-full bg-[#D9D9D9]"></div>
                     ))}
-                    <div className="block font-sans">Closed Profit</div>
-                    {Array.from({ length: 10 }).map((_, i) => (
+                    <div className="block font-sans">Closed Profit</div> */}
+                    {Array.from({ length: 14 }).map((_, i) => (
                       <div key={i} className="h-2 w-2 rounded-full bg-[#D9D9D9]"></div>
                     ))}
                     <div className="block font-sans">Trade Numbers</div>

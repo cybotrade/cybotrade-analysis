@@ -8,15 +8,24 @@ export interface ITrade {
   price: number;
   time: string;
 }
+
 export interface IBackTestData {
   id: string;
   params: string | null;
-  symbol: string;
+  symbols: string;
   intervals: Interval[] | string[];
   trades: ITrade[];
   version: string;
   start_time: string;
   end_time: string;
+}
+
+export interface IBackTestDataMultiSymbols
+  extends Omit<IBackTestData, 'symbols' | 'intervals' | 'trades'> {
+  // version 1.1.1alpha
+  symbols: string[];
+  intervals: { [key: string]: Interval[] | string[] }[];
+  trades: { [key: string]: ITrade[] };
 }
 
 export interface IClosedTrade {
