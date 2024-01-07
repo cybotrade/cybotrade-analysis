@@ -11,6 +11,8 @@
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "ignoreDeprecations": "5.0",
     "noEmit": true,
     "checkJs": true,
     "esModuleInterop": true,
