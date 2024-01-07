@@ -10,7 +10,7 @@ import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
 import { Sheet, SheetContent, SheetTrigger } from '@app/_ui/Sheet';
 
-import { IBackTestData, ITrade } from '../type';
+import { IBackTestData, IBackTestDataMultiSymbols, ITrade } from '../type';
 import { CandleChart } from './CandleChart';
 import { EquityCurve } from './EquityCurve';
 import { MonteCarlo } from './MonteCarlo';
@@ -19,7 +19,7 @@ import SettingsForm, { SettingsValue } from './SettingsForm';
 import { Trend } from './Trend';
 
 interface IBackTestResultsDrawer {
-  data: IBackTestData[] | undefined;
+  data: IBackTestDataMultiSymbols[] | undefined;
   drawer: IDrawer;
   fetchedKlinePercentage: (percentage: number) => void;
 }
@@ -45,11 +45,14 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
 
   const { data, drawer, fetchedKlinePercentage } = props;
   if (!data) return null;
+  const filteredSymbol = data[selectedIndex].symbols[0]; // temporary only support only one symbol
   const backtestData = {
     ...data[selectedIndex],
-    trades: sortByTimestamp<ITrade>(data[selectedIndex]?.trades),
+    symbols: filteredSymbol,
+    intervals: data[selectedIndex].intervals[filteredSymbol],
+    trades: sortByTimestamp<ITrade>(data[selectedIndex]?.trades[filteredSymbol]),
   } as IBackTestData;
-  const symbol = backtestData ? (backtestData.symbol?.split('/').join('') as string) : 'BTCUSDT';
+  const symbol = backtestData ? (backtestData.symbols.split('/').join('') as string) : 'BTCUSDT';
   const interval = backtestData
     ? Interval[backtestData.intervals[0] as unknown as keyof typeof Interval]
     : Interval.OneDay;
@@ -167,7 +170,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     >
       <SheetContent
         side={'right'}
-        className="min-w-[70%] overflow-y-scroll overflow-x-clip"
+        className="min-w-[75%] overflow-y-scroll overflow-x-clip"
         onPointerDownOutside={(e) => e.preventDefault()}
         overlayChildren={
           <Sheet
@@ -192,7 +195,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
             </SheetTrigger>
             <SheetContent
               side={'left'}
-              className="min-w-[31%] rounded-r-lg"
+              className="min-w-[26%] rounded-r-lg"
               overlayClassName="hidden"
             >
               <div
