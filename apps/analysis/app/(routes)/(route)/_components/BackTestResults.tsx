@@ -50,7 +50,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     ...data[selectedIndex],
     symbols: filteredSymbol,
     intervals: data[selectedIndex].intervals[filteredSymbol],
-    trades: sortByTimestamp<ITrade>(data[selectedIndex]?.trades[filteredSymbol]),
+    trades: sortByTimestamp<ITrade>(data[selectedIndex]?.trades[filteredSymbol] as ITrade[]),
   } as IBackTestData;
   const symbol = backtestData ? (backtestData.symbols.split('/').join('') as string) : 'BTCUSDT';
   const interval = backtestData
