@@ -1,6 +1,8 @@
 import { type KlineInterval, MainClient } from 'binance';
 import { NextResponse } from 'next/server';
 
+const client = new MainClient({});
+
 export const GET = async (req: Request) => {
   const paramsString = req.url.split('?')[1];
   const params = paramsString
@@ -24,13 +26,11 @@ export const GET = async (req: Request) => {
     return NextResponse.json({ error: 'Invalid parameters' });
   }
 
-  const client = new MainClient({});
   const kline = await client.getKlines({
     symbol: params['symbol'] as string,
     interval: params['interval'] as KlineInterval,
-    // startTime: parseInt(params['startTime']),
+    startTime: parseInt(params['startTime']),
     endTime: parseInt(params['endTime']),
-    // limit: 1500,
   });
 
   return NextResponse.json(kline);
