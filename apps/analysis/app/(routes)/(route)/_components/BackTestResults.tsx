@@ -6,7 +6,7 @@ import { Interval } from '@cybotrade/core';
 
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
 import { transformToClosedTrades } from '@app/_lib/calculation';
-import { cn, sortByTimestamp } from '@app/_lib/utils';
+import { cn, intervalToMilliseconds, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
 import { Sheet, SheetContent, SheetTrigger } from '@app/_ui/Sheet';
 
@@ -99,7 +99,10 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     };
 
     if (klineData?.length === 0) {
-      fetchKlineData({ startTime: backtestData.start_time, endTime: backtestData.end_time });
+      fetchKlineData({
+        startTime: (+backtestData.end_time - intervalToMilliseconds(interval) * 500).toString(),
+        endTime: backtestData.end_time,
+      });
     }
     if (klineData && klineData[0] && klineData[0][0] > +backtestData.start_time) {
       const fetchedPercentage = Math.round(
@@ -108,7 +111,10 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
           100,
       );
       fetchedKlinePercentage(fetchedPercentage);
-      fetchKlineData({ startTime: backtestData.start_time, endTime: klineData[0][0].toString() });
+      fetchKlineData({
+        startTime: (+klineData[0][0] - intervalToMilliseconds(interval) * 500).toString(),
+        endTime: klineData[0][0].toString(),
+      });
     }
     if (klineData && klineData[0] && klineData[0][0] < +backtestData.start_time) {
       setDoneFetchingKline(true);
