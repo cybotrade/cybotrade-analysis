@@ -130,24 +130,18 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
     return closedTrades.map((trade) => {
       const entryPrice = trade.entryPrice;
       const exitPrice = trade.exitPrice;
-      const entryTime = new Date(trade.entryTime);
+      const exitTime = new Date(trade.exitTime);
       const quantity = trade.quantity;
 
       const pnl = new Decimal(exitPrice).sub(entryPrice).mul(quantity);
 
       // Return an array with timestamp and pnl
-      return [entryTime.getTime(), pnl.toNumber()] as [number, number];
+      return [exitTime.getTime(), pnl.toNumber()] as [number, number];
     });
   }, [closedTrades]);
 
   const tradeArray = useMemo(() => {
-    return closedTrades.map(
-      (trade) =>
-        [new Date(trade.entryTime).getTime(), new Date(trade.exitTime).getTime()] as [
-          number,
-          number,
-        ],
-    );
+    return closedTrades.map((trade) => [new Date(trade.exitTime).getTime()] as [number]);
   }, [closedTrades]);
 
   const reset = () => {

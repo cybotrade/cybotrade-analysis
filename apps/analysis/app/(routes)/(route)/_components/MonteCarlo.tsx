@@ -111,7 +111,6 @@ export const MonteCarlo = ({
       for (let n = 0; n < new_list.length; n++) {
         const trade_idx = new_list[n];
         const t_profit = tradesWithProfit[trade_idx].pnl;
-        console.log('t_profit', t_profit.toNumber());
         if (n == 0) {
           sim_balance_graph[i] = [initialCapital];
           const last_balance = sim_balance_graph[i][sim_balance_graph[i].length - 1];
@@ -128,7 +127,6 @@ export const MonteCarlo = ({
       sim_max_dd.push(new_max_dd);
       sim_max_profit.push(new_peak_balance - initialCapital);
     }
-    console.log('sim_balance_graph', sim_balance_graph);
     // UI is already toFixed(2) so no need to trunc here.
     const dd95 = (getPercentile(sim_max_dd, 95) / initialCapital) * 100;
     setMeanDDResult(dd95);

@@ -174,7 +174,7 @@ export const ResultBreakdown = ({
                   <h6 className="text-lg font-extrabold">
                     {performanceData &&
                       performanceData.totalProfit
-                        .div(performanceData.totalLoss)
+                        .div(performanceData.totalLoss.abs())
                         .toNumber()
                         .toFixed(2)}{' '}
                     : 1
@@ -257,7 +257,7 @@ export const ResultBreakdown = ({
                     {performanceData && performanceData.largestRoi.greaterThanOrEqualTo(0)
                       ? '+'
                       : '-'}
-                    {performanceData && performanceData.largestRoi.abs().toFixed(2)}%
+                    {performanceData && performanceData.largestRoi.abs().mul(100).toFixed(2)}%
                   </h6>
                 </div>
                 <div className="text-right">
@@ -273,7 +273,7 @@ export const ResultBreakdown = ({
                     {performanceData && performanceData.smallestRoi.greaterThanOrEqualTo(0)
                       ? '+'
                       : '-'}
-                    {performanceData && performanceData.smallestRoi.abs().toFixed(2)}%{' '}
+                    {performanceData && performanceData.smallestRoi.abs().mul(100).toFixed(2)}%
                   </h6>
                 </div>
               </div>
