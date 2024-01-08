@@ -487,7 +487,7 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
 
         position = quantity - position;
         globalEntryPrice = price;
-        globalEntryTime = new Date(time);
+        globalEntryTime = new Date(+time);
         globalSide = side as OrderSide;
         return;
       }
