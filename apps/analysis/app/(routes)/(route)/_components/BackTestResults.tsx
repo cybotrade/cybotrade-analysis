@@ -45,7 +45,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
 
   const { data, drawer, fetchedKlinePercentage } = props;
   if (!data) return null;
-  const filteredSymbol = data[selectedIndex].symbols[0]; // temporary only support only one symbol
+  const filteredSymbol = data[selectedIndex].symbols[0]; // temporary to support only one symbol
   const backtestData = {
     ...data[selectedIndex],
     symbols: filteredSymbol,
