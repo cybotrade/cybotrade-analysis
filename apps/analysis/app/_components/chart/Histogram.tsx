@@ -15,7 +15,7 @@ import { cn } from '@app/_lib/utils';
 interface HistogramProps {
   data: [number, number][];
   profits: [number, number][];
-  trades: [number, number][];
+  trades: [number][];
   year: string;
   month: string;
   type: string;
@@ -55,7 +55,7 @@ const Histogram: React.FC<HistogramProps> = ({
     return entryYear.toString() === year;
   });
 
-  const calculateTotalTradeForYear = (data: [number, number][], year: string) => {
+  const calculateTotalTradeForYear = (data: [number][], year: string) => {
     // Yearly trade
     const totalTradeByMonth: { [month: string]: number } = {};
 
@@ -98,7 +98,7 @@ const Histogram: React.FC<HistogramProps> = ({
 
   const totalTradeByMonth = calculateTotalTradeForYear(filteredDataByYearforTrade, year);
 
-  const calculateTotalTradeForDay = (data: [number, number][], year: string, month: string) => {
+  const calculateTotalTradeForDay = (data: [number][], year: string, month: string) => {
     // day trade
     const totalTradeByDay: [string, number][] = [];
 
@@ -137,11 +137,7 @@ const Histogram: React.FC<HistogramProps> = ({
 
   const totalTradeByDay = calculateTotalTradeForDay(filteredDataByYearforTrade, year, month);
 
-  const calculateTotalTradeForMonthByWeekly = (
-    data: [number, number][],
-    year: string,
-    month: string,
-  ) => {
+  const calculateTotalTradeForMonthByWeekly = (data: [number][], year: string, month: string) => {
     // Initialize an array to store total trade for each day of the week (Mon to Sun)
     const totalTradeByDay: { dayOfWeek: string; total: number }[] = [
       { dayOfWeek: 'Mon', total: 0 },
