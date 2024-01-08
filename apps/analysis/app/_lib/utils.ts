@@ -1,15 +1,15 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 export const sortByTimestamp = <T extends { time: Date | string }>(
   items?: T[],
   sortOrder: 'asc' | 'desc' = 'asc',
 ): T[] => {
-  if (!items) {
+  if (!items || items.length < 1) {
     return [];
   }
 
