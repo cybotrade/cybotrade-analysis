@@ -376,7 +376,6 @@ export const calculatePerformance = ({
       ? closedTrades[0].entryTime.getTime() -
         new Date(closedTrades[closedTrades.length - 1].exitTime).getTime()
       : 0;
-
   const tradingDays = tradingTime / (1000 * 60 * 60 * 24);
   const tradingFrequency = Math.abs((closedTrades.length / tradingDays) * 100); // in percentage
   const totalTradesPerDay = Object.values(tradesPerDay);
