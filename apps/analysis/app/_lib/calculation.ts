@@ -10,6 +10,7 @@ export type Performance = {
   finalBalance: Decimal;
   initialCapital: Decimal;
   totalTrades: number;
+  tradingFrequency: number;
   totalLosingTrades: number;
   totalWinningTrades: number;
   bestTradePnl: Decimal;
@@ -376,6 +377,7 @@ export const calculatePerformance = ({
         new Date(closedTrades[closedTrades.length - 1].exitTime).getTime()
       : 0;
   const tradingDays = tradingTime / (1000 * 60 * 60 * 24);
+  const tradingFrequency = Math.abs((closedTrades.length / tradingDays) * 100); // in percentage
   const totalTradesPerDay = Object.values(tradesPerDay);
   const averageTotalTradesPerDay =
     totalTradesPerDay.length === 0
@@ -391,6 +393,7 @@ export const calculatePerformance = ({
     finalBalance,
     initialCapital: new Decimal(initialCapital),
     totalTrades: closedTrades.length,
+    tradingFrequency,
 
     totalWinningTrades: pnls.filter((pnl) => pnl.greaterThan(0)).length,
     totalLosingTrades: pnls.filter((pnl) => pnl.lessThan(0)).length,

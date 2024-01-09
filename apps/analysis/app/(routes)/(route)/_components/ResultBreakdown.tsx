@@ -186,8 +186,16 @@ export const ResultBreakdown = ({
                 <div className="text-left">
                   <h6 className="text-sm font-normal capitalize">Trading Frequency</h6>
                   <h6 className="text-lg font-extrabold">
-                    {performanceData && (performanceData.averageTotalTradesPerDay * 100).toFixed(2)}
-                    %
+                    {performanceData && performanceData.tradingFrequency.toFixed(2)}%
+                  </h6>
+                </div>
+              </div>
+              <div className="border border-t-0 border-[#DFDFDF]"></div>
+              <div className="flex justify-between items-center">
+                <div className="text-left">
+                  <h6 className="text-sm font-normal capitalize">Sharpe Ratio</h6>
+                  <h6 className="text-lg font-extrabold">
+                    {performanceData && performanceData.sharpeRatio.total.toFixed(2)}%
                   </h6>
                 </div>
               </div>
