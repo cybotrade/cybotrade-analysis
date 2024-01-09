@@ -186,7 +186,7 @@ export const ResultBreakdown = ({
                 <div className="text-left">
                   <h6 className="text-sm font-normal capitalize">Trading Frequency</h6>
                   <h6 className="text-lg font-extrabold">
-                    {performanceData && (performanceData.tradingFrequency).toFixed(2)}%
+                    {performanceData && performanceData.tradingFrequency.toFixed(2)}%
                   </h6>
                 </div>
               </div>
