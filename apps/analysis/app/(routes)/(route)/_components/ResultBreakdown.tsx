@@ -181,7 +181,7 @@ export const ResultBreakdown = ({
                   </h6>
                 </div>
               </div>
-              <div className="border border-t-0 border-[#DFDFDF]"></div>
+              {/* <div className="border border-t-0 border-[#DFDFDF]"></div>
               <div className="flex justify-between items-center">
                 <div className="text-left">
                   <h6 className="text-sm font-normal capitalize">Trading Frequency</h6>
@@ -198,7 +198,7 @@ export const ResultBreakdown = ({
                     {performanceData && performanceData.sharpeRatio.total.toFixed(2)}%
                   </h6>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
