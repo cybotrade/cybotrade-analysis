@@ -325,6 +325,7 @@ export const calculatePerformance = ({
   const closedTradesInDaily = convertCloseTradesToDaily(closedTrades);
 
   const pnls = closedTrades.map(pnlFromTrade);
+
   const drawdowns = closedTrades.map((v) => ({
     timestamp: v.exitTime,
     value: pnlFromTrade(v),
@@ -505,7 +506,7 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
       position = position - quantity;
     }
   });
-
+  console.log('closedTrades', closedTrades);
   return closedTrades;
 };
 
@@ -567,5 +568,6 @@ export const calculateEquity = ({
       time: (candleCloseTime / 1000) as UTCTimestamp,
     });
   });
+
   return equityData;
 };
