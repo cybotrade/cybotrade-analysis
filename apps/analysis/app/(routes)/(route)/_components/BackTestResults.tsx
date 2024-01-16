@@ -5,7 +5,11 @@ import React, { useEffect, useState } from 'react';
 import { Interval } from '@cybotrade/core';
 
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
-import { transformToClosedTrades } from '@app/_lib/calculation';
+import {
+  calculateCalmarRatio,
+  calculateSharpeRatio,
+  transformToClosedTrades,
+} from '@app/_lib/calculation';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
 import { Sheet, SheetContent, SheetTrigger } from '@app/_ui/Sheet';
@@ -147,6 +151,9 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
       label: 'Result Breakdown',
       content: (
         <ResultBreakdown
+          klineData={klineData ?? []}
+          trades={backtestData.trades}
+          interval={interval}
           closedTrades={closedTrades}
           initialCapital={userSettings.initial_capital}
         />
