@@ -450,7 +450,11 @@ export const calculatePerformance = ({
         })
       : new Decimal(0),
     calmarRatio: tradeOrders
-      ? calculateCalmarRatio({ klineData: tradeOrders.klineData, inputTrades: tradeOrders.trades })
+      ? calculateCalmarRatio({
+          klineData: tradeOrders.klineData,
+          inputTrades: tradeOrders.trades,
+          interval: tradeOrders.interval,
+        })
       : new Decimal(0),
     // Not using
     // monteCarlo: {
@@ -615,9 +619,11 @@ export const calculateSharpeRatio = ({
 export const calculateCalmarRatio = ({
   klineData,
   inputTrades,
+  interval,
 }: {
   klineData: Kline[];
   inputTrades: ITrade[];
+  interval: Interval;
 }) => {
   const intervalPosition = calculateIntervalPosition({ klineData, inputTrades });
   const intervalPriceChanges = calculateIntervalPriceChanges(klineData);
@@ -627,7 +633,10 @@ export const calculateCalmarRatio = ({
   const meanPNL = mean({
     values: pnlInDecimal,
   });
-  const calmarRatio = meanPNL.div(Decimal.min(...pnlInDecimal).abs());
+  const tradeInterval = new Decimal(intervalToDays(interval));
+  const calmarRatio = meanPNL
+    .mul(new Decimal(365).div(tradeInterval))
+    .div(Decimal.min(...pnlInDecimal).abs());
 
   return calmarRatio;
 };
