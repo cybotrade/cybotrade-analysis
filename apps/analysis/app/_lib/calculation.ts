@@ -2,9 +2,11 @@ import { type Kline } from 'binance';
 import { Decimal } from 'decimal.js';
 import { UTCTimestamp } from 'lightweight-charts';
 
-import { OrderSide } from '@cybotrade/core';
+import { Interval, OrderSide } from '@cybotrade/core';
 
 import { IClosedTrade, ITrade } from '@app/(routes)/(route)/type';
+
+import { intervalToDays } from './utils';
 
 export type Performance = {
   finalBalance: Decimal;
@@ -30,11 +32,13 @@ export type Performance = {
 
   // Duration in seconds
   averageTradeDuration: Decimal;
-  sharpeRatio: {
-    monthly: { startTime: Decimal; endTime: Decimal; value: Decimal }[];
-    yearly: { startTime: Decimal; endTime: Decimal; value: Decimal }[];
-    total: Decimal;
-  };
+  // sharpeRatio: {
+  //   monthly: { startTime: Decimal; endTime: Decimal; value: Decimal }[];
+  //   yearly: { startTime: Decimal; endTime: Decimal; value: Decimal }[];
+  //   total: Decimal;
+  // };
+  sharpeRatio: Decimal;
+  calmarRatio: Decimal;
 
   // monteCarlo: {
   //   drawdown: { median: Decimal; p95: Decimal };
@@ -292,6 +296,7 @@ const convertCloseTradesToDaily = (
 export const calculatePerformance = ({
   history: { openedTrades, closedTrades },
   parameters: { initialCapital, comission, riskFreeRate },
+  tradeOrders,
 }: {
   history: {
     openedTrades: {
@@ -312,6 +317,7 @@ export const calculatePerformance = ({
     }[];
   };
   parameters: { initialCapital: number; comission: number; riskFreeRate: number };
+  tradeOrders?: { klineData: Kline[]; trades: ITrade[]; interval: Interval };
 }): Performance => {
   const pnlFromTrade = (trade: (typeof closedTrades)[0]): Decimal =>
     pnl({
@@ -427,16 +433,25 @@ export const calculatePerformance = ({
       )
       .div(Math.max(1, closedTrades.length)),
 
-    sharpeRatio: {
-      monthly: [],
-      yearly: [],
-      total: sharpeRatio({
-        expectedReturn: mean({ values: closedTradesReturns }),
-        riskFreeRate: new Decimal(adjustedRiskFree),
-        standardDeviation: standardDeviation({ values: closedTradesReturns }),
-      }),
-    },
-
+    // sharpeRatio: {
+    //   monthly: [],
+    //   yearly: [],
+    //   total: sharpeRatio({
+    //     expectedReturn: mean({ values: closedTradesReturns }),
+    //     riskFreeRate: new Decimal(adjustedRiskFree),
+    //     standardDeviation: standardDeviation({ values: closedTradesReturns }),
+    //   }),
+    // },
+    sharpeRatio: tradeOrders
+      ? calculateSharpeRatio({
+          klineData: tradeOrders.klineData,
+          inputTrades: tradeOrders.trades,
+          interval: tradeOrders.interval,
+        })
+      : new Decimal(0),
+    calmarRatio: tradeOrders
+      ? calculateCalmarRatio({ klineData: tradeOrders.klineData, inputTrades: tradeOrders.trades })
+      : new Decimal(0),
     // Not using
     // monteCarlo: {
     //   drawdown: { median: new Decimal(0), p95: new Decimal(0) },
@@ -507,6 +522,114 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
   });
 
   return closedTrades;
+};
+
+const calculateIntervalPriceChanges = (klineData: Kline[]) => {
+  const priceChanges: number[] = [];
+  klineData.map((kline, index, klineArr) => {
+    const candleClosePrice = +kline[4];
+    if (priceChanges.length === 0) {
+      return priceChanges.push(0);
+    }
+    priceChanges.push(candleClosePrice / +klineArr[index - 1][4] - 1);
+  });
+  return priceChanges;
+};
+
+const calculateIntervalPosition = ({
+  klineData,
+  inputTrades,
+}: {
+  klineData: Kline[];
+  inputTrades: ITrade[];
+}) => {
+  const positions: number[] = [];
+  klineData.map((kline) => {
+    const candleOpenTime = +kline[0];
+    const candleCloseTime = +kline[6];
+    const tradesOnCandle = inputTrades.filter(
+      (trade) => +trade.time >= candleOpenTime && +trade.time <= candleCloseTime,
+    );
+    if (tradesOnCandle.length > 0) {
+      let positionOnCandle = positions[positions.length - 1];
+      tradesOnCandle.forEach((trade) => {
+        if (positionOnCandle === 0) {
+          positionOnCandle = trade.side === 'Buy' ? 1 : -1;
+        }
+        if (positionOnCandle === 1) {
+          positionOnCandle = trade.side === 'Buy' ? 1 : positionOnCandle - 1;
+        }
+        if (positionOnCandle === -1) {
+          positionOnCandle = trade.side === 'Buy' ? positionOnCandle - 1 : -1;
+        }
+      });
+      return positions.push(positionOnCandle);
+    }
+    positions.push(positions[positions.length - 1] ?? 0);
+  });
+  return positions;
+};
+
+const intervalPnl = ({
+  intervalPosition,
+  intervalPriceChanges,
+}: {
+  intervalPosition: number[];
+  intervalPriceChanges: number[];
+}) => {
+  const pnls: number[] = [];
+  intervalPriceChanges.map((priceChange, index) =>
+    index === 0 ? pnls.push(0) : pnls.push(priceChange * intervalPosition[index - 1]),
+  );
+  return pnls;
+};
+
+// sharpe ratio
+export const calculateSharpeRatio = ({
+  klineData,
+  inputTrades,
+  interval,
+}: {
+  klineData: Kline[];
+  inputTrades: ITrade[];
+  interval: Interval;
+}) => {
+  const intervalPosition = calculateIntervalPosition({ klineData, inputTrades });
+  const intervalPriceChanges = calculateIntervalPriceChanges(klineData);
+  const pnlInDecimal = intervalPnl({ intervalPosition, intervalPriceChanges }).map(
+    (pnl) => new Decimal(pnl),
+  );
+  const meanPNL = mean({
+    values: pnlInDecimal,
+  });
+  const standardDeviationValue = standardDeviation({ values: pnlInDecimal });
+  const tradeInterval = new Decimal(intervalToDays(interval));
+  const sharpeRatio = meanPNL
+    .div(standardDeviationValue)
+    .mul(new Decimal(365).div(tradeInterval).sqrt());
+
+  return sharpeRatio;
+};
+
+// carmal ratio
+export const calculateCalmarRatio = ({
+  klineData,
+  inputTrades,
+}: {
+  klineData: Kline[];
+  inputTrades: ITrade[];
+}) => {
+  const intervalPosition = calculateIntervalPosition({ klineData, inputTrades });
+  const intervalPriceChanges = calculateIntervalPriceChanges(klineData);
+  const pnlInDecimal = intervalPnl({ intervalPosition, intervalPriceChanges }).map(
+    (pnl) => new Decimal(pnl),
+  );
+  const meanPNL = mean({
+    values: pnlInDecimal,
+  });
+  const calmarRatio = meanPNL.div(Decimal.min(...pnlInDecimal).abs());
+
+  return calmarRatio;
 };
 
 export const calculateEquity = ({

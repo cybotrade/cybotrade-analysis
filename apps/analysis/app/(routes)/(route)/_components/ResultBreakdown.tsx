@@ -1,17 +1,26 @@
+import { Kline } from 'binance';
 import Decimal from 'decimal.js';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
 import React, { useMemo, useState } from 'react';
 
+import { Interval } from '@cybotrade/core';
+
 import { calculatePerformance } from '@app/_lib/calculation';
 import { cn } from '@app/_lib/utils';
 
-import { IClosedTrade } from '../type';
+import { IClosedTrade, ITrade } from '../type';
 
 export const ResultBreakdown = ({
+  klineData,
+  trades,
+  interval,
   closedTrades,
   initialCapital = 10000,
 }: {
+  klineData: Kline[];
+  trades: ITrade[];
+  interval: Interval;
   closedTrades: IClosedTrade[];
   initialCapital?: number;
 }) => {
@@ -49,6 +58,7 @@ export const ResultBreakdown = ({
           closedTrades,
           openedTrades: [],
         },
+        tradeOrders: { klineData, trades, interval },
         parameters: {
           comission: 0,
           initialCapital,
@@ -181,24 +191,21 @@ export const ResultBreakdown = ({
                   </h6>
                 </div>
               </div>
-              {/* <div className="border border-t-0 border-[#DFDFDF]"></div>
-              <div className="flex justify-between items-center">
-                <div className="text-left">
-                  <h6 className="text-sm font-normal capitalize">Trading Frequency</h6>
-                  <h6 className="text-lg font-extrabold">
-                    {performanceData && performanceData.tradingFrequency.toFixed(2)}%
-                  </h6>
-                </div>
-              </div>
               <div className="border border-t-0 border-[#DFDFDF]"></div>
               <div className="flex justify-between items-center">
                 <div className="text-left">
                   <h6 className="text-sm font-normal capitalize">Sharpe Ratio</h6>
                   <h6 className="text-lg font-extrabold">
-                    {performanceData && performanceData.sharpeRatio.total.toFixed(2)}%
+                    {performanceData && performanceData.sharpeRatio.toFixed(2)}
                   </h6>
                 </div>
-              </div> */}
+                <div className="text-right">
+                  <h6 className="text-sm font-normal capitalize">Calmar Ratio</h6>
+                  <h6 className="text-lg font-extrabold">
+                    {performanceData && performanceData.calmarRatio.toFixed(2)}
+                  </h6>
+                </div>
+              </div>
             </div>
           </div>
         </div>
