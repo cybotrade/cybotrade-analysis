@@ -24,7 +24,7 @@ export interface IBackTestDataMultiSymbols
   extends Omit<IBackTestData, 'symbols' | 'intervals' | 'trades'> {
   // version 1.1.1alpha
   symbols: string[];
-  intervals: { [key: string]: Interval[] | string[] }[];
+  intervals: { [key: string]: Interval[] | string[] };
   trades: { [key: string]: ITrade[] };
 }
 
