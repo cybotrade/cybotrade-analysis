@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Interval } from '@cybotrade/core';
 
+import SharpeRatio from '@app/(routes)/(route)/_components/SharpeRatio';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
 import {
   calculateCalmarRatio,
@@ -50,17 +51,26 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
   const { data, drawer, fetchedKlinePercentage } = props;
   if (!data) return null;
   const filteredSymbol = data[selectedIndex].symbols[0]; // temporary to support only one symbol
-  const backtestData = {
-    ...data[selectedIndex],
-    symbols: filteredSymbol,
-    intervals: data[selectedIndex].intervals[filteredSymbol],
-    trades: sortByTimestamp<ITrade>(data[selectedIndex]?.trades[filteredSymbol] as ITrade[]),
-  } as IBackTestData;
-  const symbol = backtestData ? (backtestData.symbols.split('/').join('') as string) : 'BTCUSDT';
+  const backtestData = data.map(
+    (d) =>
+      ({
+        ...d,
+        symbols: filteredSymbol,
+        intervals: d.intervals[filteredSymbol],
+        trades: sortByTimestamp<ITrade>(d?.trades[filteredSymbol] as ITrade[]),
+      }) as IBackTestData,
+  );
+  // const backtestData = {
+  //   ...data[selectedIndex],
+  //   symbols: filteredSymbol,
+  //   intervals: data[selectedIndex].intervals[filteredSymbol],
+  //   trades: sortByTimestamp<ITrade>(data[selectedIndex]?.trades[filteredSymbol] as ITrade[]),
+  // } as IBackTestData;
+  const symbol = backtestData ? (backtestData[0].symbols.split('/').join('') as string) : 'BTCUSDT';
   const interval = backtestData
-    ? Interval[backtestData.intervals[0] as unknown as keyof typeof Interval]
+    ? Interval[backtestData[0].intervals[0] as unknown as keyof typeof Interval]
     : Interval.OneDay;
-  const closedTrades = backtestData ? transformToClosedTrades(backtestData.trades) : [];
+  const closedTrades = backtestData ? transformToClosedTrades(backtestData[0].trades) : [];
 
   const [klineData, setKlineData] = useState<Kline[] | null>([]);
   const [doneFetchingKline, setDoneFetchingKline] = useState(false);
@@ -103,18 +113,21 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     };
 
     if (klineData?.length === 0) {
-      fetchKlineData({ startTime: backtestData.start_time, endTime: backtestData.end_time });
+      fetchKlineData({ startTime: backtestData[0].start_time, endTime: backtestData[0].end_time });
     }
-    if (klineData && klineData[0] && klineData[0][0] > +backtestData.start_time) {
+    if (klineData && klineData[0] && klineData[0][0] > +backtestData[0].start_time) {
       const fetchedPercentage = Math.round(
-        ((+backtestData.end_time - klineData[0][0]) /
-          (+backtestData.end_time - +backtestData.start_time)) *
+        ((+backtestData[0].end_time - klineData[0][0]) /
+          (+backtestData[0].end_time - +backtestData[0].start_time)) *
           100,
       );
       fetchedKlinePercentage(fetchedPercentage);
-      fetchKlineData({ startTime: backtestData.start_time, endTime: klineData[0][0].toString() });
+      fetchKlineData({
+        startTime: backtestData[0].start_time,
+        endTime: klineData[0][0].toString(),
+      });
     }
-    if (klineData && klineData[0] && klineData[0][0] < +backtestData.start_time) {
+    if (klineData && klineData[0] && klineData[0][0] < +backtestData[0].start_time) {
       setDoneFetchingKline(true);
       fetchedKlinePercentage(100);
     }
@@ -131,14 +144,14 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     {
       value: 'candle-chart',
       label: 'Candle Chart',
-      content: <CandleChart backtestData={backtestData} klineData={klineData ?? []} />,
+      content: <CandleChart backtestData={backtestData[0]} klineData={klineData ?? []} />,
     },
     {
       value: 'equity-curve',
       label: 'Equity Curve',
       content: (
         <EquityCurve
-          backtestData={backtestData}
+          backtestData={backtestData[0]}
           symbol={symbol}
           interval={interval}
           klineData={klineData ?? []}
@@ -152,7 +165,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
       content: (
         <ResultBreakdown
           klineData={klineData ?? []}
-          trades={backtestData.trades}
+          trades={backtestData[0].trades}
           interval={interval}
           closedTrades={closedTrades}
           initialCapital={userSettings.initial_capital}
@@ -160,6 +173,13 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
       ),
     },
     { value: 'trend', label: 'Trend', content: <Trend closedTrades={closedTrades} /> },
+    {
+      value: 'sharpe-ratio',
+      label: 'Sharpe Ratio',
+      content: (
+        <SharpeRatio backtestData={backtestData} klineData={klineData ?? []} interval={interval} />
+      ),
+    },
     {
       value: 'monte-carlo',
       label: 'Monte Carlo',
