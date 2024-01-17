@@ -21,6 +21,7 @@
     "@tanstack/react-query": "^4.0.0",
     "binance": "^2.8.14",
     "chart.js": "^4.4.1",
+    "chartjs-plugin-zoom": "2.0.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "date-fns": "^3.0.5",
