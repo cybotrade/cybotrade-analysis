@@ -1,13 +1,12 @@
 import { Kline } from 'binance';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import React, { useEffect, useState } from 'react';
 
 import { Interval } from '@cybotrade/core';
 
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
-import {
-  transformToClosedTrades,
-} from '@app/_lib/calculation';
+import { transformToClosedTrades } from '@app/_lib/calculation';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
 import { Sheet, SheetContent, SheetTrigger } from '@app/_ui/Sheet';
@@ -17,10 +16,12 @@ import { CandleChart } from './CandleChart';
 import { EquityCurve } from './EquityCurve';
 import { MonteCarlo } from './MonteCarlo';
 import { ResultBreakdown } from './ResultBreakdown';
-import SharpeRatio from './SharpeRatio';
-
 import SettingsForm, { SettingsValue } from './SettingsForm';
 import { Trend } from './Trend';
+
+const SharpeRatio = dynamic(() => import('./SharpeRatio'), {
+  ssr: false,
+}); // using dynamic import here because it is not able to support SSR for 'chartjs-plugin-zoom' in SharpeRation component
 
 interface IBackTestResultsDrawer {
   data: IBackTestDataMultiSymbols[] | undefined;
