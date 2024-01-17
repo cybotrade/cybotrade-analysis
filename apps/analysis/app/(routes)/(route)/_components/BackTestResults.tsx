@@ -4,11 +4,8 @@ import React, { useEffect, useState } from 'react';
 
 import { Interval } from '@cybotrade/core';
 
-import SharpeRatio from '@app/(routes)/(route)/_components/SharpeRatio';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
 import {
-  calculateCalmarRatio,
-  calculateSharpeRatio,
   transformToClosedTrades,
 } from '@app/_lib/calculation';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
@@ -20,6 +17,8 @@ import { CandleChart } from './CandleChart';
 import { EquityCurve } from './EquityCurve';
 import { MonteCarlo } from './MonteCarlo';
 import { ResultBreakdown } from './ResultBreakdown';
+import SharpeRatio from './SharpeRatio';
+
 import SettingsForm, { SettingsValue } from './SettingsForm';
 import { Trend } from './Trend';
 
