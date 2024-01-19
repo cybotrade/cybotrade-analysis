@@ -206,6 +206,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
             onOpenChange={() =>
               settingDrawer.isOpen ? settingDrawer.close() : settingDrawer.open()
             }
+            modal={false}
           >
             <SheetTrigger
               className={cn(
@@ -224,6 +225,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
               side={'left'}
               className="min-w-[26%] rounded-r-lg"
               overlayClassName="hidden"
+              onInteractOutside={(e) => e.preventDefault()}
             >
               <div
                 onClick={settingDrawer.close}
