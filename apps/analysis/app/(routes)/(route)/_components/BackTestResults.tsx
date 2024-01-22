@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Interval } from '@cybotrade/core';
 
+import HeatMap from '@app/(routes)/(route)/_components/HeatMap';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
 import { transformToClosedTrades } from '@app/_lib/calculation';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
@@ -178,6 +179,13 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
       label: 'Sharpe Ratio',
       content: (
         <SharpeRatio backtestData={backtestData} klineData={klineData ?? []} interval={interval} />
+      ),
+    },
+    {
+      value: 'heat-map',
+      label: 'Heat Map',
+      content: (
+        <HeatMap backtestData={backtestData} klineData={klineData ?? []} interval={interval} />
       ),
     },
     {
