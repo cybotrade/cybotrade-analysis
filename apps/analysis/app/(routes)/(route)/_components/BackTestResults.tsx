@@ -1,4 +1,5 @@
 import { Kline } from 'binance';
+import Decimal from 'decimal.js';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -18,7 +19,6 @@ import { MonteCarlo } from './MonteCarlo';
 import { ResultBreakdown } from './ResultBreakdown';
 import SettingsForm, { SettingsValue } from './SettingsForm';
 import { Trend } from './Trend';
-import Decimal from 'decimal.js';
 
 const SharpeRatio = dynamic(() => import('./SharpeRatio'), {
   ssr: false,
@@ -35,62 +35,45 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
   const settingDrawer = useDrawer();
   const [userSettings, setUserSettings] = useState<SettingsValue>({
     initial_capital: 10000,
-    order_size_unit: undefined,
+    order_size_unit: 'usdt',
     order_size_value: undefined,
-    leverage: undefined,
+    // leverage: undefined,
     fees: undefined,
-    take_profit: [{ value: undefined }, { value: undefined }],
-    stop_lost: [{ value: undefined }, { value: undefined }],
-    entry: [{ value: undefined }, { value: undefined }],
+    // take_profit: [{ value: undefined }, { value: undefined }],
+    // stop_lost: [{ value: undefined }, { value: undefined }],
+    // entry: [{ value: undefined }, { value: undefined }],
   });
 
   const onSettingsFormUpdate = (values: SettingsValue) => {
     setUserSettings(values);
-    settingDrawer.close();
   };
 
   const { data, drawer, fetchedKlinePercentage } = props;
   if (!data) return null;
   const filteredSymbol = data[selectedIndex].symbols[0]; // temporary to support only one symbol
-  const sortedTrades = (trades:ITrade[]) => {
+  const sortedTrades = (trades: ITrade[]) => {
     if (!trades) return [] as ITrade[];
     if (trades.length === 0) return [] as ITrade[];
-    if (userSettings.order_size_value) {
-      trades = trades.map((trade) => {
-        return {
-          ...trade,
-          quantity: new Decimal(userSettings.order_size_value ?? trade.quantity)
-            .div(trade.price)
-            .toNumber(),
-        };
-      });
-    }
+    trades = trades.map((trade) => {
+      return {
+        ...trade,
+        quantity: userSettings.order_size_value
+          ? new Decimal(userSettings.order_size_value).div(trade.price).toNumber()
+          : trade.quantity,
+        fees: userSettings.fees ?? 0,
+      };
+    });
     return sortByTimestamp<ITrade>(trades);
   };
-  const backtestData = data.map(
-    (d) => {
-      return {
-        ...d,
-        symbols: filteredSymbol,
-        intervals: d.intervals[filteredSymbol],
-        trades: sortedTrades(d.trades[filteredSymbol]),
-      } as IBackTestData
-    });
-    const chargeFeesWithInitialCapital = useMemo(() => {
-    if (!data) return userSettings.initial_capital;
-    let initialCapital = new Decimal(userSettings.initial_capital ?? 10000);
-    if (userSettings.fees) {
-      initialCapital = initialCapital.minus(userSettings.fees);
-      return initialCapital.toDecimalPlaces(2).toNumber();
-    }
-    return initialCapital.toDecimalPlaces(2).toNumber();
-  }, [data, userSettings.initial_capital, userSettings.fees]);
-  // const backtestData = {
-  //   ...data[selectedIndex],
-  //   symbols: filteredSymbol,
-  //   intervals: data[selectedIndex].intervals[filteredSymbol],
-  //   trades: sortByTimestamp<ITrade>(data[selectedIndex]?.trades[filteredSymbol] as ITrade[]),
-  // } as IBackTestData;
+  const backtestData = data.map((d) => {
+    return {
+      ...d,
+      symbols: filteredSymbol,
+      intervals: d.intervals[filteredSymbol],
+      trades: sortedTrades(d.trades[filteredSymbol]),
+    } as IBackTestData;
+  });
+
   const symbol = backtestData ? (backtestData[0].symbols.split('/').join('') as string) : 'BTCUSDT';
   const interval = backtestData
     ? Interval[backtestData[0].intervals[0] as unknown as keyof typeof Interval]
@@ -180,7 +163,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
           symbol={symbol}
           interval={interval}
           klineData={klineData ?? []}
-          initialCapital={chargeFeesWithInitialCapital}
+          initialCapital={userSettings.initial_capital}
         />
       ),
     },
@@ -193,7 +176,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
           trades={backtestData[0].trades}
           interval={interval}
           closedTrades={closedTrades}
-          initialCapital={chargeFeesWithInitialCapital}
+          initialCapital={userSettings.initial_capital}
         />
       ),
     },
@@ -209,7 +192,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
       value: 'monte-carlo',
       label: 'Monte Carlo',
       content: (
-        <MonteCarlo closedTrades={closedTrades} initialCapital={chargeFeesWithInitialCapital} />
+        <MonteCarlo closedTrades={closedTrades} initialCapital={userSettings.initial_capital} />
       ),
     },
   ];
