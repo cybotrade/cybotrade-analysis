@@ -32,29 +32,29 @@ const SettingsForm = ({
     initial_capital: z.number().min(1).optional(),
     order_size_unit: z.string().optional(),
     order_size_value: z.string().optional(),
-    leverage: z.string().optional(),
+    // leverage: z.string().optional(),
     fees: z.string().optional(),
-    take_profit: z
-      .array(
-        z.object({
-          value: z.string(),
-        }),
-      )
-      .optional(),
-    stop_lost: z
-      .array(
-        z.object({
-          value: z.string(),
-        }),
-      )
-      .optional(),
-    entry: z
-      .array(
-        z.object({
-          value: z.string(),
-        }),
-      )
-      .optional(),
+    // take_profit: z
+    //   .array(
+    //     z.object({
+    //       value: z.string(),
+    //     }),
+    //   )
+    //   .optional(),
+    // stop_lost: z
+    //   .array(
+    //     z.object({
+    //       value: z.string(),
+    //     }),
+    //   )
+    //   .optional(),
+    // entry: z
+    //   .array(
+    //     z.object({
+    //       value: z.string(),
+    //     }),
+    //   )
+    //   .optional(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -111,7 +111,7 @@ const SettingsForm = ({
                   <SelectContent>
                     {[
                       { key: 'usdt', value: 'USDT' },
-                      { key: 'percentage', value: 'Percentage of total equity' },
+                      // { key: 'percentage', value: 'Percentage of total equity' },
                     ].map(({ key, value }) => (
                       <SelectItem key={key} value={key} className="cursor-pointer">
                         {value}
@@ -136,7 +136,7 @@ const SettingsForm = ({
               </FormItem>
             )}
           />
-          <FormField
+          {/* <FormField
             control={form.control}
             name="leverage"
             render={({ field }) => (
@@ -148,7 +148,7 @@ const SettingsForm = ({
                 <FormMessage />
               </FormItem>
             )}
-          />
+          /> */}
           <FormField
             control={form.control}
             name="fees"
@@ -167,7 +167,7 @@ const SettingsForm = ({
               </FormItem>
             )}
           />
-          <EntryForm<z.infer<typeof formSchema>>
+          {/* <EntryForm<z.infer<typeof formSchema>>
             label="TP (Take Profit)"
             name="take_profit"
             form={form}
@@ -187,7 +187,7 @@ const SettingsForm = ({
             form={form}
             className="col-span-2"
             buttonText="Add Another Entry"
-          />
+          /> */}
           <Button type="submit" className="font-bold text-lg w-max" size="xl">
             Save Changes
           </Button>
