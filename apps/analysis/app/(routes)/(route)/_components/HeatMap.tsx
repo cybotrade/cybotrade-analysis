@@ -29,6 +29,8 @@ const HeatMap = ({
   const [ySelect, setYSelect] = useState('');
 
   const chartData = useMemo(() => {
+    if (!backtestData) return [];
+
     const data = backtestData
       .map((d) => {
         if (d.id.indexOf(',') === -1) return null;
@@ -51,6 +53,11 @@ const HeatMap = ({
       .filter((data) => {
         return data && (data.xPair.key === xSelect || data.yPair.key === ySelect);
       });
+
+    if (data && data.length > 0) {
+      setXSelect(data[0]!.xPair.key);
+    }
+
     return data;
   }, [backtestData]);
 
