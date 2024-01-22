@@ -182,17 +182,17 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
       ),
     },
     {
-      value: 'heat-map',
-      label: 'Heat Map',
-      content: (
-        <HeatMap backtestData={backtestData} klineData={klineData ?? []} interval={interval} />
-      ),
-    },
-    {
       value: 'monte-carlo',
       label: 'Monte Carlo',
       content: (
         <MonteCarlo closedTrades={closedTrades} initialCapital={userSettings.initial_capital} />
+      ),
+    },
+    {
+      value: 'heat-map',
+      label: 'Heat Map',
+      content: (
+        <HeatMap backtestData={backtestData} klineData={klineData ?? []} interval={interval} />
       ),
     },
   ];
