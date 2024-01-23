@@ -8,9 +8,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Interval } from '@cybotrade/core';
 
 import { Loading } from '@app/_components/loading';
-import { calculateEquity } from '@app/_lib/calculation';
 
 import { IBackTestData } from '../type';
+import { SettingsValue } from './SettingsForm';
 
 interface IEquityData {
   value: number;
@@ -20,13 +20,13 @@ interface IEquityData {
 export const EquityCurve = ({
   backtestData,
   klineData,
-  initialCapital,
+  userSettings,
 }: {
   backtestData: IBackTestData;
   symbol: string;
   interval: Interval;
   klineData: Kline[];
-  initialCapital?: number;
+  userSettings?: SettingsValue;
 }) => {
   const { resolvedTheme } = useTheme();
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
@@ -55,13 +55,17 @@ export const EquityCurve = ({
         worker.terminate();
       };
 
-      worker.postMessage({ klineData, trades: backtestData.trades, initialCapital });
+      worker.postMessage({
+        klineData,
+        trades: backtestData.trades,
+        initialCapital: userSettings?.initial_capital,
+      });
     }
   };
 
   useEffect(() => {
     mapEquityData();
-  }, [klineData, initialCapital]);
+  }, [klineData, userSettings]);
 
   useEffect(() => {
     const handleResize = () => {

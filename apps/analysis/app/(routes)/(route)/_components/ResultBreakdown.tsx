@@ -17,12 +17,14 @@ export const ResultBreakdown = ({
   interval,
   closedTrades,
   initialCapital = 10000,
+  fees,
 }: {
   klineData: Kline[];
   trades: ITrade[];
   interval: Interval;
   closedTrades: IClosedTrade[];
   initialCapital?: number;
+  fees: number;
 }) => {
   const { theme } = useTheme();
   const [selectedPeriod, setSelectedPeriod] = useState('all');
@@ -63,6 +65,7 @@ export const ResultBreakdown = ({
           comission: 0,
           initialCapital,
           riskFreeRate: 0.02,
+          fees,
         },
       });
     };

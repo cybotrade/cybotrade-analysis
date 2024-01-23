@@ -295,7 +295,7 @@ const convertCloseTradesToDaily = (
 
 export const calculatePerformance = ({
   history: { openedTrades, closedTrades },
-  parameters: { initialCapital, comission, riskFreeRate },
+  parameters: { initialCapital, comission, riskFreeRate, fees },
   tradeOrders,
 }: {
   history: {
@@ -316,7 +316,7 @@ export const calculatePerformance = ({
       exitTime: Date;
     }[];
   };
-  parameters: { initialCapital: number; comission: number; riskFreeRate: number };
+  parameters: { initialCapital: number; comission: number; riskFreeRate: number; fees?: number };
   tradeOrders?: { klineData: Kline[]; trades: ITrade[]; interval: Interval };
 }): Performance => {
   const pnlFromTrade = (trade: (typeof closedTrades)[0]): Decimal =>
@@ -359,7 +359,10 @@ export const calculatePerformance = ({
     (acc, trade) => acc.add(pnlFromTrade(trade)),
     new Decimal(0),
   );
-  const finalBalance = new Decimal(initialCapital || 0).plus(totalProfit).plus(totalLoss);
+  const finalBalance = new Decimal(initialCapital || 0)
+    .plus(totalProfit)
+    .plus(totalLoss)
+    .minus(new Decimal(tradeOrders?.trades.length ?? 0).mul(new Decimal(fees ?? 0)));
 
   const maxDrawdown = (() => {
     try {
@@ -413,7 +416,9 @@ export const calculatePerformance = ({
       closedTrades.length === 0
         ? new Decimal(0)
         : new Decimal(winningTrades.length).div(closedTrades.length),
-    netProfit: pnls.reduce((acc, pnl) => acc.add(pnl), new Decimal(0)),
+    netProfit: pnls
+      .reduce((acc, pnl) => acc.add(pnl), new Decimal(0))
+      .minus(new Decimal(tradeOrders?.trades.length ?? 0).mul(new Decimal(fees ?? 0))),
     profitFactor: totalLoss.equals(0) ? new Decimal(0.0) : totalProfit.div(totalLoss),
     totalProfit,
     totalLoss,
@@ -662,29 +667,31 @@ export const calculateEquity = ({
       (trade) => +trade.time <= kline[6] && +trade.time >= kline[0],
     );
     if (tradeOnCandle) {
-      const { quantity, side, price } = tradeOnCandle;
+      const { quantity, side, price, fees = 0 } = tradeOnCandle;
 
       if (globalEntryPrice === null) {
         globalEntryPrice = price;
         globalSide = side as OrderSide;
         position = quantity;
+        accumulatePnl = accumulatePnl - fees;
         return;
       }
 
       if (side === globalSide) {
         globalEntryPrice = (globalEntryPrice * position + price * quantity) / (position + quantity);
         position = position + quantity;
+        accumulatePnl = accumulatePnl - fees;
         return;
       }
       if (side !== globalSide) {
         if (quantity > position) {
-          accumulatePnl = accumulatePnl + (price - globalEntryPrice) * quantity - position;
+          accumulatePnl = accumulatePnl - fees + (price - globalEntryPrice) * quantity - position;
           position = quantity - position;
           globalEntryPrice = price;
           globalSide = side as OrderSide;
           return;
         }
-        accumulatePnl = accumulatePnl + (price - globalEntryPrice) * quantity;
+        accumulatePnl = accumulatePnl - fees + (price - globalEntryPrice) * quantity;
         position = position - quantity;
       }
     }

@@ -164,7 +164,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
           symbol={symbol}
           interval={interval}
           klineData={klineData ?? []}
-          initialCapital={userSettings.initial_capital}
+          userSettings={userSettings}
         />
       ),
     },
@@ -178,6 +178,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
           interval={interval}
           closedTrades={closedTrades}
           initialCapital={userSettings.initial_capital}
+          fees={userSettings.fees ?? 0}
         />
       ),
     },

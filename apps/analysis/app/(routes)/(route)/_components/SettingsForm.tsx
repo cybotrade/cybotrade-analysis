@@ -15,7 +15,7 @@ export type SettingsValue = {
   order_size_unit?: string;
   order_size_value?: string;
   leverage?: string;
-  fees?: string;
+  fees?: number;
   take_profit?: { value?: string }[];
   stop_lost?: { value?: string }[];
   entry?: { value?: string }[];
@@ -33,7 +33,7 @@ const SettingsForm = ({
     order_size_unit: z.string().optional(),
     order_size_value: z.string().optional(),
     // leverage: z.string().optional(),
-    fees: z.string().optional(),
+    fees: z.number().optional(),
     // take_profit: z
     //   .array(
     //     z.object({
@@ -161,6 +161,10 @@ const SettingsForm = ({
                     placeholder=""
                     {...field}
                     suffix={<div className="text-gray-500 text-sm">USDT</div>}
+                    onChange={(v) => {
+                      const parsedValue = parseInt(v.target.value);
+                      form.setValue('fees', isNaN(parsedValue) ? undefined : parsedValue);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
