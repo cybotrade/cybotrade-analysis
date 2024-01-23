@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Interval } from '@cybotrade/core';
 
+import HeatMap from '@app/(routes)/(route)/_components/HeatMap';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
 import { transformToClosedTrades } from '@app/_lib/calculation';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
@@ -193,6 +194,13 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
       label: 'Monte Carlo',
       content: (
         <MonteCarlo closedTrades={closedTrades} initialCapital={userSettings.initial_capital} />
+      ),
+    },
+    {
+      value: 'heat-map',
+      label: 'Heat Map',
+      content: (
+        <HeatMap backtestData={backtestData} klineData={klineData ?? []} interval={interval} />
       ),
     },
   ];
