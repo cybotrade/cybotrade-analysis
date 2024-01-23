@@ -7,6 +7,7 @@ export interface ITrade {
   side: OrderSide | string;
   price: number;
   time: string;
+  fees?: number;
 }
 
 export interface IBackTestData {
