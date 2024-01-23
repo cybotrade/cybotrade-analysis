@@ -88,27 +88,27 @@ const HeatMap = ({
       .append('g')
       .attr('class', 'x-axis')
       .attr('transform', `translate(0, ${height})`)
-      .call(d3.axisBottom(xScale))
+      .call(d3.axisBottom(xScale).tickSize(10).tickSizeOuter(0).tickPadding(15))
       .style('font-size', '15px')
       .style('font-family', '"DM Sans", sans-serif');
 
     svg
       .append('text')
-      .attr('x', width + 60)
-      .attr('y', height + 5)
+      .attr('x', width + 25)
+      .attr('y', height + 3)
       .text((d) => {
         return correspondingData ? correspondingData.xPair.key : '';
       })
       .attr('fill', 'black')
       .style('font-size', '15px')
       .style('font-family', '"DM Sans", sans-serif')
-      .attr('text-anchor', 'end');
+      .attr('text-anchor', 'start');
 
     const yScale = d3.scaleBand<number>().range([height, 0]).domain(yDomain).padding(0.01);
     svg
       .append('g')
       .attr('class', 'y-axis')
-      .call(d3.axisLeft(yScale))
+      .call(d3.axisLeft(yScale).tickSize(10).tickSizeOuter(0).tickPadding(15))
       .style('font-size', '15px')
       .style('font-family', '"DM Sans", sans-serif');
 
@@ -123,7 +123,7 @@ const HeatMap = ({
       .attr('fill', 'black')
       .style('font-size', '15px')
       .style('font-family', '"DM Sans", sans-serif')
-      .attr('text-anchor', 'end');
+      .attr('text-anchor', 'middle');
 
     const color = d3
       .scaleLinear<string>()
