@@ -25,41 +25,48 @@ const HeatMap = ({
 }: HeatMapProps) => {
   const heatMapContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const [xSelect, setXSelect] = useState('sma');
+  const [xSelect, setXSelect] = useState('');
   const [ySelect, setYSelect] = useState('');
 
-  const chartData = useMemo(() => {
+  const datasets = useMemo(() => {
     if (!backtestData) return [];
 
-    const data = backtestData
-      .map((d) => {
-        if (d.id.indexOf(',') === -1) return null;
+    const data = backtestData.map((d) => {
+      if (d.id.indexOf(',') === -1) return null;
 
-        const [xPair, yPair] = d.id.split(', ').map((pair) => {
-          const [key, value] = pair.split('=');
-          return { key, value: +value };
-        });
-        let sharpeRatio = calculateSharpeRatio({
-          klineData,
-          inputTrades: d.trades,
-          interval,
-        }).toDecimalPlaces(2);
-        return {
-          xPair,
-          yPair,
-          value: sharpeRatio.isNaN() ? new Decimal(0) : sharpeRatio,
-        };
-      })
-      .filter((data) => {
-        return data && (data.xPair.key === xSelect || data.yPair.key === ySelect);
+      const [xPair, yPair] = d.id.split(', ').map((pair) => {
+        const [key, value] = pair.split('=');
+        return { key, value: +value };
       });
+      let sharpeRatio = calculateSharpeRatio({
+        klineData,
+        inputTrades: d.trades,
+        interval,
+      }).toDecimalPlaces(2);
 
-    if (data && data.length > 0) {
-      setXSelect(data[0]!.xPair.key);
+      return {
+        xPair,
+        yPair,
+        value: sharpeRatio.isNaN() ? new Decimal(0) : sharpeRatio,
+      };
+    });
+
+    const findFirstData = data.find((d) => d && d);
+
+    if (findFirstData) {
+      setXSelect(findFirstData.xPair.key);
+      return data;
     }
-
-    return data;
+    return [];
   }, [backtestData]);
+
+  const chartData = useMemo(
+    () =>
+      datasets.filter((data) => {
+        return data && (data.xPair.key === xSelect || data.yPair.key === ySelect);
+      }),
+    [datasets, xSelect, ySelect],
+  );
 
   useEffect(() => {
     if (!heatMapContainerRef.current) return;
