@@ -7,6 +7,7 @@ import { Interval } from '@cybotrade/core';
 
 import { IBackTestData } from '@app/(routes)/(route)/type';
 import { calculateSharpeRatio } from '@app/_lib/calculation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/_ui/Select';
 
 type HeatMapProps = {
   backtestData: IBackTestData[];
@@ -28,14 +29,17 @@ const HeatMap = ({
   const [xSelect, setXSelect] = useState('');
   const [ySelect, setYSelect] = useState('');
 
+  const [delimitor, setDelimitor] = useState('=');
+  const [separator, setSeparator] = useState(',');
+
   const datasets = useMemo(() => {
     if (!backtestData) return [];
 
     const data = backtestData.map((d) => {
-      if (d.id.indexOf(',') === -1) return null;
+      if (d.id.indexOf(delimitor) === -1 || d.id.indexOf(separator) === -1) return null;
 
-      const [xPair, yPair] = d.id.split(', ').map((pair) => {
-        const [key, value] = pair.split('=');
+      const [xPair, yPair] = d.id.split(separator).map((pair) => {
+        const [key, value] = pair.split(delimitor);
         return { key, value: +value };
       });
       let sharpeRatio = calculateSharpeRatio({
@@ -58,7 +62,7 @@ const HeatMap = ({
       return data;
     }
     return [];
-  }, [backtestData]);
+  }, [backtestData, separator, delimitor]);
 
   const chartData = useMemo(
     () =>
@@ -70,7 +74,7 @@ const HeatMap = ({
 
   useEffect(() => {
     if (!heatMapContainerRef.current) return;
-    const margin = { top: 100, right: 180, bottom: 50, left: 100 };
+    const margin = { top: 100, right: 100, bottom: 50, left: 100 };
     const width = heatMapContainerRef.current?.offsetWidth - margin.left - margin.right;
     const height = 700 - margin.top - margin.bottom;
 
@@ -167,9 +171,45 @@ const HeatMap = ({
     return () => {
       svg.remove();
     };
-  }, [backtestData, xSelect, ySelect]);
-  if (!backtestData) return null;
-  return <div className="max-h-fit" ref={heatMapContainerRef}></div>;
+  }, [chartData, xSelect, ySelect]);
+  if (!chartData) return null;
+  return (
+    <div className="p-10">
+      <div className="flex items-center justify-end gap-4">
+        <div className="flex items-center gap-4">
+          <h5>Delimiter</h5>
+          <Select onValueChange={setDelimitor}>
+            <SelectTrigger className="w-[120px] rounded-full dark:bg-[#392910] font-bold data-[placeholder]:font-normal">
+              <SelectValue placeholder="Delimitor" defaultValue={delimitor} />
+            </SelectTrigger>
+            <SelectContent className="h-[130px] overflow-auto dark:bg-[#392910]">
+              {['='].map((symbol) => (
+                <SelectItem key={symbol} value={symbol} className="font-bold">
+                  {symbol}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-4">
+          <h5>Separator</h5>
+          <Select onValueChange={setSeparator}>
+            <SelectTrigger className="w-[120px] rounded-full dark:bg-[#392910] font-bold data-[placeholder]:font-normal">
+              <SelectValue placeholder="Separator" defaultValue={separator} />
+            </SelectTrigger>
+            <SelectContent className="h-[130px] overflow-auto dark:bg-[#392910]">
+              {[','].map((symbol) => (
+                <SelectItem key={symbol} value={symbol} className="font-bold">
+                  {symbol}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="w-full max-h-fit" ref={heatMapContainerRef}></div>
+    </div>
+  );
 };
 
 export default HeatMap;
