@@ -1,12 +1,15 @@
 import { Kline } from 'binance';
 import * as d3 from 'd3';
 import Decimal from 'decimal.js';
+import { Loader } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Interval } from '@cybotrade/core';
 
 import { IBackTestData } from '@app/(routes)/(route)/type';
 import { calculateSharpeRatio } from '@app/_lib/calculation';
+import { Input } from '@app/_ui/Input';
+import { Label } from '@app/_ui/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/_ui/Select';
 
 type HeatMapProps = {
@@ -34,6 +37,7 @@ const HeatMap = ({
 
   const datasets = useMemo(() => {
     if (!backtestData) return [];
+    if (!delimitor || !separator) return [];
 
     const data = backtestData.map((d) => {
       if (d.id.indexOf(delimitor) === -1 || d.id.indexOf(separator) === -1) return null;
@@ -63,7 +67,6 @@ const HeatMap = ({
     }
     return [];
   }, [backtestData, separator, delimitor]);
-
   const chartData = useMemo(
     () =>
       datasets.filter((data) => {
@@ -74,6 +77,7 @@ const HeatMap = ({
 
   useEffect(() => {
     if (!heatMapContainerRef.current) return;
+
     const margin = { top: 100, right: 100, bottom: 50, left: 100 };
     const width = heatMapContainerRef.current?.offsetWidth - margin.left - margin.right;
     const height = 700 - margin.top - margin.bottom;
@@ -168,46 +172,44 @@ const HeatMap = ({
       .style('font-size', '15px')
       .style('font-family', '"DM Sans", sans-serif');
 
+    heatMapContainerRef.current.scrollIntoView({ behavior: 'instant' });
+
     return () => {
       svg.remove();
     };
   }, [chartData, xSelect, ySelect]);
-  if (!chartData) return null;
+
   return (
     <div className="p-10">
-      <div className="flex items-center justify-end gap-4">
-        <div className="flex items-center gap-4">
-          <h5>Delimiter</h5>
-          <Select onValueChange={setDelimitor}>
-            <SelectTrigger className="w-[120px] rounded-full dark:bg-[#392910] font-bold data-[placeholder]:font-normal">
-              <SelectValue placeholder="Delimitor" defaultValue={delimitor} />
-            </SelectTrigger>
-            <SelectContent className="h-[130px] overflow-auto dark:bg-[#392910]">
-              {['='].map((symbol) => (
-                <SelectItem key={symbol} value={symbol} className="font-bold">
-                  {symbol}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="flex items-center justify-left gap-4 font-sora">
+        <div className="flex flex-col gap-2">
+          <Label>Delimiter</Label>
+          <Input
+            className="w-40"
+            type="text"
+            value={delimitor}
+            placeholder="Delimiter"
+            onChange={(e) => setDelimitor(e.target.value)}
+            maxLength={5}
+          />
         </div>
-        <div className="flex items-center gap-4">
-          <h5>Separator</h5>
-          <Select onValueChange={setSeparator}>
-            <SelectTrigger className="w-[120px] rounded-full dark:bg-[#392910] font-bold data-[placeholder]:font-normal">
-              <SelectValue placeholder="Separator" defaultValue={separator} />
-            </SelectTrigger>
-            <SelectContent className="h-[130px] overflow-auto dark:bg-[#392910]">
-              {[','].map((symbol) => (
-                <SelectItem key={symbol} value={symbol} className="font-bold">
-                  {symbol}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col gap-2">
+          <Label>Separator</Label>
+          <Input
+            className="w-40"
+            type="text"
+            value={separator}
+            placeholder="Separator"
+            onChange={(e) => setSeparator(e.target.value)}
+            maxLength={5}
+          />
         </div>
       </div>
-      <div className="w-full max-h-fit" ref={heatMapContainerRef}></div>
+      {!chartData || chartData.length === 0 ? (
+        <div className="flex justify-center items-center h-96 font-sans text-2xl">No Records</div>
+      ) : (
+        <div className="w-full max-h-fit" ref={heatMapContainerRef}></div>
+      )}
     </div>
   );
 };
