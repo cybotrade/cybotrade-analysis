@@ -1,15 +1,14 @@
 import { Kline } from 'binance';
+import Decimal from 'decimal.js';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Interval } from '@cybotrade/core';
 
+import HeatMap from '@app/(routes)/(route)/_components/HeatMap';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
-import {
-  calculateCalmarRatio,
-  calculateSharpeRatio,
-  transformToClosedTrades,
-} from '@app/_lib/calculation';
+import { transformToClosedTrades } from '@app/_lib/calculation';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
 import { Sheet, SheetContent, SheetTrigger } from '@app/_ui/Sheet';
@@ -22,6 +21,10 @@ import { ResultBreakdown } from './ResultBreakdown';
 import SettingsForm, { SettingsValue } from './SettingsForm';
 import { Trend } from './Trend';
 
+const SharpeRatio = dynamic(() => import('./SharpeRatio'), {
+  ssr: false,
+}); // using dynamic import here because it is not able to support SSR for 'chartjs-plugin-zoom' in SharpeRation component
+
 interface IBackTestResultsDrawer {
   data: IBackTestDataMultiSymbols[] | undefined;
   drawer: IDrawer;
@@ -33,34 +36,50 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
   const settingDrawer = useDrawer();
   const [userSettings, setUserSettings] = useState<SettingsValue>({
     initial_capital: 10000,
-    order_size_unit: undefined,
+    order_size_unit: 'usdt',
     order_size_value: undefined,
-    leverage: undefined,
+    // leverage: undefined,
     fees: undefined,
-    take_profit: [{ value: undefined }, { value: undefined }],
-    stop_lost: [{ value: undefined }, { value: undefined }],
-    entry: [{ value: undefined }, { value: undefined }],
+    // take_profit: [{ value: undefined }, { value: undefined }],
+    // stop_lost: [{ value: undefined }, { value: undefined }],
+    // entry: [{ value: undefined }, { value: undefined }],
   });
 
   const onSettingsFormUpdate = (values: SettingsValue) => {
     setUserSettings(values);
-    settingDrawer.close();
   };
 
   const { data, drawer, fetchedKlinePercentage } = props;
   if (!data) return null;
   const filteredSymbol = data[selectedIndex].symbols[0]; // temporary to support only one symbol
-  const backtestData = {
-    ...data[selectedIndex],
-    symbols: filteredSymbol,
-    intervals: data[selectedIndex].intervals[filteredSymbol],
-    trades: sortByTimestamp<ITrade>(data[selectedIndex]?.trades[filteredSymbol] as ITrade[]),
-  } as IBackTestData;
-  const symbol = backtestData ? (backtestData.symbols.split('/').join('') as string) : 'BTCUSDT';
+  const sortedTrades = (trades: ITrade[]) => {
+    if (!trades) return [] as ITrade[];
+    if (trades.length === 0) return [] as ITrade[];
+    trades = trades.map((trade) => {
+      return {
+        ...trade,
+        quantity: userSettings.order_size_value
+          ? new Decimal(userSettings.order_size_value).div(trade.price).toNumber()
+          : trade.quantity,
+        fees: userSettings.fees ?? 0,
+      };
+    });
+    return sortByTimestamp<ITrade>(trades);
+  };
+  const backtestData = data.map((d) => {
+    return {
+      ...d,
+      symbols: filteredSymbol,
+      intervals: d.intervals[filteredSymbol],
+      trades: sortedTrades(d.trades[filteredSymbol]),
+    } as IBackTestData;
+  });
+
+  const symbol = backtestData ? (backtestData[0].symbols.split('/').join('') as string) : 'BTCUSDT';
   const interval = backtestData
-    ? Interval[backtestData.intervals[0] as unknown as keyof typeof Interval]
+    ? Interval[backtestData[0].intervals[0] as unknown as keyof typeof Interval]
     : Interval.OneDay;
-  const closedTrades = backtestData ? transformToClosedTrades(backtestData.trades) : [];
+  const closedTrades = backtestData ? transformToClosedTrades(backtestData[0].trades) : [];
 
   const [klineData, setKlineData] = useState<Kline[] | null>([]);
   const [doneFetchingKline, setDoneFetchingKline] = useState(false);
@@ -103,18 +122,21 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     };
 
     if (klineData?.length === 0) {
-      fetchKlineData({ startTime: backtestData.start_time, endTime: backtestData.end_time });
+      fetchKlineData({ startTime: backtestData[0].start_time, endTime: backtestData[0].end_time });
     }
-    if (klineData && klineData[0] && klineData[0][0] > +backtestData.start_time) {
+    if (klineData && klineData[0] && klineData[0][0] > +backtestData[0].start_time) {
       const fetchedPercentage = Math.round(
-        ((+backtestData.end_time - klineData[0][0]) /
-          (+backtestData.end_time - +backtestData.start_time)) *
+        ((+backtestData[0].end_time - klineData[0][0]) /
+          (+backtestData[0].end_time - +backtestData[0].start_time)) *
           100,
       );
       fetchedKlinePercentage(fetchedPercentage);
-      fetchKlineData({ startTime: backtestData.start_time, endTime: klineData[0][0].toString() });
+      fetchKlineData({
+        startTime: backtestData[0].start_time,
+        endTime: klineData[0][0].toString(),
+      });
     }
-    if (klineData && klineData[0] && klineData[0][0] < +backtestData.start_time) {
+    if (klineData && klineData[0] && klineData[0][0] < +backtestData[0].start_time) {
       setDoneFetchingKline(true);
       fetchedKlinePercentage(100);
     }
@@ -131,18 +153,18 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     {
       value: 'candle-chart',
       label: 'Candle Chart',
-      content: <CandleChart backtestData={backtestData} klineData={klineData ?? []} />,
+      content: <CandleChart backtestData={backtestData[0]} klineData={klineData ?? []} />,
     },
     {
       value: 'equity-curve',
       label: 'Equity Curve',
       content: (
         <EquityCurve
-          backtestData={backtestData}
+          backtestData={backtestData[0]}
           symbol={symbol}
           interval={interval}
           klineData={klineData ?? []}
-          initialCapital={userSettings.initial_capital}
+          userSettings={userSettings}
         />
       ),
     },
@@ -152,19 +174,34 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
       content: (
         <ResultBreakdown
           klineData={klineData ?? []}
-          trades={backtestData.trades}
+          trades={backtestData[0].trades}
           interval={interval}
           closedTrades={closedTrades}
           initialCapital={userSettings.initial_capital}
+          fees={userSettings.fees ?? 0}
         />
       ),
     },
     { value: 'trend', label: 'Trend', content: <Trend closedTrades={closedTrades} /> },
     {
+      value: 'sharpe-ratio',
+      label: 'Sharpe Ratio',
+      content: (
+        <SharpeRatio backtestData={backtestData} klineData={klineData ?? []} interval={interval} />
+      ),
+    },
+    {
       value: 'monte-carlo',
       label: 'Monte Carlo',
       content: (
         <MonteCarlo closedTrades={closedTrades} initialCapital={userSettings.initial_capital} />
+      ),
+    },
+    {
+      value: 'heat-map',
+      label: 'Heat Map',
+      content: (
+        <HeatMap backtestData={backtestData} klineData={klineData ?? []} interval={interval} />
       ),
     },
   ];
@@ -186,6 +223,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
             onOpenChange={() =>
               settingDrawer.isOpen ? settingDrawer.close() : settingDrawer.open()
             }
+            modal={false}
           >
             <SheetTrigger
               className={cn(
@@ -204,6 +242,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
               side={'left'}
               className="min-w-[26%] rounded-r-lg"
               overlayClassName="hidden"
+              onInteractOutside={(e) => e.preventDefault()}
             >
               <div
                 onClick={settingDrawer.close}

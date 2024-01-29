@@ -52,7 +52,8 @@ const EntryForm = <T extends FieldValues>({
       <div className="flex gap-2">
         <span className="opacity-0">0</span>
         <Button
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
             append({ value: undefined } as any); //temporary
           }}
           variant={'outline'}
