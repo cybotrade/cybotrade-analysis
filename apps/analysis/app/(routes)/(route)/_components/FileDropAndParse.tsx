@@ -137,9 +137,15 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({
       try {
         const fileReader = new FileReader();
         fileReader.onload = (e) => {
-          const content = e.target?.result;
-          const jsonObject = JSON.parse(content as string);
-          onChange(file, jsonObject);
+          try {
+            const content = e.target?.result;
+            const jsonObject = JSON.parse(content as string);
+            onChange(file, jsonObject);
+          } catch (jsonParseError) {
+            console.error('Error parsing JSON:', jsonParseError);
+            setMode('ERROR');
+            setErrorMessage('Error parsing JSON');
+          }
         };
         fileReader.onerror = (error) => {
           throw error;
