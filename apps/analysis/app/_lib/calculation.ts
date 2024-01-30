@@ -401,7 +401,7 @@ export const calculatePerformance = ({
 
     finalBalance,
     initialCapital: new Decimal(initialCapital),
-    totalTrades: closedTrades.length,
+    totalTrades: tradeOrders?.trades.length || 0,
     tradingFrequency,
 
     totalWinningTrades: pnls.filter((pnl) => pnl.greaterThan(0)).length,
