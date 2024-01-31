@@ -11,7 +11,6 @@ type ErrorPageProps = {
 
 export const Error: React.FC<ErrorPageProps> = ({ error, reset }) => {
   const router = useRouter();
-  console.log('error', error);
 
   return (
     <div className="h-screen w-full flex flex-col justify-center items-center gap-5">
@@ -19,7 +18,7 @@ export const Error: React.FC<ErrorPageProps> = ({ error, reset }) => {
       <div className="text-center max-w-lg space-y-2">
         <h1 className="text-black dark:text-white font-sans font-bold text-2xl">Oops!</h1>
         <p className="text-black dark:text-white font-sora leading-6 text-lg">
-          Looks like there’s something when wrong
+          Looks like there’s something went wrong
         </p>
       </div>
       <Link
