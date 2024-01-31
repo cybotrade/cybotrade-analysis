@@ -20,6 +20,7 @@ const Backtest = () => {
   const [data, setData] = useState<IBackTestDataMultiSymbols[] | undefined>(undefined);
   const drawer = useDrawer();
   const [analysingProgress, setAnalysingProgress] = useState(0);
+  const [analysingError, setAnalysisError] = useState<string | undefined>();
 
   return (
     <div className="bg-gradient-to-b from-[#FFEFDC] to-white dark:bg-gradient-to-b dark:from-[#2E1C05] dark:to-[#73501A] text-black dark:text-white rounded-lg border border-primary-light flex flex-col justify-center items-center gap-6 relative p-8">
@@ -36,12 +37,16 @@ const Backtest = () => {
         }}
         onShowResult={drawer.open}
         analysingProgress={analysingProgress}
+        error={analysingError}
       />
       {data && (
         <BackTestResultsDrawer
           data={data}
           drawer={drawer}
-          fetchedKlinePercentage={(percentage) => {
+          fetchedKlinePercentage={(percentage, error) => {
+            if (error) {
+              setAnalysisError(error);
+            }
             setAnalysingProgress(percentage);
           }}
         />

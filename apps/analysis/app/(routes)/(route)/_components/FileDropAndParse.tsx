@@ -30,9 +30,10 @@ type Action = SetInDropZoneAction | AddFileToListAction | ResetAction;
 
 interface FileDropZoneProps {
   className?: string;
-  onChange: (file: File, result: object) => void;
+  onChange: (file?: File, result?: object) => void;
   onShowResult: () => void;
   analysingProgress: number;
+  error?: string;
 }
 
 const reducer = (state: State, action: Action) => {
@@ -56,6 +57,7 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({
   onChange,
   onShowResult,
   analysingProgress,
+  error,
 }) => {
   const [uploadPercentage, setUploadPercentage] = useState(0);
   // const [analysingPercentage, setAnalysingPercentage] = useState(0);
@@ -63,7 +65,7 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({
   const [mode, setMode] = useState<
     'PRE_UPLOAD' | 'UPLOADING' | 'POST_UPLOAD' | 'ANALYSING' | 'DONE_ANALYSING' | 'ERROR'
   >('PRE_UPLOAD');
-  const [file, setFile] = useState<File>();
+  const [file, setFile] = useState<File | undefined>();
   const [data, dispatch] = useReducer(reducer, {
     inDropZone: false,
     fileList: [],
@@ -87,6 +89,13 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({
     e.dataTransfer.dropEffect = 'copy';
     dispatch({ type: 'SET_IN_DROP_ZONE', inDropZone: true });
   };
+
+  useEffect(() => {
+    if (error) {
+      setMode('ERROR');
+      setErrorMessage(error.toString());
+    }
+  }, [error]);
 
   const handleUpload = (file: File) => {
     const maxFileSize = 5000000000; // 5GB
@@ -172,12 +181,7 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({
   }, [mode, uploadPercentage]);
   // end remove
   useEffect(() => {
-    // if (mode === 'ANALYSING' && analysingPercentage < 100) {
-    //   setTimeout(() => {
-    //     setAnalysingPercentage((prev) => prev + 1);
-    //   }, 20);
-    // }
-    if (mode === 'ANALYSING' && analysingProgress === 100) {
+    if (analysingProgress === 100) {
       setMode('DONE_ANALYSING');
     }
   }, [mode, analysingProgress]);
@@ -187,6 +191,8 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({
     dispatch({ type: 'RESET' });
     setErrorMessage('');
     setUploadPercentage(0);
+    setFile(undefined);
+    onChange(undefined, undefined);
     // setAnalysingPercentage(0);
   };
 
@@ -287,9 +293,15 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({
           <div className="border border-primary min-h-full rounded-md flex flex-col justify-end p-7 bg-gradient-to-r from-[#FFEFDC] to-white dark:bg-gradient-to-r dark:from-[#2E1C05] dark:to-[#73501A] gap-2">
             <p className="text-xl">{file?.name}</p>
             <div className="flex justify-between">
-              <p className="text-xs text-red-400 py-1 px-4 rounded-full border border-red-400 bg-white flex items-center">
-                Error: {errorMessage}
-              </p>
+              {errorMessage.startsWith('Error') ? (
+                <p className="text-xs text-red-400 py-1 px-4 rounded-full border border-red-400 bg-white flex items-center">
+                  {errorMessage}
+                </p>
+              ) : (
+                <p className="text-xs text-red-400 py-1 px-4 rounded-full border border-red-400 bg-white flex items-center">
+                  Error: {errorMessage}
+                </p>
+              )}
               <CrossSolid className="hover:opacity-70 cursor-pointer" onClick={reset} />
             </div>
           </div>
