@@ -208,7 +208,10 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
       <div className="px-8 py-8 w-full flex flex-col gap-10">
         <div className="flex items-center justify-end gap-4">
           <div>Sort By</div>
-          <Select onValueChange={(selectedYearValue) => setSelectedYear(selectedYearValue)}>
+          <Select
+            value={selectedYear}
+            onValueChange={(selectedYearValue) => setSelectedYear(selectedYearValue)}
+          >
             <SelectTrigger className="w-[120px] rounded-full dark:bg-[#392910]">
               <SelectValue placeholder="Year" defaultValue={selectedYear} />
             </SelectTrigger>
