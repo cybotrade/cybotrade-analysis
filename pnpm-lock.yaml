@@ -144,6 +144,9 @@ importers:
       '@types/d3':
         specifier: 7.4.3
         version: 7.4.3
+      '@types/d3-zoom':
+        specifier: 3.0.8
+        version: 3.0.8
       '@types/eslint':
         specifier: ^8.44.7
         version: 8.44.7
