@@ -6,7 +6,8 @@ import '@app/globals.css';
 
 export const metadata: Metadata = {
   title: 'Cybotrade Analysis',
-  description: '-',
+  description: 'Most comprehensive and institutional grade backtest report',
+  keywords: 'backtest, analysis, trading, crypto, bitcoin',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }): JSX.Element {
