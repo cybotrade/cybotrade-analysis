@@ -1,3 +1,5 @@
+'use client';
+
 import { Kline } from 'binance';
 import Decimal from 'decimal.js';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -34,7 +36,7 @@ type Pair = {
 interface IBackTestResultsDrawer {
   data: IBackTestDataMultiSymbols[] | undefined;
   drawer: IDrawer;
-  fetchedKlinePercentage: (percentage: number) => void;
+  fetchedKlinePercentage: (percentage: number, error?: string) => void;
 }
 
 const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
@@ -62,6 +64,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
 
   const { data, drawer, fetchedKlinePercentage } = props;
   if (!data) return null;
+
   const filteredSymbol = data[selectedIndex].symbols[0]; // temporary to support only one symbol
   const sortedTrades = (trades: ITrade[]) => {
     if (!trades) return [] as ITrade[];
@@ -166,17 +169,28 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
             method: 'GET',
           },
         );
-        const res: Kline[] = await req.json();
-        if (!req.ok) {
-          throw new Error(`HTTP error! Status: ${req.status}`);
+
+        if (abortController.signal.aborted) {
+          console.log('Request aborted');
+          return;
         }
 
-        setKlineData((prev) => {
-          const filteredPrev: Kline[] = prev ? prev?.filter((r) => r[0] !== +endTime) : [];
-          return [...res, ...filteredPrev];
-        });
+        const res = await req.json();
+        if (!req.ok) {
+          throw new Error(`${res.error}`);
+        }
+        if (req.ok) {
+          setKlineData((prev) => {
+            const filteredPrev: Kline[] = prev ? prev?.filter((r) => r[0] !== +endTime) : [];
+            return [...res, ...filteredPrev];
+          });
+        }
       } catch (error) {
-        console.log('error', error);
+        if ((error as Error).name === 'AbortError') {
+          console.log('Request aborted');
+          return;
+        }
+        fetchedKlinePercentage(0, error as string);
       }
     };
 

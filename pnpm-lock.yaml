@@ -156,6 +156,9 @@ importers:
       '@types/d3-fetch':
         specifier: 3.0.7
         version: 3.0.7
+      '@types/d3-zoom':
+        specifier: 3.0.8
+        version: 3.0.8
       '@types/eslint':
         specifier: ^8.44.7
         version: 8.44.7

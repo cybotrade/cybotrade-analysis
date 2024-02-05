@@ -26,12 +26,35 @@ export const GET = async (req: Request) => {
     return NextResponse.json({ error: 'Invalid parameters' });
   }
 
-  const kline = await client.getKlines({
-    symbol: params['symbol'] as string,
-    interval: params['interval'] as KlineInterval,
-    // startTime: parseInt(params['startTime']),
-    endTime: parseInt(params['endTime']),
-  });
+  try {
+    const kline = await client.getKlines({
+      symbol: params['symbol'] as string,
+      interval: params['interval'] as KlineInterval,
+      // startTime: parseInt(params['startTime']),
+      endTime: parseInt(params['endTime']),
+    });
 
-  return NextResponse.json(kline);
+    if (Array.isArray(kline)) {
+      return NextResponse.json(kline);
+    } else {
+      // Check if the response contains an error property
+      if (kline && 'error' in kline) {
+        const errorResponse = kline as { error: { message: string } };
+        return NextResponse.json({ error: errorResponse.error.message });
+      } else {
+        // Handle unexpected response format
+        return NextResponse.json(
+          { error: 'Unexpected response format from server' },
+          { status: 500 },
+        );
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching klines:', error);
+    const errorResponse = error as { message: string };
+    return NextResponse.json(
+      { error: `Failed to fetch klines: ${errorResponse.message}` },
+      { status: 500 },
+    );
+  }
 };
