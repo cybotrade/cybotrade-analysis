@@ -4,7 +4,7 @@ import { useTheme } from 'next-themes';
 import Image from 'next/image';
 import React, { useMemo, useState } from 'react';
 
-import { Interval } from '@cybotrade/core';
+import { Interval } from '@app/_lib/utils';
 
 import { calculatePerformance } from '@app/_lib/calculation';
 import { cn } from '@app/_lib/utils';

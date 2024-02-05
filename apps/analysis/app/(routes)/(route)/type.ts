@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js';
 
-import { Interval, OrderSide } from '@cybotrade/core';
+import { Interval, OrderSide } from '@app/_lib/utils';
 
 export interface ITrade {
   quantity: number;

@@ -2,7 +2,7 @@ import { type Kline } from 'binance';
 import { Decimal } from 'decimal.js';
 import { UTCTimestamp } from 'lightweight-charts';
 
-import { Interval, OrderSide } from '@cybotrade/core';
+import { Interval, OrderSide } from '@app/_lib/utils';
 
 import { IClosedTrade, ITrade } from '@app/(routes)/(route)/type';
 

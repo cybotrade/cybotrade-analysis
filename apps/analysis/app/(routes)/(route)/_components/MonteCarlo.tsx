@@ -14,7 +14,7 @@ import { FolderSearch } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 
-import { OrderSide } from '@cybotrade/core';
+import { OrderSide } from '@app/_lib/utils';
 
 import { Loading } from '@app/_components/loading';
 import { pnl } from '@app/_lib/calculation';
