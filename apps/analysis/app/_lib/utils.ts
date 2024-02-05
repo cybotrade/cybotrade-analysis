@@ -1,8 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-import { Interval } from '@cybotrade/core';
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -23,6 +21,28 @@ export const sortByTimestamp = <T extends { time: Date | string }>(
     return multiplier * (dateA.getTime() - dateB.getTime());
   });
 };
+
+export enum OrderSide {
+  Buy = 'buy',
+  Sell = 'sell',
+}
+
+export enum Interval {
+  OneMinute = '1m',
+  ThreeMinute = '3m',
+  FiveMinute = '5m',
+  FifteenMinute = '15m',
+  ThirtyMinute = '30m',
+  OneHour = '1h',
+  TwoHour = '2h',
+  FourHour = '4h',
+  SixHour = '6h',
+  TwelveHour = '12h',
+  OneDay = '1d',
+  ThreeDay = '3d',
+  OneWeek = '1w',
+  OneMonth = '1M',
+}
 
 export const intervalToDays = (interval: Interval) => {
   switch (interval) {
