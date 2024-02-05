@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import Decimal from 'decimal.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Interval } from '@cybotrade/core';
+import { Interval } from '@app/_lib/utils';
 
 import { IBackTestData } from '@app/(routes)/(route)/type';
 import { calculateSharpeRatio } from '@app/_lib/calculation';

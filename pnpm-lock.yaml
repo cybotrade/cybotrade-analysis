@@ -26,9 +26,6 @@ importers:
 
   apps/analysis:
     dependencies:
-      '@cybotrade/core':
-        specifier: ^0.0.9
-        version: 0.0.9(@sinclair/typebox@0.28.20)
       '@hookform/resolvers':
         specifier: ^3.3.3
         version: 3.3.4(react-hook-form@7.49.2)
@@ -144,6 +141,9 @@ importers:
       '@types/d3':
         specifier: 7.4.3
         version: 7.4.3
+      '@types/d3-zoom':
+        specifier: 3.0.8
+        version: 3.0.8
       '@types/eslint':
         specifier: ^8.44.7
         version: 8.44.7
@@ -517,15 +517,6 @@ packages:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
     dev: true
-
-  /@cybotrade/core@0.0.9(@sinclair/typebox@0.28.20):
-    resolution: {integrity: sha512-jSDiVipe0+as33syMuReDVDAni0Bj7pQXCmpblJ2VI0tjukR9seGtIGBtgGkeV2LTV0lEVp/3hLbaqzuyPftCA==, tarball: https://npm.pkg.github.com/download/@cybotrade/core/0.0.9/f7cff7d2f294f5b05968b72485cbdd4838b2292f}
-    peerDependencies:
-      '@sinclair/typebox': ^0.28.9
-    dependencies:
-      '@sinclair/typebox': 0.28.20
-      zod: 3.22.4
-    dev: false
 
   /@eslint-community/eslint-utils@4.4.0(eslint@8.53.0):
     resolution: {integrity: sha512-1/sA4dwrzBAyeUoQ6oxahHKmrZvsnLCg4RfxW3ZFGGmQkSNQPFNLV9CUEFQP1x9EYXHTo5p6xdhZM1Ne9p/AfA==}
@@ -1438,10 +1429,6 @@ packages:
   /@rushstack/eslint-patch@1.5.1:
     resolution: {integrity: sha512-6i/8UoL0P5y4leBIGzvkZdS85RDMG9y1ihZzmTZQ5LdHUYmZ7pKFoj8X0236s3lusPs1Fa5HTQUpwI+UfTcmeA==}
     dev: true
-
-  /@sinclair/typebox@0.28.20:
-    resolution: {integrity: sha512-QCF3BGfacwD+3CKhGsMeixnwOmX4AWgm61nKkNdRStyLVu0mpVFYlDSY8gVBOOED1oSwzbJauIWl/+REj8K5+w==}
-    dev: false
 
   /@swc/helpers@0.5.2:
     resolution: {integrity: sha512-E4KcWTpoLHqwPHLxidpOqQbcrZVgi0rsmmZXUle1jXmJfuIf/UWpczUJ7MZZ5tlxytgJXyp0w4PGkkeLiuIdZw==}
