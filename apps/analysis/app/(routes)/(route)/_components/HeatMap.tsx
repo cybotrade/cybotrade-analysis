@@ -164,8 +164,6 @@ const HeatMap = ({
       .style('font-size', '15px')
       .style('font-family', '"DM Sans", sans-serif');
 
-    heatMapContainerRef.current.scrollIntoView({ behavior: 'instant' });
-
     return () => {
       svg.remove();
     };
