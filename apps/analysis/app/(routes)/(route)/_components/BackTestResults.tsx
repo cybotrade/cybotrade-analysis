@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Interval } from '@cybotrade/core';
+import { Interval } from '@app/_lib/utils';
 
 import HeatMap from '@app/(routes)/(route)/_components/HeatMap';
 import SharpeRatio from '@app/(routes)/(route)/_components/SharpeRatio';
