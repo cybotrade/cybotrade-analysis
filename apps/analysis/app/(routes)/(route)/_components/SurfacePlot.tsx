@@ -22,7 +22,7 @@ type SurfacePlotProps = {
   onxAxisSelect: Dispatch<SetStateAction<string>>;
   onyAxisSelect: Dispatch<SetStateAction<string>>;
 };
-export const SurfacePlot = ({
+const SurfacePlot = ({
   datasets,
   delimitor,
   xAxisSelected,
@@ -225,3 +225,5 @@ export const SurfacePlot = ({
     </div>
   );
 };
+
+export default SurfacePlot;
