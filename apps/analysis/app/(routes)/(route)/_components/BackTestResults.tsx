@@ -9,8 +9,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Interval } from '@app/_lib/utils';
 
 import HeatMap from '@app/(routes)/(route)/_components/HeatMap';
+import SharpeRatio from '@app/(routes)/(route)/_components/SharpeRatio';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
-import { transformToClosedTrades } from '@app/_lib/calculation';
+import { calculateSharpeRatio, transformToClosedTrades } from '@app/_lib/calculation';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
 import { Sheet, SheetContent, SheetTrigger } from '@app/_ui/Sheet';
@@ -23,9 +24,14 @@ import { ResultBreakdown } from './ResultBreakdown';
 import SettingsForm, { SettingsValue } from './SettingsForm';
 import { Trend } from './Trend';
 
-const SharpeRatio = dynamic(() => import('./SharpeRatio'), {
+const SurfacePlot = dynamic(() => import('./SurfacePlot'), {
   ssr: false,
-}); // using dynamic import here because it is not able to support SSR for 'chartjs-plugin-zoom' in SharpeRation component
+});
+
+type Pair = {
+  key: string;
+  value: number;
+};
 
 interface IBackTestResultsDrawer {
   data: IBackTestDataMultiSymbols[] | undefined;
@@ -46,6 +52,11 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     // stop_lost: [{ value: undefined }, { value: undefined }],
     // entry: [{ value: undefined }, { value: undefined }],
   });
+  const [delimitor, setDelimitor] = useState('=');
+  const [separator, setSeparator] = useState(',');
+
+  const [xAxisSelected, setxAxisSelected] = useState('');
+  const [yAxisSelected, setyAxisSelected] = useState('');
 
   const onSettingsFormUpdate = (values: SettingsValue) => {
     setUserSettings(values);
@@ -87,6 +98,54 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
   const [klineData, setKlineData] = useState<Kline[] | null>([]);
   const [doneFetchingKline, setDoneFetchingKline] = useState(false);
 
+  const keyPairsArray = useMemo(() => {
+    if (!backtestData || !klineData) return [];
+    if (!delimitor || !separator) return [];
+
+    const data = backtestData.map((d) => {
+      if (d.id.indexOf(delimitor) === -1 || d.id.indexOf(separator) === -1) return null;
+
+      const allPairs = d.id
+        .split(separator)
+        .map((pair) => {
+          if (pair.indexOf(delimitor) === -1) return undefined;
+          const [key, value] = pair.split(delimitor);
+          return { key: key.trim(), value: +value };
+        })
+        .filter((p) => p);
+
+      let sharpeRatio = calculateSharpeRatio({
+        klineData,
+        inputTrades: d.trades,
+        interval,
+      }).toDecimalPlaces(2);
+
+      return {
+        allPairs,
+        value: sharpeRatio.isNaN() ? new Decimal(0) : sharpeRatio,
+      };
+    });
+    return data;
+  }, [backtestData, klineData]);
+
+  const filteredDatasets = useMemo(() => {
+    if (!keyPairsArray || keyPairsArray.length === 0) return [];
+    const datasets = keyPairsArray.filter(
+      (d): d is { allPairs: Pair[]; value: Decimal } => !!d && d.allPairs.length > 1,
+    );
+
+    return datasets;
+  }, [keyPairsArray]);
+
+  useEffect(() => {
+    if (filteredDatasets.length === 0) {
+      setxAxisSelected('');
+      setyAxisSelected('');
+      return;
+    }
+    setxAxisSelected(filteredDatasets[0].allPairs[0].key);
+    setyAxisSelected(filteredDatasets[0].allPairs[1].key);
+  }, [delimitor, separator]);
   useEffect(() => {
     const abortController = new AbortController();
     const fetchKlineData = async ({
@@ -215,7 +274,34 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
       value: 'heat-map',
       label: 'Heat Map',
       content: (
-        <HeatMap backtestData={backtestData} klineData={klineData ?? []} interval={interval} />
+        <HeatMap
+          datasets={filteredDatasets ?? []}
+          delimitor={delimitor}
+          separator={separator}
+          xAxisSelected={xAxisSelected}
+          yAxisSelected={yAxisSelected}
+          onDelimitorChange={setDelimitor}
+          onSeparatorChange={setSeparator}
+          onxAxisSelect={setxAxisSelected}
+          onyAxisSelect={setyAxisSelected}
+        />
+      ),
+    },
+    {
+      value: 'surface-plot',
+      label: 'Surface Plot',
+      content: (
+        <SurfacePlot
+          datasets={filteredDatasets}
+          delimitor={delimitor}
+          separator={separator}
+          xAxisSelected={xAxisSelected}
+          yAxisSelected={yAxisSelected}
+          onDelimitorChange={setDelimitor}
+          onSeparatorChange={setSeparator}
+          onxAxisSelect={setxAxisSelected}
+          onyAxisSelect={setyAxisSelected}
+        />
       ),
     },
   ];

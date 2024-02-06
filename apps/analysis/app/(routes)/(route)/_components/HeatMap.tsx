@@ -1,12 +1,12 @@
-import { Kline } from 'binance';
 import * as d3 from 'd3';
 import Decimal from 'decimal.js';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Interval } from '@app/_lib/utils';
 
 import { IBackTestData } from '@app/(routes)/(route)/type';
 import { calculateSharpeRatio } from '@app/_lib/calculation';
+
 import { Input } from '@app/_ui/Input';
 import { Label } from '@app/_ui/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/_ui/Select';
@@ -17,69 +17,38 @@ type Pair = {
 };
 
 type HeatMapProps = {
-  backtestData: IBackTestData[];
-  klineData: Kline[];
-  interval: Interval;
+  datasets: { allPairs: Pair[]; value: Decimal }[];
+  delimitor: string;
+  onDelimitorChange: Dispatch<SetStateAction<string>>;
+  separator: string;
+  onSeparatorChange: Dispatch<SetStateAction<string>>;
+  xAxisSelected: string;
+  yAxisSelected: string;
+  onxAxisSelect: Dispatch<SetStateAction<string>>;
+  onyAxisSelect: Dispatch<SetStateAction<string>>;
   minDomain?: number;
   maxDomain?: number;
 };
 
 const HeatMap = ({
-  backtestData,
-  klineData,
-  interval,
+  datasets,
+  delimitor,
+  xAxisSelected,
+  yAxisSelected,
+  separator,
+  onDelimitorChange,
+  onSeparatorChange,
+  onxAxisSelect,
+  onyAxisSelect,
   minDomain = 1,
   maxDomain = 100,
 }: HeatMapProps) => {
   const heatMapContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const [xSelect, setXSelect] = useState('');
-  const [ySelect, setYSelect] = useState('');
-
-  const [delimitor, setDelimitor] = useState('=');
-  const [separator, setSeparator] = useState(',');
-
-  const datasets = useMemo(() => {
-    if (!backtestData) return [];
-    if (!delimitor || !separator) return [];
-
-    const data = backtestData.map((d) => {
-      if (d.id.indexOf(delimitor) === -1 || d.id.indexOf(separator) === -1) return null;
-      const allPairs = d.id
-        .split(separator)
-        .map((pair) => {
-          if (pair.indexOf(delimitor) === -1) return undefined;
-          const [key, value] = pair.split(delimitor);
-          return { key: key.trim(), value: +value };
-        })
-        .filter((p) => p);
-
-      let sharpeRatio = calculateSharpeRatio({
-        klineData,
-        inputTrades: d.trades,
-        interval,
-      }).toDecimalPlaces(2);
-
-      return {
-        allPairs,
-        value: sharpeRatio.isNaN() ? new Decimal(0) : sharpeRatio,
-      };
-    });
-    return data;
-  }, [backtestData, separator, delimitor]);
-
-  const filteredDatasets = useMemo(() => {
-    if (!datasets || datasets.length === 0) return [];
-    const data = datasets.filter((d): d is { allPairs: Pair[]; value: Decimal } => !!d);
-    setXSelect(data[0]!.allPairs[0].key);
-    setYSelect(data[0]!.allPairs[1].key);
-    return data;
-  }, [datasets]);
-
   const uniqueOptions = useMemo(() => {
-    if (!filteredDatasets || filteredDatasets.length === 0) return [];
+    if (!datasets || datasets.length === 0) return [];
     let options: string[] = [];
-    filteredDatasets.forEach(({ allPairs }) => {
+    datasets.forEach(({ allPairs }) => {
       allPairs.forEach((pair) => {
         if (!options.includes(pair.key)) {
           options.push(pair.key);
@@ -87,20 +56,21 @@ const HeatMap = ({
       });
     });
     return options;
-  }, [filteredDatasets]);
+  }, [datasets]);
 
   const chartData = useMemo(() => {
-    if (!filteredDatasets || filteredDatasets.length === 0) return [];
-    return filteredDatasets
+    if (!datasets || datasets.length === 0) return [];
+
+    return datasets
       .map(({ allPairs, value }) => {
-        let xPair = allPairs.find((pair) => pair.key === xSelect);
-        let yPair = allPairs.find((pair) => pair.key === ySelect);
+        let xPair = allPairs.find((pair) => pair.key === xAxisSelected);
+        let yPair = allPairs.find((pair) => pair.key === yAxisSelected);
         return { xPair, yPair, value };
       })
       .filter((d): d is { xPair: Pair; yPair: Pair; value: Decimal } => {
         return !!d.xPair && !!d.yPair;
       });
-  }, [filteredDatasets, xSelect, ySelect]);
+  }, [datasets, xAxisSelected, yAxisSelected]);
 
   useEffect(() => {
     if (!heatMapContainerRef.current) return;
@@ -115,7 +85,7 @@ const HeatMap = ({
 
     const xDomain = [...new Set(chartData.map((d) => d.xPair!.value))];
     const yDomain = [...new Set(chartData.map((d) => d.yPair!.value))];
-    const correspondingData = chartData.find((d) => d.xPair!.key === xSelect);
+    const correspondingData = chartData.find((d) => d.xPair!.key === xAxisSelected);
 
     const svg = d3
       .select(heatMapContainerRef.current as HTMLElement)
@@ -199,12 +169,10 @@ const HeatMap = ({
       .style('font-size', '15px')
       .style('font-family', '"DM Sans", sans-serif');
 
-    heatMapContainerRef.current.scrollIntoView({ behavior: 'instant' });
-
     return () => {
       svg.remove();
     };
-  }, [chartData, xSelect, ySelect]);
+  }, [chartData, xAxisSelected, yAxisSelected]);
 
   return (
     <div className="p-10">
@@ -216,7 +184,7 @@ const HeatMap = ({
             type="text"
             value={delimitor}
             placeholder="Delimiter"
-            onChange={(e) => setDelimitor(e.target.value)}
+            onChange={(e) => onDelimitorChange(e.target.value)}
             maxLength={5}
           />
         </div>
@@ -227,15 +195,15 @@ const HeatMap = ({
             type="text"
             value={separator}
             placeholder="Separator"
-            onChange={(e) => setSeparator(e.target.value)}
+            onChange={(e) => onSeparatorChange(e.target.value)}
             maxLength={5}
           />
         </div>
         <div className="flex flex-col gap-2">
           <Label>x-axis</Label>
-          <Select value={xSelect || ''} onValueChange={setXSelect}>
-            <SelectTrigger className="w-40 dark:bg-[#392910] data-[placeholder]:font-normal">
-              <SelectValue placeholder="Select One" defaultValue={xSelect} />
+          <Select value={xAxisSelected || ''} onValueChange={(option) => onxAxisSelect(option)}>
+            <SelectTrigger className="w-40 dark:bg-[#392910] data-[placeholder]:font-normal data-[placeholder]:opacity-30">
+              <SelectValue placeholder="Select One" defaultValue={xAxisSelected} />
             </SelectTrigger>
             <SelectContent className="h-auto overflow-auto dark:bg-[#392910]">
               {uniqueOptions.map((key) => (
@@ -248,9 +216,9 @@ const HeatMap = ({
         </div>
         <div className="flex flex-col gap-2">
           <Label>y-axis</Label>
-          <Select value={ySelect || ''} onValueChange={setYSelect}>
-            <SelectTrigger className="w-40 dark:bg-[#392910] data-[placeholder]:font-normal">
-              <SelectValue placeholder="Select One" defaultValue={ySelect} />
+          <Select value={yAxisSelected || ''} onValueChange={(option) => onyAxisSelect(option)}>
+            <SelectTrigger className="w-40 dark:bg-[#392910] data-[placeholder]:font-normal data-[placeholder]:opacity-30">
+              <SelectValue placeholder="Select One" defaultValue={yAxisSelected} />
             </SelectTrigger>
             <SelectContent className="h-auto overflow-auto dark:bg-[#392910]">
               {uniqueOptions.map((key) => (
