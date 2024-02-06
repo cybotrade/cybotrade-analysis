@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Interval } from '@cybotrade/core';
 
 import HeatMap from '@app/(routes)/(route)/_components/HeatMap';
-import { SurfacePlot } from '@app/(routes)/(route)/_components/SurfacePlot';
+import SharpeRatio from '@app/(routes)/(route)/_components/SharpeRatio';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
 import { calculateSharpeRatio, transformToClosedTrades } from '@app/_lib/calculation';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
@@ -24,9 +24,9 @@ import { ResultBreakdown } from './ResultBreakdown';
 import SettingsForm, { SettingsValue } from './SettingsForm';
 import { Trend } from './Trend';
 
-const SharpeRatio = dynamic(() => import('./SharpeRatio'), {
+const SurfacePlot = dynamic(() => import('./SurfacePlot'), {
   ssr: false,
-}); // using dynamic import here because it is not able to support SSR for 'chartjs-plugin-zoom' in SharpeRation component
+});
 
 type Pair = {
   key: string;
