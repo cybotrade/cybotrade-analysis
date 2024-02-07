@@ -2,11 +2,9 @@ import * as d3 from 'd3';
 import Decimal from 'decimal.js';
 import { Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Interval } from '@app/_lib/utils';
-
 import { IBackTestData } from '@app/(routes)/(route)/type';
 import { calculateSharpeRatio } from '@app/_lib/calculation';
-
+import { Interval } from '@app/_lib/utils';
 import { Input } from '@app/_ui/Input';
 import { Label } from '@app/_ui/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/_ui/Select';
