@@ -8,13 +8,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import HeatMap from '@app/(routes)/(route)/_components/HeatMap';
 import SharpeRatio from '@app/(routes)/(route)/_components/SharpeRatio';
+import { useDebounce } from '@app/_hooks/useDebounce';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
 import { calculateSharpeRatio, transformToClosedTrades } from '@app/_lib/calculation';
 import { Interval } from '@app/_lib/utils';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
-import { Button } from '@app/_ui/Button';
-import { Sheet, SheetContent, SheetTrigger } from '@app/_ui/Sheet';
+import { Sheet, SheetContent } from '@app/_ui/Sheet';
 
 import { IBackTestData, IBackTestDataMultiSymbols, ITrade } from '../type';
 import { CandleChart } from './CandleChart';
@@ -52,8 +52,12 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     // stop_lost: [{ value: undefined }, { value: undefined }],
     // entry: [{ value: undefined }, { value: undefined }],
   });
-  const [delimitor, setDelimitor] = useState('=');
-  const [separator, setSeparator] = useState(',');
+  const [debouncedDelimitor, delimitor, setDelimitor] = useDebounce<string>('=', 500);
+  const [debouncedSeparator, separator, setSeparator] = useDebounce<string>(',', 500);
+
+  const [pairs, setPairs] = useState<({ allPairs: (Pair | undefined)[]; value: Decimal } | null)[]>(
+    [],
+  );
 
   const [xAxisSelected, setxAxisSelected] = useState('');
   const [yAxisSelected, setyAxisSelected] = useState('');
@@ -98,18 +102,22 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
   const [klineData, setKlineData] = useState<Kline[] | null>([]);
   const [doneFetchingKline, setDoneFetchingKline] = useState(false);
 
-  const keyPairsArray = useMemo(() => {
-    if (!backtestData || !klineData) return [];
-    if (!delimitor || !separator) return [];
+  useEffect(() => {
+    if (!backtestData || !klineData) return;
+    if (!debouncedDelimitor || !separator) {
+      setPairs([]);
+      return;
+    }
 
     const data = backtestData.map((d) => {
-      if (d.id.indexOf(delimitor) === -1 || d.id.indexOf(separator) === -1) return null;
+      if (d.id.indexOf(debouncedDelimitor) === -1 || d.id.indexOf(debouncedSeparator) === -1)
+        return null;
 
       const allPairs = d.id
-        .split(separator)
+        .split(debouncedSeparator)
         .map((pair) => {
-          if (pair.indexOf(delimitor) === -1) return undefined;
-          const [key, value] = pair.split(delimitor);
+          if (pair.indexOf(debouncedDelimitor) === -1) return undefined;
+          const [key, value] = pair.split(debouncedDelimitor);
           return { key: key.trim(), value: +value };
         })
         .filter((p) => p);
@@ -125,18 +133,18 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
         value: sharpeRatio.isNaN() ? new Decimal(0) : sharpeRatio,
       };
     });
-    return data;
-  }, [backtestData, klineData]);
+
+    setPairs(data);
+  }, [klineData, debouncedDelimitor, debouncedSeparator]);
 
   const filteredDatasets = useMemo(() => {
-    if (!keyPairsArray || keyPairsArray.length === 0) return [];
-    const datasets = keyPairsArray.filter(
+    if (!pairs || pairs.length === 0) return [];
+    const datasets = pairs.filter(
       (d): d is { allPairs: Pair[]; value: Decimal } => !!d && d.allPairs.length > 1,
     );
 
     return datasets;
-  }, [keyPairsArray]);
-
+  }, [pairs]);
   useEffect(() => {
     if (filteredDatasets.length === 0) {
       setxAxisSelected('');
@@ -145,7 +153,8 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     }
     setxAxisSelected(filteredDatasets[0].allPairs[0].key);
     setyAxisSelected(filteredDatasets[0].allPairs[1].key);
-  }, [delimitor, separator]);
+  }, [filteredDatasets]);
+
   useEffect(() => {
     const abortController = new AbortController();
     const fetchKlineData = async ({

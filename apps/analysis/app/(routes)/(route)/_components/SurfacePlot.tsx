@@ -156,6 +156,7 @@ const SurfacePlot = ({
         displayModeBar: false,
       },
     );
+    surfacePlotContainerRef.current.scrollIntoView({ behavior: 'instant' });
 
     return () => {
       if (!surfacePlotContainerRef.current) return;
@@ -164,10 +165,14 @@ const SurfacePlot = ({
   }, [plotData]);
 
   return (
-    <div
-      className="relative min-h-[40rem] bg-gradient-to-b from-10% from-[#FFFFFF] to-[#c6e0ff]"
-      ref={surfacePlotContainerRef}
-    >
+    <div className="relative h-auto bg-gradient-to-b from-10% from-[#FFFFFF] to-[#c6e0ff]">
+      {!plotData || plotData.length === 0 ? (
+        <div className="flex justify-center items-center h-[40rem] font-sans text-2xl">
+          No Records
+        </div>
+      ) : (
+        <div className="w-full min-h-[40rem]" ref={surfacePlotContainerRef}></div>
+      )}
       <div className="absolute right-10 top-10 min-w-max h-auto px-3 py-3 bg-white border border-[#DFDFDF] rounded-md flex items-center justify-left gap-4 font-sora">
         <div className="flex flex-col gap-2">
           <Label>Delimiter</Label>
