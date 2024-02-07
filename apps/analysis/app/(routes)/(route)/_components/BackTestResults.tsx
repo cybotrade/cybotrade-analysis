@@ -6,14 +6,14 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Interval } from '@app/_lib/utils';
-
 import HeatMap from '@app/(routes)/(route)/_components/HeatMap';
 import SharpeRatio from '@app/(routes)/(route)/_components/SharpeRatio';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
 import { calculateSharpeRatio, transformToClosedTrades } from '@app/_lib/calculation';
+import { Interval } from '@app/_lib/utils';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
+import { Button } from '@app/_ui/Button';
 import { Sheet, SheetContent, SheetTrigger } from '@app/_ui/Sheet';
 
 import { IBackTestData, IBackTestDataMultiSymbols, ITrade } from '../type';
@@ -315,46 +315,42 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
       <SheetContent
         side={'right'}
         className="min-w-[75%] overflow-y-scroll overflow-x-clip"
-        onPointerDownOutside={(e) => e.preventDefault()}
         overlayChildren={
-          <Sheet
-            key={'2'}
-            open={settingDrawer.isOpen}
-            onOpenChange={() =>
-              settingDrawer.isOpen ? settingDrawer.close() : settingDrawer.open()
-            }
-            modal={false}
+          <div
+            className={cn(
+              'absolute h-[58px] w-[58px] m-8 bottom-0 bg-white rounded-full border-2 border-primary-light p-4 shadow-xl hover:bg-primary duration-200',
+              settingDrawer.isOpen ? 'opacity-0' : 'opacity-100',
+            )}
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              settingDrawer.open();
+            }}
           >
-            <SheetTrigger
-              className={cn(
-                'absolute m-8 bottom-0 bg-white rounded-full border-2 border-primary-light p-4 shadow-xl hover:bg-primary duration-200',
-                settingDrawer.isOpen ? 'opacity-0' : 'opacity-100',
-              )}
-            >
-              <ChevronRight
-                onClick={settingDrawer.open}
-                color="#E1C3A0"
-                strokeWidth={2.5}
-                className="h-5 w-5"
-              />
-            </SheetTrigger>
-            <SheetContent
-              side={'left'}
-              className="min-w-[26%] rounded-r-lg"
-              overlayClassName="hidden"
-              onInteractOutside={(e) => e.preventDefault()}
-            >
-              <div
-                onClick={settingDrawer.close}
-                className="absolute z-50 h-[58px] w-[58px] mb-8 bottom-0 right-0 translate-x-1/2 bg-white rounded-full border-2 border-primary-light duration-200 flex items-center justify-center shadow-xl cursor-pointer hover:bg-primary"
-              >
-                <ChevronLeft color="#E1C3A0" strokeWidth={2.5} className="h=[20px]" />
-              </div>
-              <SettingsForm onUpdate={onSettingsFormUpdate} values={userSettings} />
-            </SheetContent>
-          </Sheet>
+            <ChevronRight color="#E1C3A0" strokeWidth={2.5} className="h-5 w-5" />
+          </div>
         }
       >
+        <Sheet
+          key={'2'}
+          open={settingDrawer.isOpen}
+          onOpenChange={() => (settingDrawer.isOpen ? settingDrawer.close() : settingDrawer.open())}
+          modal={false}
+        >
+          <SheetContent
+            side={'left'}
+            className="min-w-[26%] rounded-r-lg"
+            overlayClassName="hidden"
+            onInteractOutside={(e) => e.preventDefault()}
+          >
+            <div
+              onClick={settingDrawer.close}
+              className="absolute z-50 h-[58px] w-[58px] mb-8 bottom-0 right-0 translate-x-1/2 bg-white rounded-full border-2 border-primary-light duration-200 flex items-center justify-center shadow-xl cursor-pointer hover:bg-primary"
+            >
+              <ChevronLeft color="#E1C3A0" strokeWidth={2.5} className="h=[20px]" />
+            </div>
+            <SettingsForm onUpdate={onSettingsFormUpdate} values={userSettings} />
+          </SheetContent>
+        </Sheet>
         <Accordion type="multiple" defaultValue={['candle-chart']}>
           {resultContents.map((item) => (
             <AccordionItem value={item.value} data-accordion-item={item.value} key={item.value}>
