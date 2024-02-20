@@ -6,7 +6,7 @@ import useDrawer from '@app/_hooks/useDrawer';
 
 import BackTestResultsDrawer from './_components/BackTestResults';
 import FileDropAndParse from './_components/FileDropAndParse';
-import { IBackTestData, IBackTestDataMultiSymbols } from './type';
+import { IBackTestDataMultiSymbols } from './type';
 
 const FloatCard = ({ text, className }: { text: string; className: string }) => (
   <div
@@ -17,7 +17,7 @@ const FloatCard = ({ text, className }: { text: string; className: string }) => 
 );
 
 const Backtest = () => {
-  const [data, setData] = useState<IBackTestDataMultiSymbols[] | undefined>(undefined);
+  const [data, setData] = useState<IBackTestDataMultiSymbols | undefined>(undefined);
   const drawer = useDrawer();
   const [analysingProgress, setAnalysingProgress] = useState(0);
   const [analysingError, setAnalysisError] = useState<string | undefined>();
@@ -32,9 +32,7 @@ const Backtest = () => {
       </div>
       <FileDropAndParse
         className="max-w-xl z-10"
-        onChange={(file, value) => {
-          setData(value as IBackTestDataMultiSymbols[]);
-        }}
+        onChange={(file, result) => setData(result as IBackTestDataMultiSymbols)}
         onShowResult={drawer.open}
         analysingProgress={analysingProgress}
         error={analysingError}
