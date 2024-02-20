@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js';
 
-import { Interval, OrderSide } from '@cybotrade/core';
+import { Interval, OrderSide } from '@app/_lib/utils';
 
 export interface ITrade {
   quantity: number;
@@ -12,21 +12,20 @@ export interface ITrade {
 
 export interface IBackTestData {
   id: string;
-  params: string | null;
   symbols: string;
   intervals: Interval[] | string[];
   trades: ITrade[];
-  version: string;
+  version?: string;
   start_time: string;
   end_time: string;
 }
 
-export interface IBackTestDataMultiSymbols
-  extends Omit<IBackTestData, 'symbols' | 'intervals' | 'trades'> {
-  // version 1.1.1alpha
-  symbols: string[];
-  intervals: { [key: string]: Interval[] | string[] };
-  trades: { [key: string]: ITrade[] };
+export interface IBackTestDataMultiSymbols extends Pick<IBackTestData, 'start_time' | 'end_time'> {
+  // version 1.2.0
+  candle_topics: string[];
+  trades: {
+    [permutations: string]: string;
+  };
 }
 
 export interface IClosedTrade {

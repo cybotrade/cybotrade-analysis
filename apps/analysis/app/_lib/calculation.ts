@@ -2,9 +2,9 @@ import { type Kline } from 'binance';
 import { Decimal } from 'decimal.js';
 import { UTCTimestamp } from 'lightweight-charts';
 
-import { Interval, OrderSide } from '@cybotrade/core';
-
 import { IClosedTrade, ITrade } from '@app/(routes)/(route)/type';
+import { Interval, OrderSide } from '@app/_lib/utils';
+import { capitalize } from '@app/_utils/helper';
 
 import { intervalToDays } from './utils';
 
@@ -668,41 +668,56 @@ export const calculateEquity = ({
     );
     if (tradeOnCandle) {
       const { quantity, side, price, fees = 0 } = tradeOnCandle;
+      let previousPosition = position;
 
       if (globalEntryPrice === null) {
         globalEntryPrice = price;
         globalSide = side as OrderSide;
-        position = quantity;
-        accumulatePnl = accumulatePnl - fees;
+        position = side === capitalize(OrderSide.Sell) ? position - quantity : quantity;
         return;
       }
 
-      if (side === globalSide) {
-        globalEntryPrice = (globalEntryPrice * position + price * quantity) / (position + quantity);
+      if (side === capitalize(OrderSide.Buy)) {
         position = position + quantity;
-        accumulatePnl = accumulatePnl - fees;
-        return;
-      }
-      if (side !== globalSide) {
-        if (quantity > position) {
-          accumulatePnl = accumulatePnl - fees + (price - globalEntryPrice) * quantity - position;
-          position = quantity - position;
-          globalEntryPrice = price;
-          globalSide = side as OrderSide;
-          return;
-        }
-        accumulatePnl = accumulatePnl - fees + (price - globalEntryPrice) * quantity;
+      } else if (side === capitalize(OrderSide.Sell)) {
         position = position - quantity;
       }
+
+      if (side === globalSide) {
+        globalEntryPrice =
+          (globalEntryPrice * Math.abs(previousPosition) + price * quantity) / Math.abs(position);
+        return;
+      }
+
+      if (side !== globalSide) {
+        let minQty = Math.min(Math.abs(previousPosition), quantity);
+        if (side === capitalize(OrderSide.Buy)) {
+          accumulatePnl += globalEntryPrice * minQty - price * minQty;
+        } else if (side === capitalize(OrderSide.Sell)) {
+          accumulatePnl += price * minQty - globalEntryPrice * minQty;
+        }
+
+        if (quantity > Math.abs(previousPosition)) {
+          globalEntryPrice = price;
+        } else if (quantity == 0) {
+          globalEntryPrice = 0;
+        }
+      }
     }
+
+    globalSide = capitalize(position >= 0 ? OrderSide.Buy : OrderSide.Sell) as OrderSide;
+
+    let unrealizedPnl = 0;
+    if (globalSide === capitalize(OrderSide.Buy)) {
+      unrealizedPnl =
+        (+candleClosePrice - (globalEntryPrice ? +globalEntryPrice : 0)) * Math.abs(position);
+    } else {
+      unrealizedPnl =
+        ((globalEntryPrice ? +globalEntryPrice : 0) - +candleClosePrice) * Math.abs(position);
+    }
+
     equityData.push({
-      value:
-        position === 0
-          ? initialCapital + accumulatePnl
-          : new Decimal(
-              (+candleClosePrice - (globalEntryPrice ? +globalEntryPrice : 0)) * +position +
-                accumulatePnl,
-            ).toNumber() + initialCapital,
+      value: initialCapital + accumulatePnl + unrealizedPnl,
       time: (candleCloseTime / 1000) as UTCTimestamp,
     });
   });
