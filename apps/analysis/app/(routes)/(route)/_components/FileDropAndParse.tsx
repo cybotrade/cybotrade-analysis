@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { DragEvent, useEffect, useReducer, useState } from 'react';
 
 import { Attachment, CrossSolid, Upload } from '@app/_assets/icons';
@@ -93,6 +92,7 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({
   useEffect(() => {
     if (error) {
       setMode('ERROR');
+      console.log(error);
       setErrorMessage(error.toString());
     }
   }, [error]);

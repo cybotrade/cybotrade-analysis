@@ -4,10 +4,9 @@ import { ZoomBehavior } from 'd3';
 import { useTheme } from 'next-themes';
 import { useEffect, useMemo, useRef } from 'react';
 
-import { Interval } from '@app/_lib/utils';
-
 import { IBackTestData } from '@app/(routes)/(route)/type';
 import { calculateSharpeRatio } from '@app/_lib/calculation';
+import { Interval } from '@app/_lib/utils';
 
 type SharpeRatioProps = {
   backtestData: IBackTestData[];
@@ -79,9 +78,11 @@ const SharpeRatio = ({ backtestData, klineData, interval }: SharpeRatioProps) =>
 
           bars
             .attr('x', (d) => newX(d.x)!)
-            .attr('y', (d) => newY(d.y)!)
+            .attr('y', (d) => (d.y < 0 ? newY(0) : newY(d.y)))
             .attr('width', newX.bandwidth() - newX.paddingInner())
-            .attr('height', (d) => height - newY(d.y)!);
+            .attr('height', (d) =>
+              d.y < 0 ? Math.abs(newY(d.y) - newY(0)) : Math.abs(newY(0) - newY(d.y)),
+            );
 
           xAxis.call(xAxisTicks).call((g) => g.select('.domain').remove());
           yAxis
@@ -127,10 +128,14 @@ const SharpeRatio = ({ backtestData, klineData, interval }: SharpeRatioProps) =>
       .attr('transform', `translate(0, ${height})`)
       .attr('clip-path', 'url(#chart-area)');
     const xAxisTicks = d3.axisBottom(xScale).tickSize(0).tickSizeOuter(0).tickPadding(15);
+
+    const yMax = d3.max(yDomain) || 0;
+    const yMin = d3.min(yDomain) || 0;
+    const maxAbsValue = Math.max(Math.abs(yMin), Math.abs(yMax));
     const yScale = d3
       .scaleLinear()
       .range([height, 0])
-      .domain([0, d3.max(yDomain, (d) => d)! + 0.2])
+      .domain(yMin < 0 ? [-maxAbsValue - 0.2, maxAbsValue] : [0, maxAbsValue + 0.2])
       .nice();
     const yAxis = svg.append('g').attr('class', 'y-axis');
     const yAxisTicks = d3
@@ -207,19 +212,19 @@ const SharpeRatio = ({ backtestData, klineData, interval }: SharpeRatioProps) =>
 
     bars
       .attr('x', (d) => xScale(d.x)!)
-      .attr('y', (d) => yScale(0)!)
+      .attr('y', (d) => yScale(0))
       .attr('width', xScale.bandwidth())
-      .attr('height', (d) => height - yScale(0)!)
+      .attr('height', 0)
       .attr('rx', 20)
       .attr('fill', 'url(#striped-pattern)');
 
     bars
       .transition()
       .duration(800)
-      .attr('y', (d) => yScale(d.y)!)
-      .attr('height', (d) => height - yScale(d.y)!)
+      .attr('y', (d) => (d.y > 0 ? yScale(d.y) : yScale(0)))
+      .attr('height', (d) => (d.y > 0 ? yScale(0) - yScale(d.y) : yScale(d.y) - yScale(0)))
       .delay((d, i) => i * 100);
-
+    
     return () => {
       svg.remove();
     };

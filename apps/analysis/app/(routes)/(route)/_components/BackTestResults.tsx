@@ -6,15 +6,15 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Interval } from '@app/_lib/utils';
-
 import HeatMap from '@app/(routes)/(route)/_components/HeatMap';
 import SharpeRatio from '@app/(routes)/(route)/_components/SharpeRatio';
+import { useDebounce } from '@app/_hooks/useDebounce';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
 import { calculateSharpeRatio, transformToClosedTrades } from '@app/_lib/calculation';
+import { Interval } from '@app/_lib/utils';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
-import { Sheet, SheetContent, SheetTrigger } from '@app/_ui/Sheet';
+import { Sheet, SheetContent } from '@app/_ui/Sheet';
 
 import { IBackTestData, IBackTestDataMultiSymbols, ITrade } from '../type';
 import { CandleChart } from './CandleChart';
@@ -34,12 +34,16 @@ type Pair = {
 };
 
 interface IBackTestResultsDrawer {
-  data: IBackTestDataMultiSymbols[] | undefined;
+  data: IBackTestDataMultiSymbols;
   drawer: IDrawer;
   fetchedKlinePercentage: (percentage: number, error?: string) => void;
 }
 
-const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
+const BackTestResultsDrawer = ({
+  data,
+  drawer,
+  fetchedKlinePercentage,
+}: IBackTestResultsDrawer) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const settingDrawer = useDrawer();
   const [userSettings, setUserSettings] = useState<SettingsValue>({
@@ -52,64 +56,95 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     // stop_lost: [{ value: undefined }, { value: undefined }],
     // entry: [{ value: undefined }, { value: undefined }],
   });
-  const [delimitor, setDelimitor] = useState('=');
-  const [separator, setSeparator] = useState(',');
+  const [debouncedDelimitor, delimitor, setDelimitor] = useDebounce<string>('=', 500);
+  const [debouncedSeparator, separator, setSeparator] = useDebounce<string>(',', 500);
+
+  const [pairs, setPairs] = useState<({ allPairs: (Pair | undefined)[]; value: Decimal } | null)[]>(
+    [],
+  );
 
   const [xAxisSelected, setxAxisSelected] = useState('');
   const [yAxisSelected, setyAxisSelected] = useState('');
 
-  const onSettingsFormUpdate = (values: SettingsValue) => {
-    setUserSettings(values);
-  };
-
-  const { data, drawer, fetchedKlinePercentage } = props;
-  if (!data) return null;
-
-  const filteredSymbol = data[selectedIndex].symbols[0]; // temporary to support only one symbol
-  const sortedTrades = (trades: ITrade[]) => {
-    if (!trades) return [] as ITrade[];
-    if (trades.length === 0) return [] as ITrade[];
-    trades = trades.map((trade) => {
-      return {
-        ...trade,
-        quantity: userSettings.order_size_value
-          ? new Decimal(userSettings.order_size_value).div(trade.price).toNumber()
-          : trade.quantity,
-        fees: userSettings.fees ?? 0,
-      };
-    });
-    return sortByTimestamp<ITrade>(trades);
-  };
-  const backtestData = data.map((d) => {
-    return {
-      ...d,
-      symbols: filteredSymbol,
-      intervals: d.intervals[filteredSymbol],
-      trades: sortedTrades(d.trades[filteredSymbol]),
-    } as IBackTestData;
-  });
-
-  const symbol = backtestData ? (backtestData[0].symbols.split('/').join('') as string) : 'BTCUSDT';
-  const interval = backtestData
-    ? Interval[backtestData[0].intervals[0] as unknown as keyof typeof Interval]
-    : Interval.OneDay;
-  const closedTrades = backtestData ? transformToClosedTrades(backtestData[0].trades) : [];
-
   const [klineData, setKlineData] = useState<Kline[] | null>([]);
   const [doneFetchingKline, setDoneFetchingKline] = useState(false);
 
-  const keyPairsArray = useMemo(() => {
-    if (!backtestData || !klineData) return [];
-    if (!delimitor || !separator) return [];
+  const onSettingsFormUpdate = (values: SettingsValue) => {
+    setUserSettings(values);
+  };
+  const backtestData: IBackTestData[] = useMemo(() => {
+    const topics = data.candle_topics.map((t) => t.split('|'));
+    const details = topics.map((topic) => {
+      const [category, interval, symbol, exchange] = topic[0].split('-');
+      const type = topic[1];
+      const [base, quote] = symbol.split('/');
+      return {
+        category,
+        interval,
+        currency: {
+          base,
+          quote,
+        },
+        type,
+      };
+    });
+
+    const symbols = details.map(({ currency }) => `${currency.base}${currency.quote}`);
+    const intervals = details.reduce<{
+      [key: string]: Interval[] | string[];
+    }>((acc, _, i) => {
+      acc[symbols[i]] = [details[i].interval];
+      return acc;
+    }, {});
+
+    const permutations = Object.entries(data.trades).map(([id, trades]) => {
+      return {
+        id,
+        trades: JSON.parse(trades).trades,
+      };
+    });
+    return permutations.map(({ id, trades }) => {
+      let sortedTrades = trades[symbols[0]].map((trade: ITrade) => {
+        return {
+          ...trade,
+          quantity: userSettings.order_size_value
+            ? new Decimal(userSettings.order_size_value).div(trade.price).toNumber()
+            : trade.quantity,
+          fees: userSettings.fees ?? 0,
+        };
+      }) as ITrade[];
+
+      return {
+        id: id,
+        symbols: symbols[0],
+        intervals: intervals[symbols[0]],
+        trades: sortByTimestamp<ITrade>(sortedTrades),
+        start_time: data.start_time.toString(),
+        end_time: data.end_time.toString(),
+      };
+    });
+  }, [data]);
+
+  const symbol = backtestData ? (backtestData[0].symbols.split('/').join('') as string) : 'BTCUSDT';
+  const interval = backtestData ? (backtestData[0].intervals[0] as Interval) : Interval.OneDay;
+  const closedTrades = backtestData ? transformToClosedTrades(backtestData[0].trades) : [];
+
+  useEffect(() => {
+    if (!backtestData || !klineData) return;
+    if (!debouncedDelimitor || !separator) {
+      setPairs([]);
+      return;
+    }
 
     const data = backtestData.map((d) => {
-      if (d.id.indexOf(delimitor) === -1 || d.id.indexOf(separator) === -1) return null;
+      if (d.id.indexOf(debouncedDelimitor) === -1 || d.id.indexOf(debouncedSeparator) === -1)
+        return null;
 
       const allPairs = d.id
-        .split(separator)
+        .split(debouncedSeparator)
         .map((pair) => {
-          if (pair.indexOf(delimitor) === -1) return undefined;
-          const [key, value] = pair.split(delimitor);
+          if (pair.indexOf(debouncedDelimitor) === -1) return undefined;
+          const [key, value] = pair.split(debouncedDelimitor);
           return { key: key.trim(), value: +value };
         })
         .filter((p) => p);
@@ -125,17 +160,18 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
         value: sharpeRatio.isNaN() ? new Decimal(0) : sharpeRatio,
       };
     });
-    return data;
-  }, [backtestData, klineData]);
+
+    setPairs(data);
+  }, [klineData, debouncedDelimitor, debouncedSeparator]);
 
   const filteredDatasets = useMemo(() => {
-    if (!keyPairsArray || keyPairsArray.length === 0) return [];
-    const datasets = keyPairsArray.filter(
+    if (!pairs || pairs.length === 0) return [];
+    const datasets = pairs.filter(
       (d): d is { allPairs: Pair[]; value: Decimal } => !!d && d.allPairs.length > 1,
     );
 
     return datasets;
-  }, [keyPairsArray]);
+  }, [pairs]);
 
   useEffect(() => {
     if (filteredDatasets.length === 0) {
@@ -145,7 +181,8 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
     }
     setxAxisSelected(filteredDatasets[0].allPairs[0].key);
     setyAxisSelected(filteredDatasets[0].allPairs[1].key);
-  }, [delimitor, separator]);
+  }, [filteredDatasets]);
+
   useEffect(() => {
     const abortController = new AbortController();
     const fetchKlineData = async ({
@@ -315,46 +352,42 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
       <SheetContent
         side={'right'}
         className="min-w-[75%] overflow-y-scroll overflow-x-clip"
-        onPointerDownOutside={(e) => e.preventDefault()}
         overlayChildren={
-          <Sheet
-            key={'2'}
-            open={settingDrawer.isOpen}
-            onOpenChange={() =>
-              settingDrawer.isOpen ? settingDrawer.close() : settingDrawer.open()
-            }
-            modal={false}
+          <div
+            className={cn(
+              'absolute h-[58px] w-[58px] m-8 bottom-0 bg-white rounded-full border-2 border-primary-light p-4 shadow-xl hover:bg-primary duration-200',
+              settingDrawer.isOpen ? 'opacity-0' : 'opacity-100',
+            )}
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              settingDrawer.open();
+            }}
           >
-            <SheetTrigger
-              className={cn(
-                'absolute m-8 bottom-0 bg-white rounded-full border-2 border-primary-light p-4 shadow-xl hover:bg-primary duration-200',
-                settingDrawer.isOpen ? 'opacity-0' : 'opacity-100',
-              )}
-            >
-              <ChevronRight
-                onClick={settingDrawer.open}
-                color="#E1C3A0"
-                strokeWidth={2.5}
-                className="h-5 w-5"
-              />
-            </SheetTrigger>
-            <SheetContent
-              side={'left'}
-              className="min-w-[26%] rounded-r-lg"
-              overlayClassName="hidden"
-              onInteractOutside={(e) => e.preventDefault()}
-            >
-              <div
-                onClick={settingDrawer.close}
-                className="absolute z-50 h-[58px] w-[58px] mb-8 bottom-0 right-0 translate-x-1/2 bg-white rounded-full border-2 border-primary-light duration-200 flex items-center justify-center shadow-xl cursor-pointer hover:bg-primary"
-              >
-                <ChevronLeft color="#E1C3A0" strokeWidth={2.5} className="h=[20px]" />
-              </div>
-              <SettingsForm onUpdate={onSettingsFormUpdate} values={userSettings} />
-            </SheetContent>
-          </Sheet>
+            <ChevronRight color="#E1C3A0" strokeWidth={2.5} className="h-5 w-5" />
+          </div>
         }
       >
+        <Sheet
+          key={'2'}
+          open={settingDrawer.isOpen}
+          onOpenChange={() => (settingDrawer.isOpen ? settingDrawer.close() : settingDrawer.open())}
+          modal={false}
+        >
+          <SheetContent
+            side={'left'}
+            className="min-w-[26%] rounded-r-lg"
+            overlayClassName="hidden"
+            onInteractOutside={(e) => e.preventDefault()}
+          >
+            <div
+              onClick={settingDrawer.close}
+              className="absolute z-50 h-[58px] w-[58px] mb-8 bottom-0 right-0 translate-x-1/2 bg-white rounded-full border-2 border-primary-light duration-200 flex items-center justify-center shadow-xl cursor-pointer hover:bg-primary"
+            >
+              <ChevronLeft color="#E1C3A0" strokeWidth={2.5} className="h=[20px]" />
+            </div>
+            <SettingsForm onUpdate={onSettingsFormUpdate} values={userSettings} />
+          </SheetContent>
+        </Sheet>
         <Accordion type="multiple" defaultValue={['candle-chart']}>
           {resultContents.map((item) => (
             <AccordionItem value={item.value} data-accordion-item={item.value} key={item.value}>
