@@ -129,14 +129,14 @@ const SharpeRatio = ({ backtestData, klineData, interval }: SharpeRatioProps) =>
       .attr('clip-path', 'url(#chart-area)');
     const xAxisTicks = d3.axisBottom(xScale).tickSize(0).tickSizeOuter(0).tickPadding(15);
 
-    const yMax = d3.max(yDomain)!;
-    const yMin = d3.min(yDomain)!;
+    const yMax = d3.max(yDomain) || 0;
+    const yMin = d3.min(yDomain) || 0;
+    const maxAbsValue = Math.max(Math.abs(yMin), Math.abs(yMax));
     const yScale = d3
       .scaleLinear()
       .range([height, 0])
-      .domain(yMin < 0 ? [yMin - 0.2, 0] : [0, yMax + 0.2])
+      .domain(yMin < 0 ? [-maxAbsValue - 0.2, maxAbsValue] : [0, maxAbsValue + 0.2])
       .nice();
-
     const yAxis = svg.append('g').attr('class', 'y-axis');
     const yAxisTicks = d3
       .axisLeft(yScale)
@@ -212,18 +212,19 @@ const SharpeRatio = ({ backtestData, klineData, interval }: SharpeRatioProps) =>
 
     bars
       .attr('x', (d) => xScale(d.x)!)
-      .attr('y', yScale(0))
+      .attr('y', (d) => yScale(0))
       .attr('width', xScale.bandwidth())
-      .attr('height', (d) => (d.y < 0 ? yScale(0) : height - yScale(0)!))
+      .attr('height', 0)
       .attr('rx', 20)
       .attr('fill', 'url(#striped-pattern)');
 
     bars
       .transition()
       .duration(800)
-      .attr('y', (d) => (d.y < 0 ? yScale(0) : yScale(d.y)!))
-      .attr('height', (d) => (d.y < 0 ? yScale(d.y) - yScale(0) : height - yScale(d.y)!))
+      .attr('y', (d) => (d.y > 0 ? yScale(d.y) : yScale(0)))
+      .attr('height', (d) => (d.y > 0 ? yScale(0) - yScale(d.y) : yScale(d.y) - yScale(0)))
       .delay((d, i) => i * 100);
+    
     return () => {
       svg.remove();
     };
