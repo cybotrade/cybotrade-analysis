@@ -34,12 +34,16 @@ type Pair = {
 };
 
 interface IBackTestResultsDrawer {
-  data: IBackTestDataMultiSymbols[] | undefined;
+  data: IBackTestDataMultiSymbols;
   drawer: IDrawer;
   fetchedKlinePercentage: (percentage: number, error?: string) => void;
 }
 
-const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
+const BackTestResultsDrawer = ({
+  data,
+  drawer,
+  fetchedKlinePercentage,
+}: IBackTestResultsDrawer) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const settingDrawer = useDrawer();
   const [userSettings, setUserSettings] = useState<SettingsValue>({
@@ -62,45 +66,68 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
   const [xAxisSelected, setxAxisSelected] = useState('');
   const [yAxisSelected, setyAxisSelected] = useState('');
 
+  const [klineData, setKlineData] = useState<Kline[] | null>([]);
+  const [doneFetchingKline, setDoneFetchingKline] = useState(false);
+
   const onSettingsFormUpdate = (values: SettingsValue) => {
     setUserSettings(values);
   };
-
-  const { data, drawer, fetchedKlinePercentage } = props;
-  if (!data) return null;
-
-  const filteredSymbol = data[selectedIndex].symbols[0]; // temporary to support only one symbol
-  const sortedTrades = (trades: ITrade[]) => {
-    if (!trades) return [] as ITrade[];
-    if (trades.length === 0) return [] as ITrade[];
-    trades = trades.map((trade) => {
+  const backtestData: IBackTestData[] = useMemo(() => {
+    const topics = data.candle_topics.map((t) => t.split('|'));
+    const details = topics.map((topic) => {
+      const [category, interval, symbol, exchange] = topic[0].split('-');
+      const type = topic[1];
+      const [base, quote] = symbol.split('/');
       return {
-        ...trade,
-        quantity: userSettings.order_size_value
-          ? new Decimal(userSettings.order_size_value).div(trade.price).toNumber()
-          : trade.quantity,
-        fees: userSettings.fees ?? 0,
+        category,
+        interval,
+        currency: {
+          base,
+          quote,
+        },
+        type,
       };
     });
-    return sortByTimestamp<ITrade>(trades);
-  };
-  const backtestData = data.map((d) => {
-    return {
-      ...d,
-      symbols: filteredSymbol,
-      intervals: d.intervals[filteredSymbol],
-      trades: sortedTrades(d.trades[filteredSymbol]),
-    } as IBackTestData;
-  });
+
+    const symbols = details.map(({ currency }) => `${currency.base}${currency.quote}`);
+    const intervals = details.reduce<{
+      [key: string]: Interval[] | string[];
+    }>((acc, _, i) => {
+      acc[symbols[i]] = [details[i].interval];
+      return acc;
+    }, {});
+
+    const permutations = Object.entries(data.trades).map(([id, trades]) => {
+      return {
+        id,
+        trades: JSON.parse(trades).trades,
+      };
+    });
+    return permutations.map(({ id, trades }) => {
+      let sortedTrades = trades[symbols[0]].map((trade: ITrade) => {
+        return {
+          ...trade,
+          quantity: userSettings.order_size_value
+            ? new Decimal(userSettings.order_size_value).div(trade.price).toNumber()
+            : trade.quantity,
+          fees: userSettings.fees ?? 0,
+        };
+      }) as ITrade[];
+
+      return {
+        id: id,
+        symbols: symbols[0],
+        intervals: intervals[symbols[0]],
+        trades: sortByTimestamp<ITrade>(sortedTrades),
+        start_time: data.start_time.toString(),
+        end_time: data.end_time.toString(),
+      };
+    });
+  }, [data]);
 
   const symbol = backtestData ? (backtestData[0].symbols.split('/').join('') as string) : 'BTCUSDT';
-  const interval = backtestData
-    ? Interval[backtestData[0].intervals[0] as unknown as keyof typeof Interval]
-    : Interval.OneDay;
+  const interval = backtestData ? (backtestData[0].intervals[0] as Interval) : Interval.OneDay;
   const closedTrades = backtestData ? transformToClosedTrades(backtestData[0].trades) : [];
-
-  const [klineData, setKlineData] = useState<Kline[] | null>([]);
-  const [doneFetchingKline, setDoneFetchingKline] = useState(false);
 
   useEffect(() => {
     if (!backtestData || !klineData) return;
@@ -145,6 +172,7 @@ const BackTestResultsDrawer = (props: IBackTestResultsDrawer) => {
 
     return datasets;
   }, [pairs]);
+
   useEffect(() => {
     if (filteredDatasets.length === 0) {
       setxAxisSelected('');
