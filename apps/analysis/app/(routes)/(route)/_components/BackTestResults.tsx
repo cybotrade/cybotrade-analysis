@@ -154,7 +154,7 @@ const BackTestResultsDrawer = ({
         inputTrades: d.trades,
         interval,
       }).toDecimalPlaces(2);
-
+      console.log(klineData);
       return {
         allPairs,
         value: sharpeRatio.isNaN() ? new Decimal(0) : sharpeRatio,
@@ -233,23 +233,25 @@ const BackTestResultsDrawer = ({
 
     if (klineData?.length === 0) {
       fetchKlineData({ startTime: backtestData[0].start_time, endTime: backtestData[0].end_time });
-    }
-    if (klineData && klineData[0] && klineData[0][0] > +backtestData[0].start_time) {
-      const fetchedPercentage = Math.round(
-        ((+backtestData[0].end_time - klineData[0][0]) /
-          (+backtestData[0].end_time - +backtestData[0].start_time)) *
-          100,
-      );
-      fetchedKlinePercentage(fetchedPercentage);
-      fetchKlineData({
-        startTime: backtestData[0].start_time,
-        endTime: klineData[0][0].toString(),
-      });
-    }
-    if (klineData && klineData[0] && klineData[0][0] < +backtestData[0].start_time) {
       setDoneFetchingKline(true);
       fetchedKlinePercentage(100);
     }
+    // if (klineData && klineData[0] && klineData[0][0] > +backtestData[0].start_time) {
+    //   const fetchedPercentage = Math.round(
+    //     ((+backtestData[0].end_time - klineData[0][0]) /
+    //       (+backtestData[0].end_time - +backtestData[0].start_time)) *
+    //       100,
+    //   );
+    //   fetchedKlinePercentage(fetchedPercentage);
+    //   fetchKlineData({
+    //     startTime: backtestData[0].start_time,
+    //     endTime: klineData[0][0].toString(),
+    //   });
+    // }
+    // if (klineData && klineData[0] && klineData[0][0] < +backtestData[0].start_time) {
+    //   setDoneFetchingKline(true);
+    //   fetchedKlinePercentage(100);
+    // }
     return () => abortController.abort();
   }, [klineData]);
 
