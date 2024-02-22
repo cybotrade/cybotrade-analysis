@@ -1,86 +1,18 @@
-import { Kline } from 'binance';
 import Decimal from 'decimal.js';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 
-import { Interval } from '@app/_lib/utils';
-
-import { calculatePerformance } from '@app/_lib/calculation';
 import { cn } from '@app/_lib/utils';
 
-import { IClosedTrade, ITrade } from '../type';
+import { Performance } from '@app/_lib/calculation';
 
 export const ResultBreakdown = ({
-  klineData,
-  trades,
-  interval,
-  closedTrades,
-  initialCapital = 10000,
-  fees,
+  performanceData,
 }: {
-  klineData: Kline[];
-  trades: ITrade[];
-  interval: Interval;
-  closedTrades: IClosedTrade[];
-  initialCapital?: number;
-  fees: number;
+  performanceData: Performance
 }) => {
   const { theme } = useTheme();
-  const [selectedPeriod, setSelectedPeriod] = useState('all');
-
-  const performanceAll = useMemo(() => {
-    if (!closedTrades) return null;
-
-    const calculatePerformanceForTimeframe = (timeframe: {
-      days?: number | undefined;
-      months?: number | undefined;
-      years?: number | undefined;
-    }) => {
-      // let startDate: Date;
-      // const endDate = new Date(+closedTrades[closedTrades.length - 1]?.exitTime);
-      // if (!endDate) return;
-
-      // if (timeframe.days) {
-      //   startDate = sub(endDate, { days: timeframe.days });
-      // } else if (timeframe.months) {
-      //   startDate = sub(endDate, { months: timeframe.months });
-      // } else if (timeframe.years) {
-      //   startDate = sub(endDate, { years: timeframe.years });
-      // } else {
-      //   startDate = new Date(0);
-      // }
-      // const filteredClosedTrades = closedTrades.filter(
-      //   (t) =>
-      //     isAfter(new Date(+t.exitTime), startDate) && isBefore(new Date(+t.exitTime), endDate),
-      // );
-      return calculatePerformance({
-        history: {
-          // closedTrades: filteredClosedTrades,
-          closedTrades,
-          openedTrades: [],
-        },
-        tradeOrders: { klineData, trades, interval },
-        parameters: {
-          comission: 0,
-          initialCapital,
-          riskFreeRate: 0.02,
-          fees,
-        },
-      });
-    };
-    return {
-      all: calculatePerformanceForTimeframe({}),
-      // '90D': calculatePerformanceForTimeframe({ days: 90 }),
-      // '7D': calculatePerformanceForTimeframe({ days: 7 }),
-      // '1M': calculatePerformanceForTimeframe({ months: 1 }),
-      // '3M': calculatePerformanceForTimeframe({ months: 3 }),
-      // '1Y': calculatePerformanceForTimeframe({ years: 1 }),
-    };
-  }, [closedTrades]);
-
-  const performanceData =
-    performanceAll && performanceAll[selectedPeriod as keyof typeof performanceAll];
 
   return (
     <div className="px-[56px] py-[46px]">
@@ -114,17 +46,16 @@ export const ResultBreakdown = ({
                 )}
               >
                 <h2 className="text-primary text-4xl font-extrabold">
-                  {performanceData &&
-                    performanceData.netProfit
-                      .toDecimalPlaces(2)
-                      .div(
-                        performanceData?.initialCapital.toNumber() > 0
-                          ? performanceData?.initialCapital.toDecimalPlaces(2)
-                          : 1,
-                      )
-                      .mul(100)
-                      .toDecimalPlaces(2)
-                      .toNumber()}
+                  {performanceData?.netProfit
+                    .toDecimalPlaces(2)
+                    .div(
+                      performanceData?.initialCapital.toNumber() > 0
+                        ? performanceData?.initialCapital.toDecimalPlaces(2)
+                        : 1,
+                    )
+                    .mul(100)
+                    .toDecimalPlaces(2)
+                    .toNumber()}
                   %
                 </h2>
               </div>
@@ -134,13 +65,13 @@ export const ResultBreakdown = ({
               <div className="text-left">
                 <h6 className="text-sm font-normal">Starting Balance</h6>
                 <h6 className="text-lg font-extrabold">
-                  USDT {performanceData && performanceData.initialCapital.toFixed(2)}
+                  USDT {performanceData?.initialCapital.toFixed(2)}
                 </h6>
               </div>
               <div className="text-right">
                 <h6 className="text-sm font-normal">Final Balance</h6>
                 <h6 className="text-lg font-extrabold">
-                  USDT {performanceData && performanceData.finalBalance.toFixed(2)}
+                  USDT {performanceData?.finalBalance.toFixed(2)}
                 </h6>
               </div>
             </div>
@@ -166,11 +97,11 @@ export const ResultBreakdown = ({
                 <div className="w-full h-3 rounded-full bg-gradient-to-r from-[#87BF90] to-[#F2F2F2]" />
                 <div className="pt-2">
                   <span className="float-left text-[#009C3E] dark:text-[#00FC65] font-bold font-sora text-xl">
-                    {performanceData && performanceData.totalWinningTrades}
+                    {performanceData?.totalWinningTrades}
                   </span>
 
                   <span className="float-right text-[#FF4646] dark:text-[#FF6F6F] font-bold font-sora text-xl">
-                    {performanceData && performanceData.totalLosingTrades}
+                    {performanceData?.totalLosingTrades}
                   </span>
                 </div>
               </div>
@@ -179,17 +110,13 @@ export const ResultBreakdown = ({
                 <div className="text-left">
                   <h6 className="text-sm font-normal capitalize">Total Trades</h6>
                   <h6 className="text-lg font-extrabold">
-                    {performanceData && performanceData.totalTrades}
+                    {performanceData?.totalTrades}
                   </h6>
                 </div>
                 <div className="text-right">
                   <h6 className="text-sm font-normal">Profit-to-Loss</h6>
                   <h6 className="text-lg font-extrabold">
-                    {performanceData &&
-                      performanceData.totalProfit
-                        .div(performanceData.totalLoss.abs())
-                        .toNumber()
-                        .toFixed(2)}{' '}
+                    {performanceData?.profitFactor.toFixed(2)}{' '}
                     : 1
                   </h6>
                 </div>
@@ -199,13 +126,13 @@ export const ResultBreakdown = ({
                 <div className="text-left">
                   <h6 className="text-sm font-normal capitalize">Sharpe Ratio</h6>
                   <h6 className="text-lg font-extrabold">
-                    {performanceData && performanceData.sharpeRatio.toFixed(2)}
+                    {performanceData?.sharpeRatio.toFixed(2)}
                   </h6>
                 </div>
                 <div className="text-right">
                   <h6 className="text-sm font-normal capitalize">Calmar Ratio</h6>
                   <h6 className="text-lg font-extrabold">
-                    {performanceData && performanceData.calmarRatio.toFixed(2)}
+                    {performanceData?.calmarRatio.toFixed(2)}
                   </h6>
                 </div>
               </div>
@@ -230,12 +157,12 @@ export const ResultBreakdown = ({
                   <h6
                     className={cn(
                       'text-lg font-extrabold',
-                      performanceData && performanceData.winRate.greaterThanOrEqualTo(0)
+                      performanceData?.winRate.greaterThanOrEqualTo(0)
                         ? 'text-[#009C3E] dark:text-[#00FC65]'
                         : 'text-[#FF4646] dark:text-[#FF6F6F]',
                     )}
                   >
-                    {performanceData && performanceData.winRate.greaterThanOrEqualTo(0) ? '+' : '-'}
+                    {performanceData?.winRate.greaterThanOrEqualTo(0) ? '+' : '-'}
                     {performanceData &&
                       Decimal.abs(performanceData.winRate ?? 0)
                         .mul(100)
@@ -244,19 +171,16 @@ export const ResultBreakdown = ({
                   </h6>
                 </div>
                 <div className="text-right">
-                  <h6 className="text-sm font-normal">Profit Factor</h6>
+                  <h6 className="text-sm font-normal">Annualized Return</h6>
                   <h6
                     className={cn(
                       'text-lg font-extrabold',
-                      performanceData && performanceData.profitFactor.greaterThanOrEqualTo(0)
+                      performanceData?.annualizedReturn.greaterThanOrEqualTo(0)
                         ? 'text-[#009C3E] dark:text-[#00FC65]'
                         : 'text-[#FF4646] dark:text-[#FF6F6F]',
                     )}
                   >
-                    {performanceData && performanceData.profitFactor.greaterThanOrEqualTo(0)
-                      ? '+'
-                      : '-'}
-                    {performanceData && performanceData.profitFactor.abs().toFixed(2)}%
+                    {performanceData?.annualizedReturn.abs().mul(100).toFixed(2)}%
                   </h6>
                 </div>
               </div>
@@ -267,15 +191,15 @@ export const ResultBreakdown = ({
                   <h6
                     className={cn(
                       'text-lg font-extrabold',
-                      performanceData && performanceData.largestRoi.greaterThanOrEqualTo(0)
+                      performanceData?.largestRoi.greaterThanOrEqualTo(0)
                         ? 'text-[#009C3E] dark:text-[#00FC65]'
                         : 'text-[#FF4646] dark:text-[#FF6F6F]',
                     )}
                   >
-                    {performanceData && performanceData.largestRoi.greaterThanOrEqualTo(0)
+                    {performanceData?.largestRoi.greaterThanOrEqualTo(0)
                       ? '+'
                       : '-'}
-                    {performanceData && performanceData.largestRoi.abs().mul(100).toFixed(2)}%
+                    {performanceData?.largestRoi.abs().mul(100).toFixed(2)}%
                   </h6>
                 </div>
                 <div className="text-right">
@@ -283,15 +207,15 @@ export const ResultBreakdown = ({
                   <h6
                     className={cn(
                       'text-lg font-extrabold',
-                      performanceData && performanceData.smallestRoi.greaterThanOrEqualTo(0)
+                      performanceData?.smallestRoi.greaterThanOrEqualTo(0)
                         ? 'text-[#009C3E] dark:text-[#00FC65]'
                         : 'text-[#FF4646] dark:text-[#FF6F6F]',
                     )}
                   >
-                    {performanceData && performanceData.smallestRoi.greaterThanOrEqualTo(0)
+                    {performanceData?.smallestRoi.greaterThanOrEqualTo(0)
                       ? '+'
                       : '-'}
-                    {performanceData && performanceData.smallestRoi.abs().mul(100).toFixed(2)}%
+                    {performanceData?.smallestRoi.abs().mul(100).toFixed(2)}%
                   </h6>
                 </div>
               </div>
@@ -302,15 +226,15 @@ export const ResultBreakdown = ({
                   <h6
                     className={cn(
                       'text-lg font-extrabold',
-                      performanceData && performanceData.bestTradePnl.greaterThanOrEqualTo(0)
+                      performanceData?.bestTradePnl.greaterThanOrEqualTo(0)
                         ? 'text-[#009C3E] dark:text-[#00FC65]'
                         : 'text-[#FF4646] dark:text-[#FF6F6F]',
                     )}
                   >
-                    {performanceData && performanceData.bestTradePnl.greaterThanOrEqualTo(0)
+                    {performanceData?.bestTradePnl.greaterThanOrEqualTo(0)
                       ? '+'
                       : '-'}
-                    {performanceData && performanceData.bestTradePnl.abs().toFixed(2)}
+                    {performanceData?.bestTradePnl.abs().toFixed(2)}
                   </h6>
                 </div>
                 <div className="text-right">
@@ -318,15 +242,15 @@ export const ResultBreakdown = ({
                   <h6
                     className={cn(
                       'text-lg font-extrabold',
-                      performanceData && performanceData.worstTradePnl.greaterThanOrEqualTo(0)
+                      performanceData?.worstTradePnl.greaterThanOrEqualTo(0)
                         ? 'text-[#009C3E] dark:text-[#00FC65]'
                         : 'text-[#FF4646] dark:text-[#FF6F6F]',
                     )}
                   >
-                    {performanceData && performanceData.worstTradePnl.greaterThanOrEqualTo(0)
+                    {performanceData?.worstTradePnl.greaterThanOrEqualTo(0)
                       ? '+'
                       : '-'}
-                    {performanceData && performanceData.worstTradePnl.abs().toFixed(2)}
+                    {performanceData?.worstTradePnl.abs().toFixed(2)}
                   </h6>
                 </div>
               </div>

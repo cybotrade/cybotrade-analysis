@@ -78,3 +78,44 @@ export const intervalToDays = (interval: Interval) => {
       return 1; // Default to one day if the interval is not recognized
   }
 };
+
+export const intervalForDays = (interval: Interval) => {
+  switch (interval) {
+    case Interval.OneMinute:
+      return 1440;
+    case Interval.ThreeMinute:
+      return 1440 / 3;
+    case Interval.FiveMinute:
+      return 1440 / 5;
+    case Interval.FifteenMinute:
+      return 1440 / 15;
+    case Interval.ThirtyMinute:
+      return 1440 / 30;
+    case Interval.OneHour:
+      return 24;
+    case Interval.TwoHour:
+      return 24 / 2;
+    case Interval.FourHour:
+      return 24 / 4;
+    case Interval.SixHour:
+      return 24 / 6;
+    case Interval.TwelveHour:
+      return 24 / 12;
+    case Interval.OneDay:
+      return 1;
+    case Interval.ThreeDay:
+      return 1 / 3;
+    case Interval.OneWeek:
+      return 1 / 7;
+    case Interval.OneMonth:
+      return 1 / 30;
+    default:
+      return 1; // Default to one day if the interval is not recognized
+  }
+};
+
+export const addDays = function (date: Date, days: number) {
+  var newDate = new Date(date);
+  newDate.setDate(date.getDate() + days);
+  return newDate;
+}
