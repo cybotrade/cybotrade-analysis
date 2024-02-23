@@ -10,8 +10,12 @@ import HeatMap from '@app/(routes)/(route)/_components/HeatMap';
 import SharpeRatio from '@app/(routes)/(route)/_components/SharpeRatio';
 import { useDebounce } from '@app/_hooks/useDebounce';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
-import { calculateSharpeRatio, transformToClosedTrades } from '@app/_lib/calculation';
-import { Interval } from '@app/_lib/utils';
+import {
+  Performance,
+  calculatePerformance,
+  transformToClosedTrades,
+} from '@app/_lib/calculation';
+import { Interval, addDays, intervalToDays, roundIntervalDate } from '@app/_lib/utils';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
 import { Sheet, SheetContent } from '@app/_ui/Sheet';
@@ -67,6 +71,7 @@ const BackTestResultsDrawer = ({
   const [yAxisSelected, setyAxisSelected] = useState('');
 
   const [klineData, setKlineData] = useState<Kline[] | null>([]);
+  const [performanceData, setPerformanceData] = useState<Performance>();
   const [doneFetchingKline, setDoneFetchingKline] = useState(false);
 
   const onSettingsFormUpdate = (values: SettingsValue) => {
@@ -113,14 +118,15 @@ const BackTestResultsDrawer = ({
           fees: userSettings.fees ?? 0,
         };
       }) as ITrade[];
+      let interval = intervals[symbols[0]];
 
       return {
         id: id,
         symbols: symbols[0],
-        intervals: intervals[symbols[0]],
+        intervals: interval,
         trades: sortByTimestamp<ITrade>(sortedTrades),
-        start_time: data.start_time.toString(),
-        end_time: data.end_time.toString(),
+        start_time: roundIntervalDate(data.start_time, interval[0] as Interval).toString(),
+        end_time: roundIntervalDate(data.end_time, interval[0] as Interval).toString(),
       };
     });
   }, [data]);
@@ -131,6 +137,8 @@ const BackTestResultsDrawer = ({
 
   useEffect(() => {
     if (!backtestData || !klineData) return;
+    if (backtestData.length === 0 || klineData.length === 0) return;
+
     if (!debouncedDelimitor || !separator) {
       setPairs([]);
       return;
@@ -148,16 +156,19 @@ const BackTestResultsDrawer = ({
           return { key: key.trim(), value: +value };
         })
         .filter((p) => p);
-
-      let sharpeRatio = calculateSharpeRatio({
-        klineData,
-        inputTrades: d.trades,
-        interval,
-      }).toDecimalPlaces(2);
+      let sharpeRatio = calculatePerformance({
+        tradeOrders: { klineData: klineData ?? [], trades: d.trades, interval },
+        parameters: {
+          comission: 0,
+          initialCapital: 10000,
+          riskFreeRate: 0.02,
+          fees: 0,
+        },
+      }).sharpeRatio;
 
       return {
         allPairs,
-        value: sharpeRatio.isNaN() ? new Decimal(0) : sharpeRatio,
+        value: sharpeRatio,
       };
     });
 
@@ -195,12 +206,12 @@ const BackTestResultsDrawer = ({
       try {
         const req = await fetch(
           '/api/candle?' +
-            new URLSearchParams({
-              symbol,
-              interval,
-              startTime,
-              endTime,
-            }),
+          new URLSearchParams({
+            symbol,
+            interval,
+            startTime,
+            endTime,
+          }),
           {
             signal: abortController.signal,
             method: 'GET',
@@ -218,8 +229,12 @@ const BackTestResultsDrawer = ({
         }
         if (req.ok) {
           setKlineData((prev) => {
-            const filteredPrev: Kline[] = prev ? prev?.filter((r) => r[0] !== +endTime) : [];
-            return [...res, ...filteredPrev];
+            const filteredPrev: Kline[] = prev
+              ? prev?.filter(
+                (r) => r[0] >= +backtestData[0].start_time && r[0] <= +backtestData[0].end_time,
+              )
+              : [];
+            return [...filteredPrev, ...res];
           });
         }
       } catch (error) {
@@ -233,20 +248,24 @@ const BackTestResultsDrawer = ({
 
     if (klineData?.length === 0) {
       fetchKlineData({ startTime: backtestData[0].start_time, endTime: backtestData[0].end_time });
-    }
-    if (klineData && klineData[0] && klineData[0][0] > +backtestData[0].start_time) {
+    } else if (klineData?.[0] && klineData[klineData.length - 1][0] < +backtestData[0].end_time) {
       const fetchedPercentage = Math.round(
         ((+backtestData[0].end_time - klineData[0][0]) /
           (+backtestData[0].end_time - +backtestData[0].start_time)) *
-          100,
+        100,
       );
       fetchedKlinePercentage(fetchedPercentage);
+      let newStartTime = addDays(
+        new Date(klineData[klineData.length - 1][0]),
+        intervalToDays(interval),
+      )
+        .getTime()
+        .toString();
       fetchKlineData({
-        startTime: backtestData[0].start_time,
-        endTime: klineData[0][0].toString(),
+        startTime: newStartTime,
+        endTime: backtestData[0].end_time,
       });
-    }
-    if (klineData && klineData[0] && klineData[0][0] < +backtestData[0].start_time) {
+    } else if (klineData?.[0] && klineData[klineData.length - 1][0] >= +backtestData[0].end_time) {
       setDoneFetchingKline(true);
       fetchedKlinePercentage(100);
     }
@@ -256,6 +275,17 @@ const BackTestResultsDrawer = ({
   useEffect(() => {
     if (data && klineData && klineData?.length > 0 && doneFetchingKline) {
       drawer.open();
+      setPerformanceData(
+        calculatePerformance({
+          tradeOrders: { klineData: klineData ?? [], trades: backtestData[0].trades, interval },
+          parameters: {
+            comission: 0,
+            initialCapital: userSettings.initial_capital ?? 10000,
+            riskFreeRate: 0.02,
+            fees: userSettings.fees,
+          },
+        }),
+      );
     }
   }, [data, klineData, doneFetchingKline]);
 
@@ -270,6 +300,7 @@ const BackTestResultsDrawer = ({
       label: 'Equity Curve',
       content: (
         <EquityCurve
+          performanceData={performanceData!}
           backtestData={backtestData[0]}
           symbol={symbol}
           interval={interval}
@@ -281,23 +312,19 @@ const BackTestResultsDrawer = ({
     {
       value: 'result-breakdown',
       label: 'Result Breakdown',
-      content: (
-        <ResultBreakdown
-          klineData={klineData ?? []}
-          trades={backtestData[0].trades}
-          interval={interval}
-          closedTrades={closedTrades}
-          initialCapital={userSettings.initial_capital}
-          fees={userSettings.fees ?? 0}
-        />
-      ),
+      content: <ResultBreakdown performanceData={performanceData!} />,
     },
-    { value: 'trend', label: 'Trend', content: <Trend closedTrades={closedTrades} /> },
+    // { value: 'trend', label: 'Trend', content: <Trend closedTrades={closedTrades} /> },
     {
       value: 'sharpe-ratio',
       label: 'Sharpe Ratio',
       content: (
-        <SharpeRatio backtestData={backtestData} klineData={klineData ?? []} interval={interval} />
+        <SharpeRatio
+          performanceData={performanceData!}
+          backtestData={backtestData}
+          klineData={klineData ?? []}
+          interval={interval}
+        />
       ),
     },
     {
