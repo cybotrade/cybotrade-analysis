@@ -21,8 +21,6 @@ type HeatMapProps = {
   yAxisSelected: string;
   onxAxisSelect: Dispatch<SetStateAction<string>>;
   onyAxisSelect: Dispatch<SetStateAction<string>>;
-  minDomain?: number;
-  maxDomain?: number;
 };
 
 const HeatMap = ({
@@ -35,8 +33,6 @@ const HeatMap = ({
   onSeparatorChange,
   onxAxisSelect,
   onyAxisSelect,
-  minDomain = 1,
-  maxDomain = 100,
 }: HeatMapProps) => {
   const heatMapContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -133,8 +129,8 @@ const HeatMap = ({
 
     const color = d3
       .scaleLinear<string>()
-      .range(['#e4f1ff', '#00a8ff'])
-      .domain([minDomain, maxDomain]);
+      .range(["#fcfdbf", "#fed799", "#feb078", "#fc8961", "#f1605d", "#d8456c", "#b73779", "#932b80", "#721f81", "#51127c", "#2c115f"])
+      .domain([0.5, 1, 1.5, 2, 3, 5, 8, 10, 13, 17, 20]);
 
     svg
       .selectAll()

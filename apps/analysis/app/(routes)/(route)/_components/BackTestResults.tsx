@@ -13,10 +13,9 @@ import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
 import {
   Performance,
   calculatePerformance,
-  calculateSharpeRatio,
   transformToClosedTrades,
 } from '@app/_lib/calculation';
-import { Interval, addDays, intervalToDays } from '@app/_lib/utils';
+import { Interval, addDays, intervalToDays, roundIntervalDate } from '@app/_lib/utils';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
 import { Sheet, SheetContent } from '@app/_ui/Sheet';
@@ -119,14 +118,15 @@ const BackTestResultsDrawer = ({
           fees: userSettings.fees ?? 0,
         };
       }) as ITrade[];
+      let interval = intervals[symbols[0]];
 
       return {
         id: id,
         symbols: symbols[0],
-        intervals: intervals[symbols[0]],
+        intervals: interval,
         trades: sortByTimestamp<ITrade>(sortedTrades),
-        start_time: data.start_time.toString(),
-        end_time: data.end_time.toString(),
+        start_time: roundIntervalDate(data.start_time, interval[0] as Interval).toString(),
+        end_time: roundIntervalDate(data.end_time, interval[0] as Interval).toString(),
       };
     });
   }, [data]);
@@ -206,12 +206,12 @@ const BackTestResultsDrawer = ({
       try {
         const req = await fetch(
           '/api/candle?' +
-            new URLSearchParams({
-              symbol,
-              interval,
-              startTime,
-              endTime,
-            }),
+          new URLSearchParams({
+            symbol,
+            interval,
+            startTime,
+            endTime,
+          }),
           {
             signal: abortController.signal,
             method: 'GET',
@@ -231,8 +231,8 @@ const BackTestResultsDrawer = ({
           setKlineData((prev) => {
             const filteredPrev: Kline[] = prev
               ? prev?.filter(
-                  (r) => r[0] >= +backtestData[0].start_time && r[0] <= +backtestData[0].end_time,
-                )
+                (r) => r[0] >= +backtestData[0].start_time && r[0] <= +backtestData[0].end_time,
+              )
               : [];
             return [...filteredPrev, ...res];
           });
@@ -248,12 +248,11 @@ const BackTestResultsDrawer = ({
 
     if (klineData?.length === 0) {
       fetchKlineData({ startTime: backtestData[0].start_time, endTime: backtestData[0].end_time });
-    }
-    if (klineData?.[0] && klineData[klineData.length - 1][0] < +backtestData[0].end_time) {
+    } else if (klineData?.[0] && klineData[klineData.length - 1][0] < +backtestData[0].end_time) {
       const fetchedPercentage = Math.round(
         ((+backtestData[0].end_time - klineData[0][0]) /
           (+backtestData[0].end_time - +backtestData[0].start_time)) *
-          100,
+        100,
       );
       fetchedKlinePercentage(fetchedPercentage);
       let newStartTime = addDays(
@@ -266,8 +265,7 @@ const BackTestResultsDrawer = ({
         startTime: newStartTime,
         endTime: backtestData[0].end_time,
       });
-    }
-    if (klineData?.[0] && klineData[klineData.length - 1][0] >= +backtestData[0].end_time) {
+    } else if (klineData?.[0] && klineData[klineData.length - 1][0] >= +backtestData[0].end_time) {
       setDoneFetchingKline(true);
       fetchedKlinePercentage(100);
     }
