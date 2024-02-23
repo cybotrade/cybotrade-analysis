@@ -2,9 +2,8 @@ import { type Kline } from 'binance';
 import { Decimal } from 'decimal.js';
 import { UTCTimestamp } from 'lightweight-charts';
 
-import { Interval, OrderSide } from '@app/_lib/utils';
-
 import { IClosedTrade, ITrade } from '@app/(routes)/(route)/type';
+import { Interval, OrderSide, intervalForDays } from '@app/_lib/utils';
 
 import { intervalToDays } from './utils';
 
@@ -12,7 +11,6 @@ export type Performance = {
   finalBalance: Decimal;
   initialCapital: Decimal;
   totalTrades: number;
-  tradingFrequency: number;
   totalLosingTrades: number;
   totalWinningTrades: number;
   bestTradePnl: Decimal;
@@ -28,47 +26,22 @@ export type Performance = {
   totalLoss: Decimal;
   averageProfit: Decimal;
   averageLoss: Decimal;
-  maxDrawdown: { value: Decimal; percentage: Decimal };
+  maxDrawdown: Decimal;
 
   // Duration in seconds
   averageTradeDuration: Decimal;
-  // sharpeRatio: {
-  //   monthly: { startTime: Decimal; endTime: Decimal; value: Decimal }[];
-  //   yearly: { startTime: Decimal; endTime: Decimal; value: Decimal }[];
-  //   total: Decimal;
-  // };
+
   sharpeRatio: Decimal;
   calmarRatio: Decimal;
-
-  // monteCarlo: {
-  //   drawdown: { median: Decimal; p95: Decimal };
-  //   profit: { median: Decimal; p95: Decimal };
-  // };
 
   roi: Decimal;
   largestRoi: Decimal;
   smallestRoi: Decimal;
 
-  openedTrades: {
-    id: string;
-    quantity: Decimal;
-    side: OrderSide;
-    entryPrice: Decimal;
-    entryTime: Date;
-  }[];
-  closedTrades: {
-    // id: string;
-    quantity: Decimal;
-    side: OrderSide;
-    entryPrice: Decimal;
-    entryTime: Date;
-    exitPrice: Decimal;
-    exitTime: Date;
-  }[];
-  drawdowns: { timestamp: Date; value: Decimal }[];
-
-  totalTradesPerDay: number[];
-  averageTotalTradesPerDay: number;
+  averageTradesPerDay: number;
+  annualizedReturn: Decimal;
+  equityData: { value: number; time: UTCTimestamp }[];
+  intervalPriceChanges: Decimal[];
 };
 
 /**
@@ -222,261 +195,175 @@ export const returns = ({ values }: { values: Decimal[] }): Decimal[] =>
     )
     .filter((val) => val !== null) as Decimal[];
 
-/**
- * Calculate the sharpe ratio for a portfolio.
- * See https://www.investopedia.com/terms/s/sharperatio.asp for more information.
- *
- * Formula: (expectedReturn - riskFreeRate) / standardDeviation
- *
- * @param expectedReturn The expected portfolio returns.
- * @param riskFreeRate The risk free rate of the portfolio.
- * @param standardDeviation The standard deviation of the portfolio returns.
- * @returns The sharpe ratio for the portfolio.
- */
-export const sharpeRatio = ({
-  expectedReturn,
-  riskFreeRate,
-  standardDeviation,
-}: {
-  expectedReturn: Decimal;
-  riskFreeRate: Decimal;
-  standardDeviation: Decimal;
-}): Decimal =>
-  !standardDeviation.equals(0)
-    ? expectedReturn.sub(riskFreeRate).div(standardDeviation)
-    : new Decimal(0);
-
-/**
- * Convert other timeframe equities to daily equities.
- *
- * @param equities The other timeframe equities.
- * @returns The daily equities.
- */
-// export const convertEquitiesToDaily = (
-//   equities: { value: Decimal; timestamp: Date }[],
-// ): { value: Decimal; timestamp: Date }[] => {
-//   const dailyEquities: { value: Decimal; timestamp: Date }[] = [];
-//   for (const equity of equities) {
-//     const date = equity.timestamp;
-//     const utcDate = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-//     if (!dailyEquities.map((e) => e.timestamp.getTime()).includes(utcDate))
-//       dailyEquities.push({ value: equity.value, timestamp: new Date(utcDate) });
-//     else
-//       dailyEquities[dailyEquities.map((e) => e.timestamp.getTime()).indexOf(utcDate)].value =
-//         equity.value;
-//   }
-//   return dailyEquities;
-// };
-
-const convertCloseTradesToDaily = (
-  closedTrades: {
-    // id: string;
-    quantity: Decimal;
-    side: OrderSide;
-    entryPrice: Decimal;
-    entryTime: Date;
-    exitPrice: Decimal;
-    exitTime: Date;
-  }[],
-) => {
-  const dailyClosedTrades: { value: Decimal; timestamp: Date }[] = [];
-  for (const ct of closedTrades) {
-    const date = new Date(ct.exitTime);
-    const utcDate = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-    if (!dailyClosedTrades.map((e) => e.timestamp.getTime()).includes(utcDate))
-      dailyClosedTrades.push({ value: ct.exitPrice, timestamp: new Date(utcDate) });
-    else
-      dailyClosedTrades[
-        dailyClosedTrades.map((e) => e.timestamp.getTime()).indexOf(utcDate)
-      ].value = ct.exitPrice;
-  }
-  return dailyClosedTrades;
-};
-
 export const calculatePerformance = ({
-  history: { openedTrades, closedTrades },
   parameters: { initialCapital, comission, riskFreeRate, fees },
   tradeOrders,
 }: {
-  history: {
-    openedTrades: {
-      id: string;
-      quantity: Decimal;
-      side: OrderSide;
-      entryPrice: Decimal;
-      entryTime: Date;
-    }[];
-    closedTrades: {
-      // id: string;
-      quantity: Decimal;
-      side: OrderSide;
-      entryPrice: Decimal;
-      entryTime: Date;
-      exitPrice: Decimal;
-      exitTime: Date;
-    }[];
-  };
   parameters: { initialCapital: number; comission: number; riskFreeRate: number; fees?: number };
   tradeOrders?: { klineData: Kline[]; trades: ITrade[]; interval: Interval };
 }): Performance => {
-  const pnlFromTrade = (trade: (typeof closedTrades)[0]): Decimal =>
-    pnl({
-      entryPrice: new Decimal(trade.entryPrice),
-      entryQuantity: new Decimal(trade.quantity),
-      exitPrice: new Decimal(trade.exitPrice),
-      exitQuantity: new Decimal(trade.quantity),
-      orderSide: trade.side.toLowerCase() as OrderSide,
-      comission: new Decimal(comission),
+  let interval = tradeOrders?.interval ?? Interval.OneDay;
+  let intervalPriceChanges: Decimal[] = [];
+  let klineData = tradeOrders?.klineData;
+  let equityData: { value: number; time: UTCTimestamp }[] = [];
+  let geoUnrealizedPnlInfo: Decimal[] = [];
+  let geoCumulativeUnrealizedPnlInfo: Decimal[] = [];
+  let ariUnrealizedPnlInfo: Decimal[] = [];
+  let ariCumulativeUnrealizedPnlInfo: Decimal[] = [];
+  let globalEntryPrice: number | null = null;
+  let globalSide: OrderSide | null = null;
+  let position: number = 0;
+  let pnlList: Decimal[] = [];
+  let finalPnl = new Decimal(0);
+  let positionList: Decimal[] = [];
+  klineData?.map((kline, index, klineArr) => {
+    const candleClosePrice = kline[4];
+    const candleCloseTime = kline[6];
+    const tradeOnCandle = tradeOrders?.trades.find(
+      (trade) => +trade.time <= kline[6] && +trade.time >= kline[0],
+    );
+    let previousPosition = position;
+    if (tradeOnCandle) {
+      const { quantity, side, price, fees = 0 } = tradeOnCandle;
+
+      let current_side = side === "buy" ? OrderSide.Buy : OrderSide.Sell;
+
+      let pnl = new Decimal(0);
+      if (globalEntryPrice === null) {
+        globalEntryPrice = price;
+        globalSide = current_side;
+        position = current_side == OrderSide.Sell ? position - quantity : quantity;
+      } else {
+        if (current_side == OrderSide.Buy) {
+          position = position + quantity;
+        } else if (current_side == OrderSide.Sell) {
+          position = position - quantity;
+        }
+
+        if (current_side == globalSide) {
+          globalEntryPrice =
+            (globalEntryPrice * Math.abs(previousPosition) + price * quantity) / Math.abs(position);
+        } else if (current_side !== globalSide) {
+          let minQty = Math.min(Math.abs(previousPosition), quantity);
+          if (current_side == OrderSide.Buy) {
+            pnl = new Decimal(globalEntryPrice * minQty - price * minQty);
+          } else if (current_side == OrderSide.Sell) {
+            pnl = new Decimal(price * minQty - globalEntryPrice * minQty);
+          }
+
+          if (quantity > Math.abs(previousPosition)) {
+            globalEntryPrice = price;
+          } else if (quantity == 0) {
+            globalEntryPrice = 0;
+          }
+        }
+
+        pnlList.push(pnl);
+        finalPnl = finalPnl.add(pnl);
+      }
+    }
+
+    globalSide = position >= 0 ? OrderSide.Buy : OrderSide.Sell;
+
+    let geometricUnrealizedPnl;
+    if (globalSide == OrderSide.Buy) {
+      geometricUnrealizedPnl =
+        new Decimal((+candleClosePrice - (globalEntryPrice ? +globalEntryPrice : 0)) * Math.abs(position));
+    } else {
+      geometricUnrealizedPnl =
+        new Decimal(((globalEntryPrice ? +globalEntryPrice : 0) - +candleClosePrice) * Math.abs(position));
+    }
+
+    let priceChange = new Decimal(index > 0 ? +candleClosePrice / +klineArr[index - 1][4] - 1 : 0);
+    intervalPriceChanges.push(priceChange);
+
+    // Geometric way of calculating unrealized pnl
+    geoUnrealizedPnlInfo.push(geometricUnrealizedPnl);
+    let prevGeoCumUnrealizedPnl = geoCumulativeUnrealizedPnlInfo.length > 0 ? geoCumulativeUnrealizedPnlInfo[geoCumulativeUnrealizedPnlInfo.length - 1] : new Decimal(0);
+    geoCumulativeUnrealizedPnlInfo.push(prevGeoCumUnrealizedPnl.add(geometricUnrealizedPnl));
+
+    let arimetricUnrealizedPnl = (positionList.length > 0 ? positionList[positionList.length - 1] : new Decimal(0)).mul(priceChange);
+    let arithmeticPosition = new Decimal(0);
+    if (position > 0) {
+      arithmeticPosition = new Decimal(1);
+    } else if (position < 0) {
+      arithmeticPosition = new Decimal(-1);
+    }
+    positionList.push(arithmeticPosition)
+
+    // Atrihmetic way of calculating unrealized pnl
+    ariUnrealizedPnlInfo.push(arimetricUnrealizedPnl);
+    let prevAriCumUnrealizedPnl = ariCumulativeUnrealizedPnlInfo.length > 0 ? ariCumulativeUnrealizedPnlInfo[ariCumulativeUnrealizedPnlInfo.length - 1] : new Decimal(0);
+    ariCumulativeUnrealizedPnlInfo.push(prevAriCumUnrealizedPnl.add(arimetricUnrealizedPnl));
+
+    // This is to get the interval equity curve
+    equityData.push({
+      value: initialCapital + finalPnl.toNumber() + geometricUnrealizedPnl.toNumber(),
+      time: (candleCloseTime / 1000) as UTCTimestamp,
     });
-  const closedTradesInDaily = convertCloseTradesToDaily(closedTrades);
-
-  const pnls = closedTrades.map(pnlFromTrade);
-  const drawdowns = closedTrades.map((v) => ({
-    timestamp: v.exitTime,
-    value: pnlFromTrade(v),
-  }));
-  const winningTrades = closedTrades.filter((trade) => pnlFromTrade(trade).greaterThan(0));
-  const losingTrades = closedTrades.filter((trade) => pnlFromTrade(trade).lessThan(0));
-  const bestTradePnl = (() => {
-    try {
-      return Decimal.max(...pnls);
-    } catch (e) {
-      return new Decimal(0);
-    }
-  })();
-  const worstTradePnl = (() => {
-    try {
-      return Decimal.min(...pnls);
-    } catch (e) {
-      return new Decimal(0);
-    }
-  })();
-  const totalProfit = winningTrades.reduce(
-    (acc, trade) => acc.add(pnlFromTrade(trade)),
-    new Decimal(0),
-  );
-  const totalLoss = losingTrades.reduce(
-    (acc, trade) => acc.add(pnlFromTrade(trade)),
-    new Decimal(0),
-  );
-  const finalBalance = new Decimal(initialCapital || 0)
-    .plus(totalProfit)
-    .plus(totalLoss)
-    .minus(new Decimal(tradeOrders?.trades.length ?? 0).mul(new Decimal(fees ?? 0)));
-
-  const maxDrawdown = (() => {
-    try {
-      return Decimal.max(...drawdowns.map(({ value }) => value));
-    } catch (e) {
-      return new Decimal(0);
-    }
-  })();
-  const closedTradesReturns = returns({ values: closedTradesInDaily.map(({ value }) => value) });
-
-  //total trade
-  const tradesPerDay: Record<string, number> = {};
-
-  closedTrades.forEach((trade) => {
-    const closeDate = new Date(trade.exitTime).toISOString().split('T')[0];
-    tradesPerDay[closeDate] = (tradesPerDay[closeDate] || 0) + 1;
   });
-  const tradingTime =
-    closedTrades.length > 0
-      ? closedTrades[0].entryTime.getTime() -
-        new Date(closedTrades[closedTrades.length - 1].exitTime).getTime()
-      : 0;
-  const tradingDays = tradingTime / (1000 * 60 * 60 * 24);
-  const tradingFrequency = Math.abs((closedTrades.length / tradingDays) * 100); // in percentage
-  const totalTradesPerDay = Object.values(tradesPerDay);
-  const averageTotalTradesPerDay =
-    totalTradesPerDay.length === 0
-      ? 0
-      : totalTradesPerDay.reduce((sum, count) => sum + count, 0) / totalTradesPerDay.length;
-  const adjustedRiskFree = (1 + riskFreeRate) ** (tradingDays / 365) - 1;
 
-  return {
+  let averageTradesPerDay = tradeOrders!.trades.length / Math.round((+tradeOrders!.trades[tradeOrders!.trades.length - 1].time - +tradeOrders!.trades[0].time) / (1000 * 3600 * 24));
+  let bestTradePnl = Decimal.max(...pnlList);
+  let worstTradePnl = Decimal.min(...pnlList);
+  let winningTrades = pnlList.filter((pnl) => pnl.greaterThan(0));
+  let losingTrades = pnlList.filter((pnl) => pnl.lessThan(0));
+  let totalProfit = winningTrades.reduce((acc, curr) => acc.add(curr), new Decimal(0));
+  let totalLoss = losingTrades.reduce((acc, curr) => acc.add(curr), new Decimal(0));
+  let totalWinningTrades = winningTrades.length;
+  let totalLosingTrades = losingTrades.length;
+  let finalBalance = new Decimal(equityData[equityData.length - 1].value);
+
+  let drawdowns = ariCumulativeUnrealizedPnlInfo.map((currentValue, index) => {
+    const maxFromStart = Decimal.max(...ariCumulativeUnrealizedPnlInfo.slice(0, index + 1)); // Slice the array to get the sublist from 0 to index
+    return currentValue.minus(maxFromStart).abs();
+  });
+  let maxDrawdown = Decimal.max(...drawdowns);
+  let annualizedReturn = mean({ values: ariUnrealizedPnlInfo }).mul(365).div(intervalForDays(interval));
+
+  let performance = {
     // to calculate average total trade per day
-    totalTradesPerDay,
-    averageTotalTradesPerDay,
+    averageTradesPerDay: averageTradesPerDay,
 
     finalBalance,
     initialCapital: new Decimal(initialCapital),
-    totalTrades: tradeOrders?.trades.length || 0,
-    tradingFrequency,
+    totalTrades: tradeOrders?.trades.length ?? 0,
 
-    totalWinningTrades: pnls.filter((pnl) => pnl.greaterThan(0)).length,
-    totalLosingTrades: pnls.filter((pnl) => pnl.lessThan(0)).length,
+    totalWinningTrades,
+    totalLosingTrades,
     bestTradePnl,
     worstTradePnl,
-    averagePnl: mean({ values: pnls }),
-    highestWinningStreak: streak(pnls, (pnl) => pnl.greaterThan(0)),
-    highestLosingStreak: streak(pnls, (pnl) => pnl.lessThan(0)),
+    averagePnl: mean({ values: pnlList }),
+    highestWinningStreak: streak(pnlList, (pnl) => pnl.greaterThan(0)),
+    highestLosingStreak: streak(pnlList, (pnl) => pnl.lessThan(0)),
 
     winRate:
-      closedTrades.length === 0
+      pnlList.length === 0
         ? new Decimal(0)
-        : new Decimal(winningTrades.length).div(closedTrades.length),
-    netProfit: pnls
-      .reduce((acc, pnl) => acc.add(pnl), new Decimal(0))
-      .minus(new Decimal(tradeOrders?.trades.length ?? 0).mul(new Decimal(fees ?? 0))),
-    profitFactor: totalLoss.equals(0) ? new Decimal(0.0) : totalProfit.div(totalLoss),
+        : new Decimal(totalWinningTrades).div(pnlList.length),
+    netProfit: finalPnl,
+    profitFactor: totalLoss.equals(0) ? new Decimal(0.0) : totalProfit.div(totalLoss.abs()),
     totalProfit,
     totalLoss,
     averageProfit:
-      winningTrades.length === 0 ? new Decimal(0) : totalProfit.div(winningTrades.length),
-    averageLoss: losingTrades.length === 0 ? new Decimal(0) : totalLoss.div(losingTrades.length),
-    maxDrawdown: {
-      value: maxDrawdown,
-      percentage: initialCapital === 0 ? new Decimal(0) : maxDrawdown.div(initialCapital),
-    },
+      totalWinningTrades === 0 ? new Decimal(0) : totalProfit.div(totalWinningTrades),
+    averageLoss: totalLosingTrades === 0 ? new Decimal(0) : totalLoss.div(totalLosingTrades),
+    maxDrawdown,
 
-    averageTradeDuration: closedTrades
-      .reduce(
-        (acc, trade) =>
-          acc.add(new Decimal(new Date(trade.exitTime).getTime()).sub(trade.entryTime.getTime())),
-        new Decimal(0),
-      )
-      .div(Math.max(1, closedTrades.length)),
-
-    // sharpeRatio: {
-    //   monthly: [],
-    //   yearly: [],
-    //   total: sharpeRatio({
-    //     expectedReturn: mean({ values: closedTradesReturns }),
-    //     riskFreeRate: new Decimal(adjustedRiskFree),
-    //     standardDeviation: standardDeviation({ values: closedTradesReturns }),
-    //   }),
-    // },
-    sharpeRatio: tradeOrders
-      ? calculateSharpeRatio({
-          klineData: tradeOrders.klineData,
-          inputTrades: tradeOrders.trades,
-          interval: tradeOrders.interval,
-        })
-      : new Decimal(0),
-    calmarRatio: tradeOrders
-      ? calculateCalmarRatio({
-          klineData: tradeOrders.klineData,
-          inputTrades: tradeOrders.trades,
-          interval: tradeOrders.interval,
-        })
-      : new Decimal(0),
-    // Not using
-    // monteCarlo: {
-    //   drawdown: { median: new Decimal(0), p95: new Decimal(0) },
-    //   profit: { median: new Decimal(0), p95: new Decimal(0) },
-    // },
-
+    averageTradeDuration: new Decimal(0),
+    annualizedReturn,
+    sharpeRatio: calculateSharpeRatio({ intervalPnl: ariUnrealizedPnlInfo, interval }),
+    calmarRatio: calculateCalmarRatio({ maxDrawdown, annualizedReturn }),
     roi:
       initialCapital === 0
         ? new Decimal(0)
         : new Decimal(finalBalance.sub(initialCapital)).div(initialCapital),
     largestRoi: initialCapital === 0 ? new Decimal(0) : bestTradePnl.div(initialCapital),
     smallestRoi: initialCapital === 0 ? new Decimal(0) : worstTradePnl.div(initialCapital),
-    drawdowns,
-    closedTrades,
-    openedTrades,
+    equityData,
+    intervalPriceChanges,
   };
+  return performance;
 };
 
 export const transformToClosedTrades = (inputTrades: ITrade[]) => {
@@ -533,85 +420,18 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
   return closedTrades;
 };
 
-const calculateIntervalPriceChanges = (klineData: Kline[]) => {
-  const priceChanges: number[] = [];
-  klineData.map((kline, index, klineArr) => {
-    const candleClosePrice = +kline[4];
-    if (priceChanges.length === 0) {
-      return priceChanges.push(0);
-    }
-    priceChanges.push(candleClosePrice / +klineArr[index - 1][4] - 1);
-  });
-  return priceChanges;
-};
-
-const calculateIntervalPosition = ({
-  klineData,
-  inputTrades,
-}: {
-  klineData: Kline[];
-  inputTrades: ITrade[];
-}) => {
-  const positions: number[] = [];
-  klineData.map((kline) => {
-    const candleOpenTime = +kline[0];
-    const candleCloseTime = +kline[6];
-    const tradesOnCandle = inputTrades.filter(
-      (trade) => +trade.time >= candleOpenTime && +trade.time <= candleCloseTime,
-    );
-    if (tradesOnCandle.length > 0) {
-      let positionOnCandle = positions[positions.length - 1];
-      tradesOnCandle.forEach((trade) => {
-        if (positionOnCandle === 0) {
-          positionOnCandle = trade.side === 'Buy' ? 1 : -1;
-        }
-        if (positionOnCandle === 1) {
-          positionOnCandle = trade.side === 'Buy' ? 1 : positionOnCandle - 1;
-        }
-        if (positionOnCandle === -1) {
-          positionOnCandle = trade.side === 'Buy' ? positionOnCandle - 1 : -1;
-        }
-      });
-      return positions.push(positionOnCandle);
-    }
-    positions.push(positions[positions.length - 1] ?? 0);
-  });
-  return positions;
-};
-
-const intervalPnl = ({
-  intervalPosition,
-  intervalPriceChanges,
-}: {
-  intervalPosition: number[];
-  intervalPriceChanges: number[];
-}) => {
-  const pnls: number[] = [];
-  intervalPriceChanges.map((priceChange, index) =>
-    index === 0 ? pnls.push(0) : pnls.push(priceChange * intervalPosition[index - 1]),
-  );
-  return pnls;
-};
-
 // sharpe ratio
 export const calculateSharpeRatio = ({
-  klineData,
-  inputTrades,
+  intervalPnl,
   interval,
 }: {
-  klineData: Kline[];
-  inputTrades: ITrade[];
+  intervalPnl: Decimal[];
   interval: Interval;
 }) => {
-  const intervalPosition = calculateIntervalPosition({ klineData, inputTrades });
-  const intervalPriceChanges = calculateIntervalPriceChanges(klineData);
-  const pnlInDecimal = intervalPnl({ intervalPosition, intervalPriceChanges }).map(
-    (pnl) => new Decimal(pnl),
-  );
   const meanPNL = mean({
-    values: pnlInDecimal,
+    values: intervalPnl,
   });
-  const standardDeviationValue = standardDeviation({ values: pnlInDecimal });
+  const standardDeviationValue = standardDeviation({ values: intervalPnl });
   const tradeInterval = new Decimal(intervalToDays(interval));
   const sharpeRatio = meanPNL
     .div(standardDeviationValue)
@@ -620,91 +440,13 @@ export const calculateSharpeRatio = ({
   return sharpeRatio;
 };
 
-// carmal ratio
+// calmar ratio
 export const calculateCalmarRatio = ({
-  klineData,
-  inputTrades,
-  interval,
+  maxDrawdown,
+  annualizedReturn,
 }: {
-  klineData: Kline[];
-  inputTrades: ITrade[];
-  interval: Interval;
+  maxDrawdown: Decimal;
+  annualizedReturn: Decimal;
 }) => {
-  const intervalPosition = calculateIntervalPosition({ klineData, inputTrades });
-  const intervalPriceChanges = calculateIntervalPriceChanges(klineData);
-  const pnlInDecimal = intervalPnl({ intervalPosition, intervalPriceChanges }).map(
-    (pnl) => new Decimal(pnl),
-  );
-  const meanPNL = mean({
-    values: pnlInDecimal,
-  });
-  const tradeInterval = new Decimal(intervalToDays(interval));
-  const calmarRatio = meanPNL
-    .mul(new Decimal(365).div(tradeInterval))
-    .div(Decimal.min(...pnlInDecimal).abs());
-
-  return calmarRatio;
-};
-
-export const calculateEquity = ({
-  klineData,
-  trades,
-  initialCapital = 0,
-}: {
-  klineData: Kline[];
-  trades: ITrade[];
-  initialCapital: number;
-}): { value: number; time: UTCTimestamp }[] => {
-  const equityData: { value: number; time: UTCTimestamp }[] = [];
-  let globalEntryPrice: number | null = null;
-  let globalSide: OrderSide | null = null;
-  let position: number = 0;
-  let accumulatePnl = 0;
-  klineData.map((kline) => {
-    const candleClosePrice = kline[4];
-    const candleCloseTime = kline[6];
-    const tradeOnCandle = trades.find(
-      (trade) => +trade.time <= kline[6] && +trade.time >= kline[0],
-    );
-    if (tradeOnCandle) {
-      const { quantity, side, price, fees = 0 } = tradeOnCandle;
-
-      if (globalEntryPrice === null) {
-        globalEntryPrice = price;
-        globalSide = side as OrderSide;
-        position = quantity;
-        accumulatePnl = accumulatePnl - fees;
-        return;
-      }
-
-      if (side === globalSide) {
-        globalEntryPrice = (globalEntryPrice * position + price * quantity) / (position + quantity);
-        position = position + quantity;
-        accumulatePnl = accumulatePnl - fees;
-        return;
-      }
-      if (side !== globalSide) {
-        if (quantity > position) {
-          accumulatePnl = accumulatePnl - fees + (price - globalEntryPrice) * quantity - position;
-          position = quantity - position;
-          globalEntryPrice = price;
-          globalSide = side as OrderSide;
-          return;
-        }
-        accumulatePnl = accumulatePnl - fees + (price - globalEntryPrice) * quantity;
-        position = position - quantity;
-      }
-    }
-    equityData.push({
-      value:
-        position === 0
-          ? initialCapital + accumulatePnl
-          : new Decimal(
-              (+candleClosePrice - (globalEntryPrice ? +globalEntryPrice : 0)) * +position +
-                accumulatePnl,
-            ).toNumber() + initialCapital,
-      time: (candleCloseTime / 1000) as UTCTimestamp,
-    });
-  });
-  return equityData;
+  return annualizedReturn.div(maxDrawdown)
 };

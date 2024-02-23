@@ -11,6 +11,7 @@ import { Loading } from '@app/_components/loading';
 
 import { IBackTestData } from '../type';
 import { SettingsValue } from './SettingsForm';
+import { Performance } from '@app/_lib/calculation';
 
 interface IEquityData {
   value: number;
@@ -18,10 +19,12 @@ interface IEquityData {
 }
 
 export const EquityCurve = ({
+  performanceData,
   backtestData,
   klineData,
   userSettings,
 }: {
+  performanceData: Performance
   backtestData: IBackTestData;
   symbol: string;
   interval: Interval;
@@ -37,29 +40,9 @@ export const EquityCurve = ({
   const mapEquityData = async () => {
     if (klineData && klineData.length > 0 && backtestData.trades.length > 0) {
       setIsLoading(true);
+      setEquityData(performanceData.equityData);
+      setIsLoading(false);
 
-      const worker = new Worker(
-        new URL('@app/_workers/equityCalculator.worker.js', import.meta.url),
-      );
-
-      worker.onmessage = (event) => {
-        const result = event.data;
-
-        if ('error' in result) {
-          console.error('Error in web worker:', result.error);
-        } else {
-          setEquityData(result);
-          setIsLoading(false);
-        }
-
-        worker.terminate();
-      };
-
-      worker.postMessage({
-        klineData,
-        trades: backtestData.trades,
-        initialCapital: userSettings?.initial_capital,
-      });
     }
   };
 
