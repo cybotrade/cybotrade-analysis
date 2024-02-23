@@ -10,7 +10,12 @@ import HeatMap from '@app/(routes)/(route)/_components/HeatMap';
 import SharpeRatio from '@app/(routes)/(route)/_components/SharpeRatio';
 import { useDebounce } from '@app/_hooks/useDebounce';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
-import { Performance, calculatePerformance, calculateSharpeRatio, transformToClosedTrades } from '@app/_lib/calculation';
+import {
+  Performance,
+  calculatePerformance,
+  calculateSharpeRatio,
+  transformToClosedTrades,
+} from '@app/_lib/calculation';
 import { Interval, addDays, intervalToDays } from '@app/_lib/utils';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
@@ -132,6 +137,8 @@ const BackTestResultsDrawer = ({
 
   useEffect(() => {
     if (!backtestData || !klineData) return;
+    if (backtestData.length === 0 || klineData.length === 0) return;
+
     if (!debouncedDelimitor || !separator) {
       setPairs([]);
       return;
@@ -149,17 +156,19 @@ const BackTestResultsDrawer = ({
           return { key: key.trim(), value: +value };
         })
         .filter((p) => p);
-
-      // let sharpeRatio = calculateSharpeRatio({
-      //   klineData,
-      //   inputTrades: d.trades,
-      //   interval,
-      // }).toDecimalPlaces(2);
+      let sharpeRatio = calculatePerformance({
+        tradeOrders: { klineData: klineData ?? [], trades: d.trades, interval },
+        parameters: {
+          comission: 0,
+          initialCapital: 10000,
+          riskFreeRate: 0.02,
+          fees: 0,
+        },
+      }).sharpeRatio;
 
       return {
         allPairs,
-        value: new Decimal(0),
-        // value: sharpeRatio.isNaN() ? new Decimal(0) : sharpeRatio,
+        value: sharpeRatio,
       };
     });
 
@@ -197,12 +206,12 @@ const BackTestResultsDrawer = ({
       try {
         const req = await fetch(
           '/api/candle?' +
-          new URLSearchParams({
-            symbol,
-            interval,
-            startTime,
-            endTime,
-          }),
+            new URLSearchParams({
+              symbol,
+              interval,
+              startTime,
+              endTime,
+            }),
           {
             signal: abortController.signal,
             method: 'GET',
@@ -220,7 +229,11 @@ const BackTestResultsDrawer = ({
         }
         if (req.ok) {
           setKlineData((prev) => {
-            const filteredPrev: Kline[] = prev ? prev?.filter((r) => r[0] >= +backtestData[0].start_time && r[0] <= +backtestData[0].end_time) : [];
+            const filteredPrev: Kline[] = prev
+              ? prev?.filter(
+                  (r) => r[0] >= +backtestData[0].start_time && r[0] <= +backtestData[0].end_time,
+                )
+              : [];
             return [...filteredPrev, ...res];
           });
         }
@@ -240,10 +253,15 @@ const BackTestResultsDrawer = ({
       const fetchedPercentage = Math.round(
         ((+backtestData[0].end_time - klineData[0][0]) /
           (+backtestData[0].end_time - +backtestData[0].start_time)) *
-        100,
+          100,
       );
       fetchedKlinePercentage(fetchedPercentage);
-      let newStartTime = addDays(new Date(klineData[klineData.length - 1][0]), intervalToDays(interval)).getTime().toString()
+      let newStartTime = addDays(
+        new Date(klineData[klineData.length - 1][0]),
+        intervalToDays(interval),
+      )
+        .getTime()
+        .toString();
       fetchKlineData({
         startTime: newStartTime,
         endTime: backtestData[0].end_time,
@@ -259,15 +277,17 @@ const BackTestResultsDrawer = ({
   useEffect(() => {
     if (data && klineData && klineData?.length > 0 && doneFetchingKline) {
       drawer.open();
-      setPerformanceData(calculatePerformance({
-        tradeOrders: { klineData: klineData ?? [], trades: backtestData[0].trades, interval },
-        parameters: {
-          comission: 0,
-          initialCapital: userSettings.initial_capital ?? 10000,
-          riskFreeRate: 0.02,
-          fees: userSettings.fees,
-        },
-      }));
+      setPerformanceData(
+        calculatePerformance({
+          tradeOrders: { klineData: klineData ?? [], trades: backtestData[0].trades, interval },
+          parameters: {
+            comission: 0,
+            initialCapital: userSettings.initial_capital ?? 10000,
+            riskFreeRate: 0.02,
+            fees: userSettings.fees,
+          },
+        }),
+      );
     }
   }, [data, klineData, doneFetchingKline]);
 
@@ -294,18 +314,19 @@ const BackTestResultsDrawer = ({
     {
       value: 'result-breakdown',
       label: 'Result Breakdown',
-      content: (
-        <ResultBreakdown
-          performanceData={performanceData!}
-        />
-      ),
+      content: <ResultBreakdown performanceData={performanceData!} />,
     },
     // { value: 'trend', label: 'Trend', content: <Trend closedTrades={closedTrades} /> },
     {
       value: 'sharpe-ratio',
       label: 'Sharpe Ratio',
       content: (
-        <SharpeRatio performanceData={performanceData!} backtestData={backtestData} klineData={klineData ?? []} interval={interval} />
+        <SharpeRatio
+          performanceData={performanceData!}
+          backtestData={backtestData}
+          klineData={klineData ?? []}
+          interval={interval}
+        />
       ),
     },
     {

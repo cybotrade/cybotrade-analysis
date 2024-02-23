@@ -55,7 +55,6 @@ const HeatMap = ({
 
   const chartData = useMemo(() => {
     if (!datasets || datasets.length === 0) return [];
-
     return datasets
       .map(({ allPairs, value }) => {
         let xPair = allPairs.find((pair) => pair.key === xAxisSelected);
