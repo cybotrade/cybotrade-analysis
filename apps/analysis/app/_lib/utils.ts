@@ -205,8 +205,54 @@ export const roundIntervalDate = (givenDate: string, interval: Interval) => {
   return date.getTime();
 };
 
-export const addDays = function (date: Date, days: number) {
+export const addIntervalTime = (date: Date, interval: Interval) => {
   let newDate = new Date(date);
-  newDate.setUTCDate(date.getUTCDate() + days);
+  switch (interval) {
+    case Interval.OneMinute:
+      newDate.setUTCMinutes(newDate.getUTCMinutes() + 1);
+      break;
+    case Interval.ThreeMinute:
+      newDate.setUTCMinutes(newDate.getUTCMinutes() + 3);
+      break;
+    case Interval.FiveMinute:
+      newDate.setUTCMinutes(newDate.getUTCMinutes() + 5);
+      break;
+    case Interval.FifteenMinute:
+      newDate.setUTCMinutes(newDate.getUTCMinutes() + 15);
+      break;
+    case Interval.ThirtyMinute:
+      newDate.setUTCMinutes(newDate.getUTCMinutes() + 30);
+      break;
+    case Interval.OneHour:
+      newDate.setUTCHours(newDate.getUTCHours() + 1);
+      break;
+    case Interval.TwoHour:
+      newDate.setUTCHours(newDate.getUTCHours() + 2);
+      break;
+    case Interval.FourHour:
+      newDate.setUTCHours(newDate.getUTCHours() + 4);
+      break;
+    case Interval.SixHour:
+      newDate.setUTCHours(newDate.getUTCHours() + 6);
+      break;
+    case Interval.TwelveHour:
+      newDate.setUTCHours(newDate.getUTCHours() + 12);
+      break;
+    case Interval.OneDay:
+      newDate.setUTCDate(newDate.getUTCDate() + 1);
+      break;
+    case Interval.ThreeDay:
+      newDate.setUTCDate(newDate.getUTCDate() + 3);
+      break;
+    case Interval.OneWeek:
+      newDate.setUTCDate(newDate.getUTCDate() + 7);
+      break;
+    case Interval.OneMonth:
+      newDate.setUTCMonth(newDate.getUTCMonth() + 1);
+      break;
+    default:
+      console.error("Invalid Interval found");
+      break;
+  }
   return newDate;
-}
+};
