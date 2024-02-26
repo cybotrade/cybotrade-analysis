@@ -13,7 +13,7 @@ import { useTheme } from 'next-themes';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 
-import { cn } from '@app/_lib/utils';
+import { Interval, cn } from '@app/_lib/utils';
 
 import { IBackTestData } from '../type';
 
@@ -22,9 +22,13 @@ const socketUrl = 'wss://stream.binance.com:9443/stream';
 export const CandleChart = ({
   backtestData,
   klineData,
+  symbol,
+  interval,
 }: {
   backtestData: IBackTestData;
   klineData: Kline[];
+  symbol: string;
+  interval: Interval;
 }) => {
   const { resolvedTheme } = useTheme();
   const [binanceKlineData, setBinanceKlineData] = useState<
@@ -67,18 +71,18 @@ export const CandleChart = ({
   useEffect(() => {
     sendJsonMessage({
       method: 'SUBSCRIBE',
-      params: ['btcusdt@kline_1d'],
+      params: [`${symbol.toLowerCase()}@kline_${interval}`],
       id: 1,
     });
 
     return () => {
       sendJsonMessage({
         method: 'UNSUBSCRIBE',
-        params: ['btcusdt@kline_1d'],
+        params: [`${symbol.toLowerCase()}@kline_${interval}`],
         id: 1,
       });
     };
-  }, []);
+  }, [backtestData]);
 
   useEffect(() => {
     if (klineData && klineData.length < 1) return;
