@@ -160,6 +160,7 @@ const SharpeRatio = ({ backtestData, klineData, interval }: SharpeRatioProps) =>
       .selectAll('rect')
       .data(chartData)
       .join('rect');
+
     xAxis
       .call(xAxisTicks)
       .call((g) => g.select('.domain').remove())
@@ -218,15 +219,62 @@ const SharpeRatio = ({ backtestData, klineData, interval }: SharpeRatioProps) =>
       .attr('rx', 20)
       .attr('fill', 'url(#striped-pattern)');
 
+    const tooltip = d3
+      .select('body')
+      .append('div')
+      .attr('class', 'tooltip')
+      .style('opacity', 0)
+      .style('position', 'absolute')
+      .style('background-color', '#ffffff')
+      .style('border', 'solid')
+      .style('border-width', '2px')
+      .style('border-radius', '10px')
+      .style('border-color', '#f1f1f1')
+      .style('font-size', '15px')
+      .style('font-family', '"DM Sans", sans-serif')
+      .style('color', '#b0b0b0')
+      .style('padding', '8px')
+      .style('width', '180px')
+      .style('pointer-events', 'none')
+      .style('z-index', '999'); // Make sure it's above other elements
     bars
       .transition()
       .duration(800)
       .attr('y', (d) => (d.y > 0 ? yScale(d.y) : yScale(0)))
       .attr('height', (d) => (d.y > 0 ? yScale(0) - yScale(d.y) : yScale(d.y) - yScale(0)))
       .delay((d, i) => i * 100);
-    
+
+    bars
+      .on('mouseover', (event, d) => {
+        tooltip.transition().duration(200).style('opacity', 1);
+        tooltip
+          .html(`Sharpe Ratio: ${d.y}`)
+          .style('left', event.pageX + 5 + 'px')
+          .style('top', event.pageY - 28 + 'px');
+      })
+      .on('mousemove', (event) => {
+        let tooltipWidth = tooltip.node()!.getBoundingClientRect().width;
+        let tooltipHeight = tooltip.node()!.getBoundingClientRect().height;
+
+        let left = event.pageX + 5;
+        let top = event.pageY - 28;
+
+        if (left + tooltipWidth > window.innerWidth) {
+          left = event.pageX - tooltipWidth - 5;
+        }
+
+        if (top + tooltipHeight > window.innerHeight) {
+          top = event.pageY - tooltipHeight - 10;
+        }
+
+        tooltip.style('left', left + 'px').style('top', top + 'px');
+      })
+      .on('mouseout', () => {
+        tooltip.transition().duration(200).style('opacity', 0);
+      });
     return () => {
       svg.remove();
+      tooltip.remove();
     };
   }, [backtestData]);
 
