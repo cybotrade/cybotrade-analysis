@@ -156,7 +156,6 @@ const SurfacePlot = ({
         displayModeBar: false,
       },
     );
-    surfacePlotContainerRef.current.scrollIntoView({ behavior: 'instant' });
 
     return () => {
       if (!surfacePlotContainerRef.current) return;

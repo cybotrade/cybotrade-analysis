@@ -5,9 +5,8 @@ import { FolderSearch } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useRef, useState } from 'react';
 
-import { Interval } from '@app/_lib/utils';
-
 import { Loading } from '@app/_components/loading';
+import { Interval } from '@app/_lib/utils';
 
 import { IBackTestData } from '../type';
 import { SettingsValue } from './SettingsForm';
@@ -65,7 +64,7 @@ export const EquityCurve = ({
 
   useEffect(() => {
     mapEquityData();
-  }, [klineData, userSettings]);
+  }, [backtestData, klineData, userSettings]);
 
   useEffect(() => {
     const handleResize = () => {
