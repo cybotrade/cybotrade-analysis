@@ -101,7 +101,7 @@ const BackTestResultsDrawer = ({
       return {
         id: id,
         symbols: Object.keys(trades)[0],
-        intervals: intervals[symbols[0]],
+        intervals: intervals[Object.keys(trades)[0]],
         trades: sortByTimestamp<ITrade>(sortedTrades),
         start_time: data.start_time.toString(),
         end_time: data.end_time.toString(),
@@ -248,7 +248,7 @@ const BackTestResultsDrawer = ({
         fetchedKlinePercentage(0, error as string);
       }
     };
-    console.log(klineData);
+
     if (klineData?.length === 0) {
       fetchKlineData({
         startTime: selectedBacktest.start_time,
