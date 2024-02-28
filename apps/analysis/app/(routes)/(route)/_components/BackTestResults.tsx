@@ -15,7 +15,7 @@ import {
   calculatePerformance,
   transformToClosedTrades,
 } from '@app/_lib/calculation';
-import { Interval, addDays, intervalToDays, roundIntervalDate } from '@app/_lib/utils';
+import { Interval, addIntervalTime, roundIntervalDate } from '@app/_lib/utils';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
 import { Sheet, SheetContent } from '@app/_ui/Sheet';
@@ -255,9 +255,9 @@ const BackTestResultsDrawer = ({
         100,
       );
       fetchedKlinePercentage(fetchedPercentage);
-      let newStartTime = addDays(
+      let newStartTime = addIntervalTime(
         new Date(klineData[klineData.length - 1][0]),
-        intervalToDays(interval),
+        interval,
       )
         .getTime()
         .toString();

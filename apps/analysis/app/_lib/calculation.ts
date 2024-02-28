@@ -229,31 +229,32 @@ export const calculatePerformance = ({
       let current_side = side === "buy" ? OrderSide.Buy : OrderSide.Sell;
 
       let pnl = new Decimal(0);
+      let qty = +quantity;
       if (globalEntryPrice === null) {
         globalEntryPrice = price;
         globalSide = current_side;
-        position = current_side == OrderSide.Sell ? position - quantity : quantity;
+        position = current_side == OrderSide.Sell ? position - qty : qty;
       } else {
         if (current_side == OrderSide.Buy) {
-          position = position + quantity;
+          position = position + qty;
         } else if (current_side == OrderSide.Sell) {
-          position = position - quantity;
+          position = position - qty;
         }
 
         if (current_side == globalSide) {
           globalEntryPrice =
-            (globalEntryPrice * Math.abs(previousPosition) + price * quantity) / Math.abs(position);
+            (globalEntryPrice * Math.abs(previousPosition) + price * qty) / Math.abs(position);
         } else if (current_side !== globalSide) {
-          let minQty = Math.min(Math.abs(previousPosition), quantity);
+          let minQty = Math.min(Math.abs(previousPosition), qty);
           if (current_side == OrderSide.Buy) {
             pnl = new Decimal(globalEntryPrice * minQty - price * minQty);
           } else if (current_side == OrderSide.Sell) {
             pnl = new Decimal(price * minQty - globalEntryPrice * minQty);
           }
 
-          if (quantity > Math.abs(previousPosition)) {
+          if (qty > Math.abs(previousPosition)) {
             globalEntryPrice = price;
-          } else if (quantity == 0) {
+          } else if (qty == 0) {
             globalEntryPrice = 0;
           }
         }
@@ -302,7 +303,6 @@ export const calculatePerformance = ({
       time: (candleCloseTime / 1000) as UTCTimestamp,
     });
   });
-
   let averageTradesPerDay = tradeOrders!.trades.length / Math.round((+tradeOrders!.trades[tradeOrders!.trades.length - 1].time - +tradeOrders!.trades[0].time) / (1000 * 3600 * 24));
   let bestTradePnl = Decimal.max(...pnlList);
   let worstTradePnl = Decimal.min(...pnlList);
@@ -376,20 +376,21 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
   inputTrades.map((trade, index) => {
     const { quantity, side, price, time } = trade;
 
+    let qty = +quantity;
     if (index === 0) {
       globalEntryPrice = price;
-      globalEntryTime = new Date(+time) as Date;
+      globalEntryTime = new Date(+time);
       globalSide = side as OrderSide;
-      position = quantity;
+      position = qty;
       return;
     }
     if (side === globalSide) {
-      globalEntryPrice = (globalEntryPrice * position + price * quantity) / (position + quantity);
-      position = position + quantity;
+      globalEntryPrice = (globalEntryPrice * position + price * qty) / (position + qty);
+      position = position + qty;
       return;
     }
     if (side !== globalSide) {
-      if (quantity > position) {
+      if (qty > position) {
         closedTrades.push({
           entryPrice: new Decimal(globalEntryPrice),
           entryTime: new Date(globalEntryTime ?? 0),
@@ -399,7 +400,7 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
           side: side as OrderSide,
         });
 
-        position = quantity - position;
+        position = qty - position;
         globalEntryPrice = price;
         globalEntryTime = new Date(+time);
         globalSide = side as OrderSide;
@@ -410,10 +411,10 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
         entryTime: new Date(globalEntryTime ?? 0),
         exitPrice: new Decimal(price),
         exitTime: new Date(+time),
-        quantity: new Decimal(quantity),
+        quantity: new Decimal(qty),
         side: side as OrderSide,
       });
-      position = position - quantity;
+      position = position - qty;
     }
   });
 
