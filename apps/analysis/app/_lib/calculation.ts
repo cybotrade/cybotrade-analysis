@@ -376,20 +376,21 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
   inputTrades.map((trade, index) => {
     const { quantity, side, price, time } = trade;
 
+    let qty = +quantity;
     if (index === 0) {
       globalEntryPrice = price;
-      globalEntryTime = new Date(+time) as Date;
+      globalEntryTime = new Date(+time);
       globalSide = side as OrderSide;
-      position = quantity;
+      position = qty;
       return;
     }
     if (side === globalSide) {
-      globalEntryPrice = (globalEntryPrice * position + price * quantity) / (position + quantity);
-      position = position + quantity;
+      globalEntryPrice = (globalEntryPrice * position + price * qty) / (position + qty);
+      position = position + qty;
       return;
     }
     if (side !== globalSide) {
-      if (quantity > position) {
+      if (qty > position) {
         closedTrades.push({
           entryPrice: new Decimal(globalEntryPrice),
           entryTime: new Date(globalEntryTime ?? 0),
@@ -399,7 +400,7 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
           side: side as OrderSide,
         });
 
-        position = quantity - position;
+        position = qty - position;
         globalEntryPrice = price;
         globalEntryTime = new Date(+time);
         globalSide = side as OrderSide;
@@ -410,10 +411,10 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
         entryTime: new Date(globalEntryTime ?? 0),
         exitPrice: new Decimal(price),
         exitTime: new Date(+time),
-        quantity: new Decimal(quantity),
+        quantity: new Decimal(qty),
         side: side as OrderSide,
       });
-      position = position - quantity;
+      position = position - qty;
     }
   });
 
