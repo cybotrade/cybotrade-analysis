@@ -53,31 +53,6 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
     );
   }
 
-  const performance = useMemo(() => {
-    if (!closedTrades) return null;
-
-    const calculatePerformanceForTimeframe = (timeframe: {
-      days?: number | undefined;
-      months?: number | undefined;
-      years?: number | undefined;
-    }) => {
-      return calculatePerformance({
-        history: {
-          closedTrades,
-          openedTrades: [],
-        },
-        parameters: {
-          comission: 0,
-          initialCapital,
-          riskFreeRate: 0.02,
-        },
-      });
-    };
-    return {
-      all: calculatePerformanceForTimeframe({}),
-    };
-  }, [closedTrades, initialCapital]);
-
   const maxDDArray = useMemo(
     () =>
       drawdowns.map(

@@ -22,6 +22,7 @@ interface HistogramProps {
   arrayType: 'maxDD' | 'Profit' | 'Trade';
   className: string;
 }
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 const Histogram: React.FC<HistogramProps> = ({
@@ -34,10 +35,6 @@ const Histogram: React.FC<HistogramProps> = ({
   arrayType,
   className,
 }) => {
-  // const { asPath } = useRouter();
-  // const isArenaPath = asPath.includes('/arena/');
-
-  // const chartSize = isArenaPath ? { width: 100, height: 100 } : { width: 300, height: 300 };
   const chartSize = { width: 300, height: 300 };
 
   const filteredDataByYear = data.filter((entry) => {
