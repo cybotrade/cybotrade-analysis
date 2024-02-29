@@ -226,7 +226,7 @@ export const calculatePerformance = ({
     if (tradeOnCandle) {
       const { quantity, side, price, fees = 0 } = tradeOnCandle;
 
-      let current_side = side === "buy" ? OrderSide.Buy : OrderSide.Sell;
+      let current_side = side === 'buy' ? OrderSide.Buy : OrderSide.Sell;
 
       let pnl = new Decimal(0);
       let qty = +quantity;
@@ -268,11 +268,13 @@ export const calculatePerformance = ({
 
     let geometricUnrealizedPnl;
     if (globalSide == OrderSide.Buy) {
-      geometricUnrealizedPnl =
-        new Decimal((+candleClosePrice - (globalEntryPrice ? +globalEntryPrice : 0)) * Math.abs(position));
+      geometricUnrealizedPnl = new Decimal(
+        (+candleClosePrice - (globalEntryPrice ? +globalEntryPrice : 0)) * Math.abs(position),
+      );
     } else {
-      geometricUnrealizedPnl =
-        new Decimal(((globalEntryPrice ? +globalEntryPrice : 0) - +candleClosePrice) * Math.abs(position));
+      geometricUnrealizedPnl = new Decimal(
+        ((globalEntryPrice ? +globalEntryPrice : 0) - +candleClosePrice) * Math.abs(position),
+      );
     }
 
     let priceChange = new Decimal(index > 0 ? +candleClosePrice / +klineArr[index - 1][4] - 1 : 0);
@@ -280,21 +282,29 @@ export const calculatePerformance = ({
 
     // Geometric way of calculating unrealized pnl
     geoUnrealizedPnlInfo.push(geometricUnrealizedPnl);
-    let prevGeoCumUnrealizedPnl = geoCumulativeUnrealizedPnlInfo.length > 0 ? geoCumulativeUnrealizedPnlInfo[geoCumulativeUnrealizedPnlInfo.length - 1] : new Decimal(0);
+    let prevGeoCumUnrealizedPnl =
+      geoCumulativeUnrealizedPnlInfo.length > 0
+        ? geoCumulativeUnrealizedPnlInfo[geoCumulativeUnrealizedPnlInfo.length - 1]
+        : new Decimal(0);
     geoCumulativeUnrealizedPnlInfo.push(prevGeoCumUnrealizedPnl.add(geometricUnrealizedPnl));
 
-    let arimetricUnrealizedPnl = (positionList.length > 0 ? positionList[positionList.length - 1] : new Decimal(0)).mul(priceChange);
+    let arimetricUnrealizedPnl = (
+      positionList.length > 0 ? positionList[positionList.length - 1] : new Decimal(0)
+    ).mul(priceChange);
     let arithmeticPosition = new Decimal(0);
     if (position > 0) {
       arithmeticPosition = new Decimal(1);
     } else if (position < 0) {
       arithmeticPosition = new Decimal(-1);
     }
-    positionList.push(arithmeticPosition)
+    positionList.push(arithmeticPosition);
 
     // Atrihmetic way of calculating unrealized pnl
     ariUnrealizedPnlInfo.push(arimetricUnrealizedPnl);
-    let prevAriCumUnrealizedPnl = ariCumulativeUnrealizedPnlInfo.length > 0 ? ariCumulativeUnrealizedPnlInfo[ariCumulativeUnrealizedPnlInfo.length - 1] : new Decimal(0);
+    let prevAriCumUnrealizedPnl =
+      ariCumulativeUnrealizedPnlInfo.length > 0
+        ? ariCumulativeUnrealizedPnlInfo[ariCumulativeUnrealizedPnlInfo.length - 1]
+        : new Decimal(0);
     ariCumulativeUnrealizedPnlInfo.push(prevAriCumUnrealizedPnl.add(arimetricUnrealizedPnl));
 
     // This is to get the interval equity curve
@@ -303,7 +313,12 @@ export const calculatePerformance = ({
       time: (candleCloseTime / 1000) as UTCTimestamp,
     });
   });
-  let averageTradesPerDay = tradeOrders!.trades.length / Math.round((+tradeOrders!.trades[tradeOrders!.trades.length - 1].time - +tradeOrders!.trades[0].time) / (1000 * 3600 * 24));
+  let averageTradesPerDay =
+    tradeOrders!.trades.length /
+    Math.round(
+      (+tradeOrders!.trades[tradeOrders!.trades.length - 1].time - +tradeOrders!.trades[0].time) /
+        (1000 * 3600 * 24),
+    );
   let bestTradePnl = Decimal.max(...pnlList);
   let worstTradePnl = Decimal.min(...pnlList);
   let winningTrades = pnlList.filter((pnl) => pnl.greaterThan(0));
@@ -319,7 +334,9 @@ export const calculatePerformance = ({
     return currentValue.minus(maxFromStart).abs();
   });
   let maxDrawdown = Decimal.max(...drawdowns);
-  let annualizedReturn = mean({ values: ariUnrealizedPnlInfo }).mul(365).div(intervalForDays(interval));
+  let annualizedReturn = mean({ values: ariUnrealizedPnlInfo })
+    .mul(365)
+    .div(intervalForDays(interval));
 
   let performance = {
     // to calculate average total trade per day
@@ -338,15 +355,12 @@ export const calculatePerformance = ({
     highestLosingStreak: streak(pnlList, (pnl) => pnl.lessThan(0)),
 
     winRate:
-      pnlList.length === 0
-        ? new Decimal(0)
-        : new Decimal(totalWinningTrades).div(pnlList.length),
+      pnlList.length === 0 ? new Decimal(0) : new Decimal(totalWinningTrades).div(pnlList.length),
     netProfit: finalPnl,
     profitFactor: totalLoss.equals(0) ? new Decimal(0.0) : totalProfit.div(totalLoss.abs()),
     totalProfit,
     totalLoss,
-    averageProfit:
-      totalWinningTrades === 0 ? new Decimal(0) : totalProfit.div(totalWinningTrades),
+    averageProfit: totalWinningTrades === 0 ? new Decimal(0) : totalProfit.div(totalWinningTrades),
     averageLoss: totalLosingTrades === 0 ? new Decimal(0) : totalLoss.div(totalLosingTrades),
     maxDrawdown,
 
@@ -376,21 +390,20 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
   inputTrades.map((trade, index) => {
     const { quantity, side, price, time } = trade;
 
-    let qty = +quantity;
     if (index === 0) {
       globalEntryPrice = price;
-      globalEntryTime = new Date(+time);
+      globalEntryTime = new Date(+time) as Date;
       globalSide = side as OrderSide;
-      position = qty;
+      position = quantity;
       return;
     }
     if (side === globalSide) {
-      globalEntryPrice = (globalEntryPrice * position + price * qty) / (position + qty);
-      position = position + qty;
+      globalEntryPrice = (globalEntryPrice * position + price * quantity) / (position + quantity);
+      position = position + quantity;
       return;
     }
     if (side !== globalSide) {
-      if (qty > position) {
+      if (quantity > position) {
         closedTrades.push({
           entryPrice: new Decimal(globalEntryPrice),
           entryTime: new Date(globalEntryTime ?? 0),
@@ -400,7 +413,7 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
           side: side as OrderSide,
         });
 
-        position = qty - position;
+        position = quantity - position;
         globalEntryPrice = price;
         globalEntryTime = new Date(+time);
         globalSide = side as OrderSide;
@@ -411,10 +424,10 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
         entryTime: new Date(globalEntryTime ?? 0),
         exitPrice: new Decimal(price),
         exitTime: new Date(+time),
-        quantity: new Decimal(qty),
+        quantity: new Decimal(quantity),
         side: side as OrderSide,
       });
-      position = position - qty;
+      position = position - quantity;
     }
   });
 
@@ -449,5 +462,5 @@ export const calculateCalmarRatio = ({
   maxDrawdown: Decimal;
   annualizedReturn: Decimal;
 }) => {
-  return annualizedReturn.div(maxDrawdown)
+  return annualizedReturn.div(maxDrawdown);
 };

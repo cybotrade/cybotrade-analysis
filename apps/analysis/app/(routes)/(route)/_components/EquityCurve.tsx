@@ -5,13 +5,12 @@ import { FolderSearch } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useRef, useState } from 'react';
 
-import { Interval } from '@app/_lib/utils';
-
 import { Loading } from '@app/_components/loading';
+import { Performance } from '@app/_lib/calculation';
+import { Interval } from '@app/_lib/utils';
 
 import { IBackTestData } from '../type';
 import { SettingsValue } from './SettingsForm';
-import { Performance } from '@app/_lib/calculation';
 
 interface IEquityData {
   value: number;
@@ -24,7 +23,7 @@ export const EquityCurve = ({
   klineData,
   userSettings,
 }: {
-  performanceData: Performance
+  performanceData: Performance;
   backtestData: IBackTestData;
   symbol: string;
   interval: Interval;
@@ -42,13 +41,12 @@ export const EquityCurve = ({
       setIsLoading(true);
       setEquityData(performanceData.equityData);
       setIsLoading(false);
-
     }
   };
 
   useEffect(() => {
     mapEquityData();
-  }, [klineData, userSettings]);
+  }, [backtestData, klineData, userSettings]);
 
   useEffect(() => {
     const handleResize = () => {

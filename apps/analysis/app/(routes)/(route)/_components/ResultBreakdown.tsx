@@ -1,19 +1,13 @@
 import Decimal from 'decimal.js';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
-import React from 'react';
-
-import { cn } from '@app/_lib/utils';
+import React, { Fragment } from 'react';
 
 import { Performance } from '@app/_lib/calculation';
+import { cn } from '@app/_lib/utils';
 
-export const ResultBreakdown = ({
-  performanceData,
-}: {
-  performanceData: Performance
-}) => {
+export const ResultBreakdown = ({ performanceData }: { performanceData: Performance }) => {
   const { theme } = useTheme();
-
   return (
     <div className="px-[56px] py-[46px]">
       <div className="grid grid-cols-3 border border-[#DFDFDF] rounded-md relative px-3">
@@ -109,15 +103,12 @@ export const ResultBreakdown = ({
               <div className="flex justify-between items-center">
                 <div className="text-left">
                   <h6 className="text-sm font-normal capitalize">Total Trades</h6>
-                  <h6 className="text-lg font-extrabold">
-                    {performanceData?.totalTrades}
-                  </h6>
+                  <h6 className="text-lg font-extrabold">{performanceData?.totalTrades}</h6>
                 </div>
                 <div className="text-right">
                   <h6 className="text-sm font-normal">Profit-to-Loss</h6>
                   <h6 className="text-lg font-extrabold">
-                    {performanceData?.profitFactor.toFixed(2)}{' '}
-                    : 1
+                    {performanceData?.profitFactor.toFixed(2)} : 1
                   </h6>
                 </div>
               </div>
@@ -196,9 +187,7 @@ export const ResultBreakdown = ({
                         : 'text-[#FF4646] dark:text-[#FF6F6F]',
                     )}
                   >
-                    {performanceData?.largestRoi.greaterThanOrEqualTo(0)
-                      ? '+'
-                      : '-'}
+                    {performanceData?.largestRoi.greaterThanOrEqualTo(0) ? '+' : '-'}
                     {performanceData?.largestRoi.abs().mul(100).toFixed(2)}%
                   </h6>
                 </div>
@@ -212,9 +201,7 @@ export const ResultBreakdown = ({
                         : 'text-[#FF4646] dark:text-[#FF6F6F]',
                     )}
                   >
-                    {performanceData?.smallestRoi.greaterThanOrEqualTo(0)
-                      ? '+'
-                      : '-'}
+                    {performanceData?.smallestRoi.greaterThanOrEqualTo(0) ? '+' : '-'}
                     {performanceData?.smallestRoi.abs().mul(100).toFixed(2)}%
                   </h6>
                 </div>
@@ -231,9 +218,7 @@ export const ResultBreakdown = ({
                         : 'text-[#FF4646] dark:text-[#FF6F6F]',
                     )}
                   >
-                    {performanceData?.bestTradePnl.greaterThanOrEqualTo(0)
-                      ? '+'
-                      : '-'}
+                    {performanceData?.bestTradePnl.greaterThanOrEqualTo(0) ? '+' : '-'}
                     {performanceData?.bestTradePnl.abs().toFixed(2)}
                   </h6>
                 </div>
@@ -247,9 +232,7 @@ export const ResultBreakdown = ({
                         : 'text-[#FF4646] dark:text-[#FF6F6F]',
                     )}
                   >
-                    {performanceData?.worstTradePnl.greaterThanOrEqualTo(0)
-                      ? '+'
-                      : '-'}
+                    {performanceData?.worstTradePnl.greaterThanOrEqualTo(0) ? '+' : '-'}
                     {performanceData?.worstTradePnl.abs().toFixed(2)}
                   </h6>
                 </div>

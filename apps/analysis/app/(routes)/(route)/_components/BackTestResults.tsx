@@ -1,6 +1,5 @@
 'use client';
 
-import { Kline } from 'binance';
 import Decimal from 'decimal.js';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
@@ -8,24 +7,23 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import HeatMap from '@app/(routes)/(route)/_components/HeatMap';
 import SharpeRatio from '@app/(routes)/(route)/_components/SharpeRatio';
+import SortHeader from '@app/(routes)/(route)/_components/SortHeader';
+import { useBacktests } from '@app/_hooks/useBacktests';
 import { useDebounce } from '@app/_hooks/useDebounce';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
-import {
-  Performance,
-  calculatePerformance,
-  transformToClosedTrades,
-} from '@app/_lib/calculation';
-import { Interval, addIntervalTime, roundIntervalDate } from '@app/_lib/utils';
+import { useKline } from '@app/_hooks/useKline';
+import { calculatePerformance, transformToClosedTrades } from '@app/_lib/calculation';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
 import { Sheet, SheetContent } from '@app/_ui/Sheet';
 
-import { IBackTestData, IBackTestDataMultiSymbols, ITrade } from '../type';
+import { IBackTestDataMultiSymbols, ITrade } from '../type';
 import { CandleChart } from './CandleChart';
 import { EquityCurve } from './EquityCurve';
 import { MonteCarlo } from './MonteCarlo';
 import { ResultBreakdown } from './ResultBreakdown';
 import SettingsForm, { SettingsValue } from './SettingsForm';
+
 // import { Trend } from './Trend';
 
 const SurfacePlot = dynamic(() => import('./SurfacePlot'), {
@@ -40,16 +38,14 @@ type Pair = {
 interface IBackTestResultsDrawer {
   data: IBackTestDataMultiSymbols;
   drawer: IDrawer;
-  fetchedKlinePercentage: (percentage: number, error?: string) => void;
+  fetchedKlinesPercentage: (percentage: number, error?: string) => void;
 }
 
 const BackTestResultsDrawer = ({
   data,
   drawer,
-  fetchedKlinePercentage,
+  fetchedKlinesPercentage,
 }: IBackTestResultsDrawer) => {
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const settingDrawer = useDrawer();
   const [userSettings, setUserSettings] = useState<SettingsValue>({
     initial_capital: 10000,
     order_size_unit: 'usdt',
@@ -60,6 +56,53 @@ const BackTestResultsDrawer = ({
     // stop_lost: [{ value: undefined }, { value: undefined }],
     // entry: [{ value: undefined }, { value: undefined }],
   });
+  const {
+    backtestData,
+    selectedBacktest,
+    symbol,
+    interval,
+    permutationOptions,
+    selectedPermutation,
+    setSelectedPermutation,
+  } = useBacktests(data);
+
+  const sortedTrades = useMemo(() => {
+    if (!selectedBacktest) return [];
+    const trades = selectedBacktest.trades.map((trade) => {
+      return {
+        ...trade,
+        quantity: userSettings.order_size_value
+          ? new Decimal(userSettings.order_size_value).div(trade.price).toNumber()
+          : trade.quantity,
+        fees: userSettings.fees ?? 0,
+      };
+    });
+    return sortByTimestamp<ITrade>(trades);
+  }, [selectedBacktest, userSettings.order_size_value, userSettings.fees]);
+
+  const closedTrades = useMemo(
+    () => (selectedBacktest ? transformToClosedTrades(selectedBacktest.trades) : []),
+    [sortedTrades],
+  );
+
+  const { klineData, doneFetchingKline } = useKline(
+    selectedBacktest,
+    symbol,
+    interval,
+    fetchedKlinesPercentage,
+  );
+  const performanceData = useMemo(() => {
+    if (!doneFetchingKline) return;
+    return calculatePerformance({
+      tradeOrders: { klineData: klineData ?? [], trades: sortedTrades, interval },
+      parameters: {
+        comission: 0,
+        initialCapital: userSettings.initial_capital ?? 10000,
+        riskFreeRate: 0.02,
+        fees: userSettings.fees,
+      },
+    });
+  }, [selectedBacktest, doneFetchingKline]);
   const [debouncedDelimitor, delimitor, setDelimitor] = useDebounce<string>('=', 500);
   const [debouncedSeparator, separator, setSeparator] = useDebounce<string>(',', 500);
 
@@ -70,75 +113,15 @@ const BackTestResultsDrawer = ({
   const [xAxisSelected, setxAxisSelected] = useState('');
   const [yAxisSelected, setyAxisSelected] = useState('');
 
-  const [klineData, setKlineData] = useState<Kline[] | null>([]);
-  const [performanceData, setPerformanceData] = useState<Performance>();
-  const [doneFetchingKline, setDoneFetchingKline] = useState(false);
+  const settingDrawer = useDrawer();
 
   const onSettingsFormUpdate = (values: SettingsValue) => {
     setUserSettings(values);
   };
-  const backtestData: IBackTestData[] = useMemo(() => {
-    const topics = data.candle_topics.map((t) => t.split('|'));
-    const details = topics.map((topic) => {
-      const [category, interval, symbol, exchange] = topic[0].split('-');
-      const type = topic[1];
-      const [base, quote] = symbol.split('/');
-      return {
-        category,
-        interval,
-        currency: {
-          base,
-          quote,
-        },
-        type,
-      };
-    });
-
-    const symbols = details.map(({ currency }) => `${currency.base}${currency.quote}`);
-    const intervals = details.reduce<{
-      [key: string]: Interval[] | string[];
-    }>((acc, _, i) => {
-      acc[symbols[i]] = [details[i].interval];
-      return acc;
-    }, {});
-
-    const permutations = Object.entries(data.trades).map(([id, trades]) => {
-      return {
-        id,
-        trades: JSON.parse(trades).trades,
-      };
-    });
-    return permutations.map(({ id, trades }) => {
-      let sortedTrades = trades[symbols[0]].map((trade: ITrade) => {
-        return {
-          ...trade,
-          quantity: userSettings.order_size_value
-            ? new Decimal(userSettings.order_size_value).div(trade.price).toNumber()
-            : trade.quantity,
-          fees: userSettings.fees ?? 0,
-        };
-      }) as ITrade[];
-      let interval = intervals[symbols[0]];
-
-      return {
-        id: id,
-        symbols: symbols[0],
-        intervals: interval,
-        trades: sortByTimestamp<ITrade>(sortedTrades),
-        start_time: roundIntervalDate(data.start_time, interval[0] as Interval).toString(),
-        end_time: roundIntervalDate(data.end_time, interval[0] as Interval).toString(),
-      };
-    });
-  }, [data]);
-
-  const symbol = backtestData ? (backtestData[0].symbols.split('/').join('') as string) : 'BTCUSDT';
-  const interval = backtestData ? (backtestData[0].intervals[0] as Interval) : Interval.OneDay;
-  const closedTrades = backtestData ? transformToClosedTrades(backtestData[0].trades) : [];
 
   useEffect(() => {
     if (!backtestData || !klineData) return;
     if (backtestData.length === 0 || klineData.length === 0) return;
-
     if (!debouncedDelimitor || !separator) {
       setPairs([]);
       return;
@@ -156,6 +139,7 @@ const BackTestResultsDrawer = ({
           return { key: key.trim(), value: +value };
         })
         .filter((p) => p);
+
       let sharpeRatio = calculatePerformance({
         tradeOrders: { klineData: klineData ?? [], trades: d.trades, interval },
         parameters: {
@@ -195,105 +179,15 @@ const BackTestResultsDrawer = ({
   }, [filteredDatasets]);
 
   useEffect(() => {
-    const abortController = new AbortController();
-    const fetchKlineData = async ({
-      startTime,
-      endTime,
-    }: {
-      startTime: string;
-      endTime: string;
-    }) => {
-      try {
-        const req = await fetch(
-          '/api/candle?' +
-          new URLSearchParams({
-            symbol,
-            interval,
-            startTime,
-            endTime,
-          }),
-          {
-            signal: abortController.signal,
-            method: 'GET',
-          },
-        );
-
-        if (abortController.signal.aborted) {
-          console.log('Request aborted');
-          return;
-        }
-
-        const res = await req.json();
-        if (!req.ok) {
-          throw new Error(`${res.error}`);
-        }
-        if (req.ok) {
-          setKlineData((prev) => {
-            const filteredPrev: Kline[] = prev
-              ? prev?.filter(
-                (r) => r[0] >= +backtestData[0].start_time && r[0] <= +backtestData[0].end_time,
-              )
-              : [];
-            return [...filteredPrev, ...res];
-          });
-        }
-      } catch (error) {
-        if ((error as Error).name === 'AbortError') {
-          console.log('Request aborted');
-          return;
-        }
-        fetchedKlinePercentage(0, error as string);
-      }
-    };
-
-    if (klineData?.length === 0) {
-      fetchKlineData({ startTime: backtestData[0].start_time, endTime: backtestData[0].end_time });
-    } else if (klineData?.[0] && klineData[klineData.length - 1][0] < +backtestData[0].end_time) {
-      const fetchedPercentage = Math.round(
-        ((+backtestData[0].end_time - klineData[0][0]) /
-          (+backtestData[0].end_time - +backtestData[0].start_time)) *
-        100,
-      );
-      fetchedKlinePercentage(fetchedPercentage);
-      let newStartTime = addIntervalTime(
-        new Date(klineData[klineData.length - 1][0]),
-        interval,
-      )
-        .getTime()
-        .toString();
-      fetchKlineData({
-        startTime: newStartTime,
-        endTime: backtestData[0].end_time,
-      });
-    } else if (klineData?.[0] && klineData[klineData.length - 1][0] >= +backtestData[0].end_time) {
-      setDoneFetchingKline(true);
-      fetchedKlinePercentage(100);
-    }
-    return () => abortController.abort();
-  }, [klineData]);
-
-  useEffect(() => {
     if (data && klineData && klineData?.length > 0 && doneFetchingKline) {
       drawer.open();
-      setPerformanceData(
-        calculatePerformance({
-          tradeOrders: { klineData: klineData ?? [], trades: backtestData[0].trades, interval },
-          parameters: {
-            comission: 0,
-            initialCapital: userSettings.initial_capital ?? 10000,
-            riskFreeRate: 0.02,
-            fees: userSettings.fees,
-          },
-        }),
-      );
     }
   }, [data, klineData, doneFetchingKline]);
-
   const resultContents = [
     {
       value: 'candle-chart',
       label: 'Candle Chart',
-      content: <CandleChart backtestData={backtestData[0]} klineData={klineData ?? []} />,
+      content: <CandleChart backtestData={selectedBacktest} klineData={klineData ?? []} />,
     },
     {
       value: 'equity-curve',
@@ -301,7 +195,7 @@ const BackTestResultsDrawer = ({
       content: (
         <EquityCurve
           performanceData={performanceData!}
-          backtestData={backtestData[0]}
+          backtestData={selectedBacktest}
           symbol={symbol}
           interval={interval}
           klineData={klineData ?? []}
@@ -314,7 +208,6 @@ const BackTestResultsDrawer = ({
       label: 'Result Breakdown',
       content: <ResultBreakdown performanceData={performanceData!} />,
     },
-    // { value: 'trend', label: 'Trend', content: <Trend closedTrades={closedTrades} /> },
     {
       value: 'sharpe-ratio',
       label: 'Sharpe Ratio',
@@ -369,7 +262,6 @@ const BackTestResultsDrawer = ({
       ),
     },
   ];
-
   return (
     <Sheet
       key={'1'}
@@ -415,6 +307,11 @@ const BackTestResultsDrawer = ({
             <SettingsForm onUpdate={onSettingsFormUpdate} values={userSettings} />
           </SheetContent>
         </Sheet>
+        <SortHeader
+          permutationOptions={permutationOptions}
+          selectedPermutation={selectedPermutation}
+          onPermutationChange={(option) => setSelectedPermutation(option)}
+        />
         <Accordion type="multiple" defaultValue={['candle-chart']}>
           {resultContents.map((item) => (
             <AccordionItem value={item.value} data-accordion-item={item.value} key={item.value}>

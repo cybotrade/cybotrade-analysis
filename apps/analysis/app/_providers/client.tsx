@@ -1,10 +1,11 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Toaster } from 'react-hot-toast';
 
 import { Error } from '@app/_components/error/error';
+import { queryClient } from '@app/_utils/react-query';
 
 import ThemeProvider from './theme';
 

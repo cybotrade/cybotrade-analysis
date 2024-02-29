@@ -22,6 +22,7 @@ interface HistogramProps {
   arrayType: 'maxDD' | 'Profit' | 'Trade';
   className: string;
 }
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 const Histogram: React.FC<HistogramProps> = ({
@@ -34,7 +35,6 @@ const Histogram: React.FC<HistogramProps> = ({
   arrayType,
   className,
 }) => {
-
   const chartSize = { width: 300, height: 300 };
 
   const filteredDataByYear = data.filter((entry) => {
@@ -463,12 +463,12 @@ const Histogram: React.FC<HistogramProps> = ({
                     ? maxValuesByMonth.map((item) => item.month)
                     : type === 'Week'
                       ? maxWeeklyValuesByMonth.map((item) =>
-                        new Date(item.timestamp).toLocaleDateString(),
-                      )
-                      : type === 'Day'
-                        ? maxValuesByDay.map((item) =>
                           new Date(item.timestamp).toLocaleDateString(),
                         )
+                      : type === 'Day'
+                        ? maxValuesByDay.map((item) =>
+                            new Date(item.timestamp).toLocaleDateString(),
+                          )
                         : [],
                 datasets: [
                   {
@@ -500,8 +500,8 @@ const Histogram: React.FC<HistogramProps> = ({
                       ? totalProfitByWeekForMonth.map((item) => item.dayOfWeek)
                       : type === 'Day'
                         ? totalProfitByDayForMonth.map((item) =>
-                          new Date(item.timestamp).toLocaleDateString(),
-                        )
+                            new Date(item.timestamp).toLocaleDateString(),
+                          )
                         : [],
                 datasets: [
                   {

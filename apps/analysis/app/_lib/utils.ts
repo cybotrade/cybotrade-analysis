@@ -124,23 +124,23 @@ export const roundIntervalDate = (givenDate: string, interval: Interval) => {
     case Interval.ThreeMinute:
       date.setUTCMilliseconds(0);
       date.setUTCSeconds(0);
-      date.setUTCMinutes(date.getUTCMinutes() - date.getUTCMinutes() % 3);
+      date.setUTCMinutes(date.getUTCMinutes() - (date.getUTCMinutes() % 3));
       break;
 
     case Interval.FiveMinute:
       date.setUTCMilliseconds(0);
       date.setUTCSeconds(0);
-      date.setUTCMinutes(date.getUTCMinutes() - date.getUTCMinutes() % 5);
+      date.setUTCMinutes(date.getUTCMinutes() - (date.getUTCMinutes() % 5));
       break;
     case Interval.FifteenMinute:
       date.setUTCMilliseconds(0);
       date.setUTCSeconds(0);
-      date.setUTCMinutes(date.getUTCMinutes() - date.getUTCMinutes() % 15);
+      date.setUTCMinutes(date.getUTCMinutes() - (date.getUTCMinutes() % 15));
       break;
     case Interval.ThirtyMinute:
       date.setUTCMilliseconds(0);
       date.setUTCSeconds(0);
-      date.setUTCMinutes(date.getUTCMinutes() - date.getUTCMinutes() % 30);
+      date.setUTCMinutes(date.getUTCMinutes() - (date.getUTCMinutes() % 30));
       break;
     case Interval.OneHour:
       date.setUTCMilliseconds(0);
@@ -151,25 +151,25 @@ export const roundIntervalDate = (givenDate: string, interval: Interval) => {
       date.setUTCMilliseconds(0);
       date.setUTCSeconds(0);
       date.setUTCMinutes(0);
-      date.setUTCHours(date.getUTCHours() - date.getUTCHours() % 2);
+      date.setUTCHours(date.getUTCHours() - (date.getUTCHours() % 2));
       break;
     case Interval.FourHour:
       date.setUTCMilliseconds(0);
       date.setUTCSeconds(0);
       date.setUTCMinutes(0);
-      date.setUTCHours(date.getUTCHours() - date.getUTCHours() % 4);
+      date.setUTCHours(date.getUTCHours() - (date.getUTCHours() % 4));
       break;
     case Interval.SixHour:
       date.setUTCMilliseconds(0);
       date.setUTCSeconds(0);
       date.setUTCMinutes(0);
-      date.setUTCHours(date.getUTCHours() - date.getUTCHours() % 6);
+      date.setUTCHours(date.getUTCHours() - (date.getUTCHours() % 6));
       break;
     case Interval.TwelveHour:
       date.setUTCMilliseconds(0);
       date.setUTCSeconds(0);
       date.setUTCMinutes(0);
-      date.setUTCHours(date.getUTCHours() - date.getUTCHours() % 12);
+      date.setUTCHours(date.getUTCHours() - (date.getUTCHours() % 12));
       break;
     case Interval.OneDay:
       date.setUTCMilliseconds(0);
@@ -182,14 +182,14 @@ export const roundIntervalDate = (givenDate: string, interval: Interval) => {
       date.setUTCSeconds(0);
       date.setUTCMinutes(0);
       date.setUTCHours(0);
-      date.setUTCDate(date.getUTCDate() - date.getUTCDate() % 3);
+      date.setUTCDate(date.getUTCDate() - (date.getUTCDate() % 3));
       break;
     case Interval.OneWeek:
       date.setUTCMilliseconds(0);
       date.setUTCSeconds(0);
       date.setUTCMinutes(0);
       date.setUTCHours(0);
-      date.setUTCDate(date.getUTCDate() - date.getUTCDate() % 7);
+      date.setUTCDate(date.getUTCDate() - (date.getUTCDate() % 7));
       break;
     case Interval.OneMonth:
       date.setUTCMilliseconds(0);
@@ -199,7 +199,7 @@ export const roundIntervalDate = (givenDate: string, interval: Interval) => {
       date.setUTCDate(0);
       break;
     default:
-      console.error("Invalid Interval found");
+      console.error('Invalid Interval found');
       break;
   }
   return date.getTime();
@@ -251,7 +251,7 @@ export const addIntervalTime = (date: Date, interval: Interval) => {
       newDate.setUTCMonth(newDate.getUTCMonth() + 1);
       break;
     default:
-      console.error("Invalid Interval found");
+      console.error('Invalid Interval found');
       break;
   }
   return newDate;
