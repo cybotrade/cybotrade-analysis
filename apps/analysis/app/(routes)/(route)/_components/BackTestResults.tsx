@@ -23,7 +23,8 @@ import { EquityCurve } from './EquityCurve';
 import { MonteCarlo } from './MonteCarlo';
 import { ResultBreakdown } from './ResultBreakdown';
 import SettingsForm, { SettingsValue } from './SettingsForm';
-import { Trend } from './Trend';
+
+// import { Trend } from './Trend';
 
 const SurfacePlot = dynamic(() => import('./SurfacePlot'), {
   ssr: false,

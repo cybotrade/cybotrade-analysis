@@ -97,6 +97,7 @@ const SurfacePlot = ({
               size: 15,
               color: 'black',
             },
+            tickformat: '.2f',
             thickness: 20,
             thicknessmode: 'pixels',
             len: 0.4,

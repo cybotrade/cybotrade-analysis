@@ -7,18 +7,18 @@ export const GET = async (req: Request) => {
   const paramsString = req.url.split('?')[1];
   const params = paramsString
     ? paramsString.split('&').reduce(
-        (acc, cur) => {
-          const [key, value] = cur.split('=');
+      (acc, cur) => {
+        const [key, value] = cur.split('=');
 
-          // Use a type guard to ensure key and value are defined
-          if (key !== undefined && value !== undefined) {
-            acc[key] = value;
-          }
+        // Use a type guard to ensure key and value are defined
+        if (key !== undefined && value !== undefined) {
+          acc[key] = value;
+        }
 
-          return acc;
-        },
-        {} as Record<string, string>,
-      )
+        return acc;
+      },
+      {} as Record<string, string>,
+    )
     : undefined;
 
   if (!params) {
