@@ -195,6 +195,7 @@ export const returns = ({ values }: { values: Decimal[] }): Decimal[] =>
     )
     .filter((val) => val !== null) as Decimal[];
 
+// Calculate all the required performance data
 export const calculatePerformance = ({
   parameters: { initialCapital, comission, riskFreeRate, fees },
   tradeOrders,
