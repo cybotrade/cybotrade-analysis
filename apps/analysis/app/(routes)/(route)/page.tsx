@@ -41,7 +41,7 @@ const Backtest = () => {
         <BackTestResultsDrawer
           data={data}
           drawer={drawer}
-          fetchedKlinePercentage={(percentage, error) => {
+          fetchedKlinesPercentage={(percentage, error) => {
             if (error) {
               setAnalysisError(error);
             }

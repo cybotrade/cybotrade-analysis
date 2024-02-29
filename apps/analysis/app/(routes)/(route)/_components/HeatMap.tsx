@@ -1,10 +1,7 @@
 import * as d3 from 'd3';
 import Decimal from 'decimal.js';
-import { Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useMemo, useRef } from 'react';
 
-import { IBackTestData } from '@app/(routes)/(route)/type';
-import { calculateSharpeRatio } from '@app/_lib/calculation';
-import { Interval } from '@app/_lib/utils';
 import { Input } from '@app/_ui/Input';
 import { Label } from '@app/_ui/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/_ui/Select';
@@ -24,8 +21,6 @@ type HeatMapProps = {
   yAxisSelected: string;
   onxAxisSelect: Dispatch<SetStateAction<string>>;
   onyAxisSelect: Dispatch<SetStateAction<string>>;
-  minDomain?: number;
-  maxDomain?: number;
 };
 
 const HeatMap = ({
@@ -38,8 +33,6 @@ const HeatMap = ({
   onSeparatorChange,
   onxAxisSelect,
   onyAxisSelect,
-  minDomain = 1,
-  maxDomain = 100,
 }: HeatMapProps) => {
   const heatMapContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -58,7 +51,6 @@ const HeatMap = ({
 
   const chartData = useMemo(() => {
     if (!datasets || datasets.length === 0) return [];
-
     return datasets
       .map(({ allPairs, value }) => {
         let xPair = allPairs.find((pair) => pair.key === xAxisSelected);
@@ -137,8 +129,20 @@ const HeatMap = ({
 
     const color = d3
       .scaleLinear<string>()
-      .range(['#e4f1ff', '#00a8ff'])
-      .domain([minDomain, maxDomain]);
+      .range([
+        '#fcfdbf',
+        '#fed799',
+        '#feb078',
+        '#fc8961',
+        '#f1605d',
+        '#d8456c',
+        '#b73779',
+        '#932b80',
+        '#721f81',
+        '#51127c',
+        '#2c115f',
+      ])
+      .domain([0.5, 1, 1.5, 2, 3, 5, 8, 10, 13, 17, 20]);
 
     svg
       .selectAll()

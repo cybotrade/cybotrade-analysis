@@ -5,11 +5,12 @@ import { useTheme } from 'next-themes';
 import { useEffect, useMemo, useRef } from 'react';
 
 import { IBackTestData } from '@app/(routes)/(route)/type';
-import { calculateSharpeRatio } from '@app/_lib/calculation';
+import { Performance, calculatePerformance, calculateSharpeRatio } from '@app/_lib/calculation';
 import { Interval } from '@app/_lib/utils';
 
 type SharpeRatioProps = {
   backtestData: IBackTestData[];
+  performanceData: Performance;
   klineData: Kline[];
   interval: Interval;
 };
@@ -19,17 +20,21 @@ type ChartDataType = {
   y: number;
 };
 
-const SharpeRatio = ({ backtestData, klineData, interval }: SharpeRatioProps) => {
+const SharpeRatio = ({ backtestData, performanceData, klineData, interval }: SharpeRatioProps) => {
   const sharpeRatioContainerRef = useRef<HTMLDivElement | null>(null);
 
   const { resolvedTheme } = useTheme();
   const chartData: ChartDataType[] = useMemo(() => {
     const data = backtestData.map((d) => {
-      let sharpeRatio = calculateSharpeRatio({
-        klineData,
-        inputTrades: d.trades,
-        interval,
-      }).toDecimalPlaces(2);
+      let sharpeRatio = calculatePerformance({
+        tradeOrders: { klineData: klineData ?? [], trades: d.trades, interval },
+        parameters: {
+          comission: 0,
+          initialCapital: 10000,
+          riskFreeRate: 0.02,
+          fees: 0,
+        },
+      }).sharpeRatio;
 
       return {
         id: d.id,

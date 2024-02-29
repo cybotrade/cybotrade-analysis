@@ -30,7 +30,7 @@ export const GET = async (req: Request) => {
     const kline = await client.getKlines({
       symbol: params['symbol'] as string,
       interval: params['interval'] as KlineInterval,
-      // startTime: parseInt(params['startTime']),
+      startTime: parseInt(params['startTime']),
       endTime: parseInt(params['endTime']),
     });
 
