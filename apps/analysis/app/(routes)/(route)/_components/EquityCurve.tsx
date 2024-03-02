@@ -6,29 +6,26 @@ import { useTheme } from 'next-themes';
 import { useEffect, useRef, useState } from 'react';
 
 import { Loading } from '@app/_components/loading';
-import { Performance } from '@app/_lib/calculation';
-import { Interval } from '@app/_lib/utils';
 
 import { IBackTestData } from '../type';
 import { SettingsValue } from './SettingsForm';
+import { FullPerformance } from './BackTestResults';
 
-interface IEquityData {
+export interface IEquityData {
   value: number;
   time: UTCTimestamp;
 }
 
 export const EquityCurve = ({
-  performanceData,
-  backtestData,
-  klineData,
-  userSettings,
+  fullPerformance,
+  selectedBacktest,
+  // klineData,
+  // userSettings,
 }: {
-  performanceData: Performance;
-  backtestData: IBackTestData;
-  symbol: string;
-  interval: Interval;
-  klineData: Kline[];
-  userSettings?: SettingsValue;
+  fullPerformance: FullPerformance[];
+  selectedBacktest: IBackTestData;
+  // klineData: Kline[];
+  // userSettings?: SettingsValue;
 }) => {
   const { resolvedTheme } = useTheme();
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
@@ -37,18 +34,16 @@ export const EquityCurve = ({
   let chart: IChartApi | null = null;
 
   const mapEquityData = async () => {
-    if (klineData && klineData.length > 0 && backtestData.trades.length > 0) {
-      setIsLoading(true);
-      setEquityData(performanceData.equityData);
-      setIsLoading(false);
-    }
+    console.log("mapEquityData")
+    let performanceData = fullPerformance.find((x) => x.id === selectedBacktest.id);
+    setIsLoading(true);
+    setEquityData(performanceData?.performance.equityData!);
+    setIsLoading(false);
+
   };
 
   useEffect(() => {
     mapEquityData();
-  }, [backtestData, klineData, userSettings]);
-
-  useEffect(() => {
     const handleResize = () => {
       chart?.applyOptions({ width: chartContainerRef.current?.clientWidth ?? 0 });
     };
@@ -104,12 +99,10 @@ export const EquityCurve = ({
   return (
     <div className={`p-4 ${resolvedTheme === 'dark' ? 'dark' : ''}`}>
       <div className="w-full h-96 rounded-xlflex items-center justify-center">
-        {backtestData && equityData.length > 0 ? (
-          <>
-            <div className="pl-12 h-full w-full">
-              <div ref={chartContainerRef} />
-            </div>
-          </>
+        {equityData.length > 0 ? (
+          <div className="pl-12 h-full w-full">
+            <div ref={chartContainerRef} />
+          </div>
         ) : (
           <div className="flex flex-col justify-center items-center w-full h-full ">
             <div className="icon">

@@ -3,7 +3,7 @@ import { addDays } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 
 import { IBackTestData } from '@app/(routes)/(route)/type';
-import { Performance, calculatePerformance } from '@app/_lib/calculation';
+import { PerformanceData, calculatePerformance } from '@app/_lib/calculation';
 import { Interval, addIntervalTime, intervalToDays } from '@app/_lib/utils';
 
 type klineParams = {
@@ -35,7 +35,7 @@ export function useKline(
 ) {
   const [klineData, setklineData] = useState<Kline[] | null>([]);
   const [doneFetchingKline, setDoneFetchingKline] = useState(false);
-  const [performanceData, setPerformanceData] = useState<Performance>();
+  const [performanceData, setPerformanceData] = useState<PerformanceData>();
 
   useEffect(() => {
     if (!selectedBacktest) return;
@@ -65,8 +65,8 @@ export function useKline(
           setklineData((prev) => {
             const filteredPrev: Kline[] = prev
               ? prev?.filter(
-                  (r) => r[0] >= +selectedBacktest.start_time && r[0] <= +selectedBacktest.end_time,
-                )
+                (r) => r[0] >= +selectedBacktest.start_time && r[0] <= +selectedBacktest.end_time,
+              )
               : [];
             return [...filteredPrev, ...res];
           });
@@ -87,11 +87,10 @@ export function useKline(
       let newStartTime = addIntervalTime(new Date(klineData[klineData.length - 1][0]), interval)
         .getTime()
         .toString();
-
       const fetchedPercentage = Math.round(
         ((+newStartTime - +selectedBacktest.start_time) /
           (+selectedBacktest.end_time - +selectedBacktest.start_time)) *
-          100,
+        100,
       );
       fetchedKlinePercentage(fetchedPercentage);
 
@@ -107,21 +106,21 @@ export function useKline(
     return () => abortController.abort();
   }, [selectedBacktest, klineData]);
 
-  useEffect(() => {
-    if (doneFetchingKline) {
-      setPerformanceData(
-        calculatePerformance({
-          tradeOrders: { klineData: klineData ?? [], trades: selectedBacktest.trades, interval },
-          parameters: {
-            comission: 0,
-            initialCapital: 10000,
-            riskFreeRate: 0.02,
-            fees: 0,
-          },
-        }),
-      );
-    }
-  }, [klineData]);
+  // useEffect(() => {
+  //   if (doneFetchingKline) {
+  //     setPerformanceData(
+  //       calculatePerformance({
+  //         tradeOrders: { klineData: klineData ?? [], trades: selectedBacktest.trades, interval },
+  //         parameters: {
+  //           comission: 0,
+  //           initialCapital: 10000,
+  //           riskFreeRate: 0.02,
+  //           fees: 0,
+  //         },
+  //       }),
+  //     );
+  //   }
+  // }, [klineData]);
 
   return { klineData, doneFetchingKline };
 }

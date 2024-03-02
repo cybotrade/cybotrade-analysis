@@ -5,6 +5,7 @@ import { Dispatch, SetStateAction, useEffect, useMemo, useRef } from 'react';
 import { Input } from '@app/_ui/Input';
 import { Label } from '@app/_ui/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/_ui/Select';
+import { PerformanceData } from '@app/_lib/calculation';
 
 type Pair = {
   key: string;
@@ -12,7 +13,7 @@ type Pair = {
 };
 
 type HeatMapProps = {
-  datasets: { allPairs: Pair[]; value: Decimal }[];
+  datasets: { allPairs: Pair[]; id: string; performance: PerformanceData }[];
   delimitor: string;
   onDelimitorChange: Dispatch<SetStateAction<string>>;
   separator: string;
@@ -52,10 +53,10 @@ const HeatMap = ({
   const chartData = useMemo(() => {
     if (!datasets || datasets.length === 0) return [];
     return datasets
-      .map(({ allPairs, value }) => {
+      .map(({ allPairs, id, performance }) => {
         let xPair = allPairs.find((pair) => pair.key === xAxisSelected);
         let yPair = allPairs.find((pair) => pair.key === yAxisSelected);
-        return { xPair, yPair, value };
+        return { xPair, yPair, value: performance.sharpeRatio };
       })
       .filter((d): d is { xPair: Pair; yPair: Pair; value: Decimal } => {
         return !!d.xPair && !!d.yPair;

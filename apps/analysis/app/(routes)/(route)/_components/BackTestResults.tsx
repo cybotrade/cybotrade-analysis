@@ -12,7 +12,7 @@ import { useBacktests } from '@app/_hooks/useBacktests';
 import { useDebounce } from '@app/_hooks/useDebounce';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
 import { useKline } from '@app/_hooks/useKline';
-import { calculatePerformance, transformToClosedTrades } from '@app/_lib/calculation';
+import { PerformanceData, calculatePerformance, transformToClosedTrades } from '@app/_lib/calculation';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
 import { Sheet, SheetContent } from '@app/_ui/Sheet';
@@ -30,9 +30,15 @@ const SurfacePlot = dynamic(() => import('./SurfacePlot'), {
   ssr: false,
 });
 
-type Pair = {
+export type Pair = {
   key: string;
   value: number;
+};
+
+export type FullPerformance = {
+  allPairs: Pair[];
+  id: string;
+  performance: PerformanceData;
 };
 
 interface IBackTestResultsDrawer {
@@ -91,22 +97,22 @@ const BackTestResultsDrawer = ({
     interval,
     fetchedKlinesPercentage,
   );
-  const performanceData = useMemo(() => {
-    if (!doneFetchingKline) return;
-    return calculatePerformance({
-      tradeOrders: { klineData: klineData ?? [], trades: sortedTrades, interval },
-      parameters: {
-        comission: 0,
-        initialCapital: userSettings.initial_capital ?? 10000,
-        riskFreeRate: 0.02,
-        fees: userSettings.fees,
-      },
-    });
-  }, [selectedBacktest, doneFetchingKline]);
+  // const performanceData = useMemo(() => {
+  //   if (!doneFetchingKline) return;
+  //   return calculatePerformance({
+  //     tradeOrders: { klineData: klineData ?? [], trades: sortedTrades, interval },
+  //     parameters: {
+  //       comission: 0,
+  //       initialCapital: userSettings.initial_capital ?? 10000,
+  //       riskFreeRate: 0.02,
+  //       fees: userSettings.fees,
+  //     },
+  //   });
+  // }, [selectedBacktest, doneFetchingKline]);
   const [debouncedDelimitor, delimitor, setDelimitor] = useDebounce<string>('=', 500);
   const [debouncedSeparator, separator, setSeparator] = useDebounce<string>(',', 500);
 
-  const [pairs, setPairs] = useState<({ allPairs: (Pair | undefined)[]; value: Decimal } | null)[]>(
+  const [completeData, setCompleteData] = useState<(FullPerformance)[]>(
     [],
   );
 
@@ -120,27 +126,37 @@ const BackTestResultsDrawer = ({
   };
 
   useEffect(() => {
-    if (!backtestData || !klineData) return;
-    if (backtestData.length === 0 || klineData.length === 0) return;
+    if (!doneFetchingKline) {
+      setCompleteData([]);
+      return
+    };
+    if (!backtestData || !klineData) {
+      setCompleteData([]);
+      return
+    };
+    if (backtestData.length === 0 || klineData.length === 0) {
+      setCompleteData([]);
+      return
+    };
     if (!debouncedDelimitor || !separator) {
-      setPairs([]);
+      setCompleteData([]);
       return;
     }
-
     const data = backtestData.map((d) => {
-      if (d.id.indexOf(debouncedDelimitor) === -1 || d.id.indexOf(debouncedSeparator) === -1)
-        return null;
-
-      const allPairs = d.id
-        .split(debouncedSeparator)
-        .map((pair) => {
-          if (pair.indexOf(debouncedDelimitor) === -1) return undefined;
-          const [key, value] = pair.split(debouncedDelimitor);
-          return { key: key.trim(), value: +value };
-        })
-        .filter((p) => p);
-
-      let sharpeRatio = calculatePerformance({
+      let pairs;
+      if (d.id.indexOf(debouncedDelimitor) === -1 || d.id.indexOf(debouncedSeparator) === -1) {
+        pairs = [{ key: "", value: 0 }]
+      } else {
+        pairs = d.id
+          .split(debouncedSeparator)
+          .map((pair) => {
+            if (pair.indexOf(debouncedDelimitor) === -1) return { key: "", value: 0 };
+            const [key, value] = pair.split(debouncedDelimitor);
+            return { key: key.trim(), value: +value };
+          })
+          .filter((p) => p);
+      }
+      let performance = calculatePerformance({
         tradeOrders: { klineData: klineData ?? [], trades: d.trades, interval },
         parameters: {
           comission: 0,
@@ -148,25 +164,26 @@ const BackTestResultsDrawer = ({
           riskFreeRate: 0.02,
           fees: 0,
         },
-      }).sharpeRatio;
+      });
 
       return {
-        allPairs,
-        value: sharpeRatio,
+        allPairs: pairs,
+        id: d.id,
+        performance: performance,
       };
     });
 
-    setPairs(data);
-  }, [klineData, debouncedDelimitor, debouncedSeparator]);
+    setCompleteData(data);
+  }, [klineData, debouncedDelimitor, debouncedSeparator, !doneFetchingKline]);
 
   const filteredDatasets = useMemo(() => {
-    if (!pairs || pairs.length === 0) return [];
-    const datasets = pairs.filter(
-      (d): d is { allPairs: Pair[]; value: Decimal } => !!d && d.allPairs.length > 1,
+    if (!completeData || completeData.length === 0) return [];
+    const datasets = completeData.filter(
+      (d): d is { allPairs: Pair[]; id: string; performance: PerformanceData } => !!d && d.allPairs.length > 1,
     );
 
     return datasets;
-  }, [pairs]);
+  }, [completeData]);
 
   useEffect(() => {
     if (filteredDatasets.length === 0) {
@@ -194,29 +211,24 @@ const BackTestResultsDrawer = ({
       label: 'Equity Curve',
       content: (
         <EquityCurve
-          performanceData={performanceData!}
-          backtestData={selectedBacktest}
-          symbol={symbol}
-          interval={interval}
-          klineData={klineData ?? []}
-          userSettings={userSettings}
+          fullPerformance={completeData}
+          selectedBacktest={selectedBacktest}
+        // klineData={klineData ?? []}
+        // userSettings={userSettings}
         />
       ),
     },
     {
       value: 'result-breakdown',
       label: 'Result Breakdown',
-      content: <ResultBreakdown performanceData={performanceData!} />,
+      content: <ResultBreakdown fullPerformance={completeData} selectedBacktest={selectedBacktest} />,
     },
     {
       value: 'sharpe-ratio',
       label: 'Sharpe Ratio',
       content: (
         <SharpeRatio
-          performanceData={performanceData!}
-          backtestData={backtestData}
-          klineData={klineData ?? []}
-          interval={interval}
+          fullResult={completeData}
         />
       ),
     },
@@ -271,22 +283,22 @@ const BackTestResultsDrawer = ({
       <SheetContent
         side={'right'}
         className="min-w-[75%] overflow-y-scroll overflow-x-clip"
-        overlayChildren={
-          <div
-            className={cn(
-              'absolute h-[58px] w-[58px] m-8 bottom-0 bg-white rounded-full border-2 border-primary-light p-4 shadow-xl hover:bg-primary duration-200',
-              settingDrawer.isOpen ? 'opacity-0' : 'opacity-100',
-            )}
-            onPointerDown={(e) => {
-              e.stopPropagation();
-              settingDrawer.open();
-            }}
-          >
-            <ChevronRight color="#E1C3A0" strokeWidth={2.5} className="h-5 w-5" />
-          </div>
-        }
+      // overlayChildren={
+      //   // <div
+      //   //   className={cn(
+      //   //     'absolute h-[58px] w-[58px] m-8 bottom-0 bg-white rounded-full border-2 border-primary-light p-4 shadow-xl hover:bg-primary duration-200',
+      //   //     settingDrawer.isOpen ? 'opacity-0' : 'opacity-100',
+      //   //   )}
+      //   //   onPointerDown={(e) => {
+      //   //     e.stopPropagation();
+      //   //     settingDrawer.open();
+      //   //   }}
+      //   // >
+      //   //   {/* <ChevronRight color="#E1C3A0" strokeWidth={2.5} className="h-5 w-5" /> */}
+      //   // </div>
+      // }
       >
-        <Sheet
+        {/* <Sheet
           key={'2'}
           open={settingDrawer.isOpen}
           onOpenChange={() => (settingDrawer.isOpen ? settingDrawer.close() : settingDrawer.open())}
@@ -306,7 +318,7 @@ const BackTestResultsDrawer = ({
             </div>
             <SettingsForm onUpdate={onSettingsFormUpdate} values={userSettings} />
           </SheetContent>
-        </Sheet>
+        </Sheet> */}
         <SortHeader
           permutationOptions={permutationOptions}
           selectedPermutation={selectedPermutation}
