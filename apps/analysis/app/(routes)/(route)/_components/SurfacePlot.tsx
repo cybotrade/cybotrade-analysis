@@ -5,14 +5,11 @@ import { Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from '
 import { Input } from '@app/_ui/Input';
 import { Label } from '@app/_ui/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/_ui/Select';
-
-type Pair = {
-  key: string;
-  value: number;
-};
+import { Pair } from './BackTestResults';
+import { PerformanceData } from '@app/_lib/calculation';
 
 type SurfacePlotProps = {
-  datasets: { allPairs: Pair[]; value: Decimal }[];
+  datasets: { allPairs: Pair[]; id: string, performance: PerformanceData }[];
   delimitor: string;
   onDelimitorChange: Dispatch<SetStateAction<string>>;
   separator: string;
@@ -39,12 +36,12 @@ const SurfacePlot = ({
     if (!datasets || datasets.length === 0) return [];
 
     return datasets
-      .map(({ allPairs, value }) => {
+      .map(({ allPairs, id, performance }) => {
         let xPair = allPairs.find((pair) => pair.key === xAxisSelected);
         let yPair = allPairs.find((pair) => pair.key === yAxisSelected);
-        return { xPair, yPair, value };
+        return { xPair, yPair, value: performance.sharpeRatio };
       })
-      .filter((d): d is { xPair: Pair; yPair: Pair; value: Decimal } => {
+      .filter((d): d is { xPair: Pair; yPair: Pair, value: Decimal } => {
         return !!d.xPair && !!d.yPair;
       });
   }, [datasets, xAxisSelected, yAxisSelected]);
