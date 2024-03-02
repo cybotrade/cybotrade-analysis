@@ -1,13 +1,15 @@
 import Decimal from 'decimal.js';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
-import React, { Fragment } from 'react';
+import React from 'react';
 
-import { Performance } from '@app/_lib/calculation';
 import { cn } from '@app/_lib/utils';
+import { FullPerformance } from './BackTestResults';
+import { IBackTestData } from '../type';
 
-export const ResultBreakdown = ({ performanceData }: { performanceData: Performance }) => {
+export const ResultBreakdown = ({ fullPerformance, selectedBacktest }: { fullPerformance: FullPerformance[], selectedBacktest: IBackTestData }) => {
   const { theme } = useTheme();
+  let performanceData = fullPerformance.filter((x) => x.id === selectedBacktest.id)[0].performance;
   return (
     <div className="px-[56px] py-[46px]">
       <div className="grid grid-cols-3 border border-[#DFDFDF] rounded-md relative px-3">
