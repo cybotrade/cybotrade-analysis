@@ -1,18 +1,12 @@
-import { Kline } from 'binance';
 import * as d3 from 'd3';
 import { ZoomBehavior } from 'd3';
 import { useTheme } from 'next-themes';
 import { useEffect, useMemo, useRef } from 'react';
 
-import { IBackTestData } from '@app/(routes)/(route)/type';
-import { Performance, calculatePerformance, calculateSharpeRatio } from '@app/_lib/calculation';
-import { Interval } from '@app/_lib/utils';
+import { FullPerformance } from './BackTestResults';
 
 type SharpeRatioProps = {
-  backtestData: IBackTestData[];
-  performanceData: Performance;
-  klineData: Kline[];
-  interval: Interval;
+  fullResult: FullPerformance[];
 };
 
 type ChartDataType = {
@@ -20,29 +14,21 @@ type ChartDataType = {
   y: number;
 };
 
-const SharpeRatio = ({ backtestData, performanceData, klineData, interval }: SharpeRatioProps) => {
+const SharpeRatio = ({ fullResult }: SharpeRatioProps) => {
   const sharpeRatioContainerRef = useRef<HTMLDivElement | null>(null);
 
   const { resolvedTheme } = useTheme();
   const chartData: ChartDataType[] = useMemo(() => {
-    const data = backtestData.map((d) => {
-      let sharpeRatio = calculatePerformance({
-        tradeOrders: { klineData: klineData ?? [], trades: d.trades, interval },
-        parameters: {
-          comission: 0,
-          initialCapital: 10000,
-          riskFreeRate: 0.02,
-          fees: 0,
-        },
-      }).sharpeRatio;
+    const data = fullResult.map((d) => {
+
 
       return {
         id: d.id,
-        sharpeRatio,
+        sharpeRatio: d.performance.sharpeRatio,
       };
     });
     return data.map((d) => ({ x: d.id, y: d.sharpeRatio.toNumber() }));
-  }, [backtestData]);
+  }, [fullResult]);
 
   useEffect(() => {
     if (!sharpeRatioContainerRef.current) return;
@@ -281,7 +267,7 @@ const SharpeRatio = ({ backtestData, performanceData, klineData, interval }: Sha
       svg.remove();
       tooltip.remove();
     };
-  }, [backtestData]);
+  }, []);
 
   return <div className="w-full max-h-fit p-10" ref={sharpeRatioContainerRef}></div>;
 };
