@@ -282,7 +282,7 @@ export const calculatePerformance = ({
         globalEntryPrice.sub(candleClosePrice).mul(position.abs());
     }
 
-    let priceChange = index > 0 ? candleClosePrice.div(new Decimal(+klineArr[index - 1][4] - 1)) : new Decimal(0);
+    let priceChange = index > 0 ? candleClosePrice.div(new Decimal(+klineArr[index - 1][4])).sub(new Decimal(1)) : new Decimal(0);
     intervalPriceChanges.push(priceChange);
 
     // Geometric way of calculating unrealized pnl
@@ -336,9 +336,9 @@ export const calculatePerformance = ({
 
   let drawdowns = ariCumulativeUnrealizedPnlInfo.map((currentValue, index) => {
     const maxFromStart = Decimal.max(...ariCumulativeUnrealizedPnlInfo.slice(0, index + 1)); // Slice the array to get the sublist from 0 to index
-    return currentValue.minus(maxFromStart).abs();
+    return currentValue.minus(maxFromStart);
   });
-  let maxDrawdown = Decimal.max(...drawdowns);
+  let maxDrawdown = Decimal.min(...drawdowns).abs();
   let annualizedReturn = mean({ values: ariUnrealizedPnlInfo })
     .mul(365)
     .div(intervalForDays(interval));
