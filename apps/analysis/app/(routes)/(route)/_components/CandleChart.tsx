@@ -53,9 +53,9 @@ export const CandleChart = ({
         const { price, quantity, side, time } = trade;
         markers.push({
           time: (+time / 1000) as UTCTimestamp,
-          position: side === 'Sell' ? 'belowBar' : ('aboveBar' as SeriesMarkerPosition),
-          color: side === 'Sell' ? '#ff4976' : '#4bffb5',
-          shape: side === 'Sell' ? 'arrowDown' : ('arrowUp' as SeriesMarkerShape),
+          position: side === 'sell' ? 'belowBar' : ('aboveBar' as SeriesMarkerPosition),
+          color: side === 'sell' ? '#ff4976' : '#4bffb5',
+          shape: side === 'sell' ? 'arrowDown' : ('arrowUp' as SeriesMarkerShape),
           text: `${side.toUpperCase()} ${quantity}\n${price}`,
           id: `${new Date(time).getTime()}`,
         });
