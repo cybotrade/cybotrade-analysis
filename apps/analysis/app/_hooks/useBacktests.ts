@@ -34,7 +34,7 @@ export function useBacktests(data: IBackTestDataMultiSymbols) {
 
     const permutations = Object.entries(data.trades).map(([id, trades]) => {
       return {
-        id: id || 'blank=0,blank=0',
+        id: id || 'default=0,default=0',
         trades: JSON.parse(trades).trades,
       };
     });
