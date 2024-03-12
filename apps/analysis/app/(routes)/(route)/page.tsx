@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 
+import BackTestResultsDrawer from '@app/(routes)/(route)/_components/BackTestResults';
+import FileDropAndParse from '@app/(routes)/(route)/_components/FileDropAndParse';
 import useDrawer from '@app/_hooks/useDrawer';
 
-import BackTestResultsDrawer from './_components/BackTestResults';
-import FileDropAndParse from './_components/FileDropAndParse';
 import { IBackTestDataMultiSymbols } from './type';
 
 const FloatCard = ({ text, className }: { text: string; className: string }) => (

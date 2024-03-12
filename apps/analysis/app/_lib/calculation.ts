@@ -2,11 +2,11 @@ import { type Kline } from 'binance';
 import { Decimal } from 'decimal.js';
 import { UTCTimestamp } from 'lightweight-charts';
 
+import { IEquityData } from '@app/(routes)/(route)/new/_components/EquityCurve';
 import { IClosedTrade, ITrade } from '@app/(routes)/(route)/type';
 import { Interval, OrderSide, intervalForDays } from '@app/_lib/utils';
 
 import { intervalToDays } from './utils';
-import { IEquityData } from '@app/(routes)/(route)/_components/EquityCurve';
 
 export type PerformanceData = {
   finalBalance: Decimal;
@@ -141,9 +141,7 @@ export const pnl = ({
  * @returns The mean of the series of numbers.
  */
 export const mean = ({ values }: { values: Decimal[] }): Decimal =>
-  values.length == 0
-    ? new Decimal(0)
-    : Decimal.sum(...values).div(values.length);
+  values.length == 0 ? new Decimal(0) : Decimal.sum(...values).div(values.length);
 
 /**
  * Calculate the standard deviation given a series of numbers. By default, the sample standard deviation is used.
@@ -247,8 +245,10 @@ export const calculatePerformance = ({
         }
 
         if (current_side == globalSide) {
-          globalEntryPrice =
-            (globalEntryPrice.mul(previousPosition.abs()).add(tradePrice.mul(qty)).div(position.abs()));
+          globalEntryPrice = globalEntryPrice
+            .mul(previousPosition.abs())
+            .add(tradePrice.mul(qty))
+            .div(position.abs());
         } else if (current_side !== globalSide) {
           let minQty = Decimal.min(previousPosition.abs(), qty);
           if (current_side == OrderSide.Buy) {
@@ -270,19 +270,17 @@ export const calculatePerformance = ({
         }
       }
       globalSide = position.greaterThanOrEqualTo(0) ? OrderSide.Buy : OrderSide.Sell;
-
     });
 
     let geometricUnrealizedPnl;
     if (globalSide == OrderSide.Buy) {
-      geometricUnrealizedPnl =
-        candleClosePrice.sub(globalEntryPrice).mul(position.abs());
+      geometricUnrealizedPnl = candleClosePrice.sub(globalEntryPrice).mul(position.abs());
     } else {
-      geometricUnrealizedPnl =
-        globalEntryPrice.sub(candleClosePrice).mul(position.abs());
+      geometricUnrealizedPnl = globalEntryPrice.sub(candleClosePrice).mul(position.abs());
     }
 
-    let priceChange = index > 0 ? candleClosePrice.div(new Decimal(+klineArr[index - 1][4] - 1)) : new Decimal(0);
+    let priceChange =
+      index > 0 ? candleClosePrice.div(new Decimal(+klineArr[index - 1][4] - 1)) : new Decimal(0);
     intervalPriceChanges.push(priceChange);
 
     // Geometric way of calculating unrealized pnl
@@ -322,7 +320,7 @@ export const calculatePerformance = ({
     tradeOrders!.trades.length /
     Math.round(
       (+tradeOrders!.trades[tradeOrders!.trades.length - 1].time - +tradeOrders!.trades[0].time) /
-      (1000 * 3600 * 24),
+        (1000 * 3600 * 24),
     );
   let bestTradePnl = pnlList.length > 0 ? Decimal.max(...pnlList) : new Decimal(0);
   let worstTradePnl = pnlList.length > 0 ? Decimal.min(...pnlList) : new Decimal(0);
