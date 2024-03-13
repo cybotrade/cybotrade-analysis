@@ -2,7 +2,7 @@ import { cn } from '@app/_lib/utils';
 
 type TextProps = {
   content: string | number;
-  className: string;
+  className?: string;
 };
 
 export const Text = ({ content, className }: TextProps) => {

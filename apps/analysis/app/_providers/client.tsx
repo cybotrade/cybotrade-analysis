@@ -1,5 +1,7 @@
 'use client';
 
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
 import { Suspense, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Toaster } from 'react-hot-toast';
@@ -11,6 +13,8 @@ import ThemeProvider from './theme';
 type ClientProviderProps = {
   children: React.ReactNode;
 };
+
+gsap.registerPlugin(useGSAP);
 
 export const ClientProvider: React.FC<ClientProviderProps> = ({ children }) => {
   return (

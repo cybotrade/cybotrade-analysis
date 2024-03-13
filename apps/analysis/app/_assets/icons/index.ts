@@ -20,3 +20,4 @@ export * from './circular';
 export * from './vertex';
 export * from './bars';
 export * from './trail';
+export * from './crown';

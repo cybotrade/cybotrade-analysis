@@ -8,7 +8,6 @@ export const DashboardFooter = () => {
       <OptionSelect data={OPTION_LIST[1]} />
       <OptionSelect data={OPTION_LIST[2]} />
       <OptionSelect data={OPTION_LIST[3]} />
-      {/*<OptionSelect data={OPTION_LIST[4]} />*/}
     </div>
   );
 };

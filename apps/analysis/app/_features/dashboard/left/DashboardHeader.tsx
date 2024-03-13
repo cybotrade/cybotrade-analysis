@@ -5,9 +5,6 @@ import { Badge } from '@app/_ui/Badge';
 export const DashboardHeader = () => {
   return (
     <div className="font-sora flex w-full h-16 min-h-16 relative gap-2">
-      <button className="rounded-full w-16 h-full bg-[#FFFFFF] border border-[#E1D9D6] flex justify-center items-center">
-        <BackIcon className="text-[#706C6C]" />
-      </button>
       <div className="relative rounded-xl w-full h-full bg-[#FFFFFF] border border-[#E1D9D6] p-4 flex justify-between items-center">
         <CybotradeLogo className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
         <div className="flex items-center gap-5 z-10">

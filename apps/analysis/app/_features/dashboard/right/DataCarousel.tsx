@@ -17,7 +17,7 @@ export const DataCarousel = () => {
   return (
     <div className="h-fit row-[2]">
       <CarouselContainer setApi={setApi} className="flex flex-col justify-between">
-        <CarouselContent className="h-[24rem] max-w-[26.5rem]">
+        <CarouselContent className="h-[23rem] max-w-[26.5rem]">
           <CarouselItem className="pl-4">
             <TotalReturnWidget />
           </CarouselItem>

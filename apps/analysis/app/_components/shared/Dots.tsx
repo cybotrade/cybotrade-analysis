@@ -16,7 +16,7 @@ type DotProps = {
 
 export const Dots = ({ count, activeIndex, handleDotClick }: DotsProps) => {
   return (
-    <div className="flex justify-center items-center p-1">
+    <div className="flex justify-center items-center min-h-[1rem] p-1">
       {Array.from(new Array(count)).map((_, i) => {
         return <Dot key={i} index={i} active={i === activeIndex} onDotClick={handleDotClick} />;
       })}
