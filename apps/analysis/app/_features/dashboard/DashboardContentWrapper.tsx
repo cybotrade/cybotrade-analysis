@@ -1,14 +1,7 @@
-import { EquityCurve } from '@app/(routes)/(route)/_components/EquityCurve';
-import { Banner } from '@app/_components/shared/Banner';
-import { NewEquityCurve } from '@app/_features/dashboard/left/content/NewEquityCurve';
+import { PropsWithChildren } from 'react';
 
-const DashboardContent = () => {
-  return (
-    <div className="w-full h-[80%]">
-      {/*<Banner />*/}
-      <NewEquityCurve />
-    </div>
-  );
+const DashboardContentWrapper = ({ children }: PropsWithChildren) => {
+  return <div className="w-full h-[80%]">{children}</div>;
 };
 
-export default DashboardContent;
+export default DashboardContentWrapper;

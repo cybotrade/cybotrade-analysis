@@ -1,4 +1,4 @@
-import { BackIcon, CybotradeLogo, NotificationIcon, SettingsIcon } from '@app/_assets/icons';
+import { CybotradeLogo, NotificationIcon, SettingsIcon } from '@app/_assets/icons';
 import { Text } from '@app/_components/shared/Text';
 import { Badge } from '@app/_ui/Badge';
 

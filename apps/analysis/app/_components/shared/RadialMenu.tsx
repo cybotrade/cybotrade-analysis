@@ -20,7 +20,7 @@ const RadialMenu = () => {
     () => [
       {
         name: 'equity-curve',
-        href: '/candles',
+        href: '/candle-chart',
         icon: {
           active: (
             <ActiveEquityCurveMenuIcon
