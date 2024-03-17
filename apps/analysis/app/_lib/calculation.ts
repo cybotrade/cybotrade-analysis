@@ -3,7 +3,7 @@ import { Decimal } from 'decimal.js';
 import { UTCTimestamp } from 'lightweight-charts';
 
 import { IClosedTrade, ITrade } from '@app/(routes)/(route)/type';
-import { Interval, OrderSide, intervalForDays } from '@app/_lib/utils';
+import { Interval, OrderSide, addIntervalTime, intervalForDays } from '@app/_lib/utils';
 
 import { intervalToDays } from './utils';
 import { IEquityData } from '@app/(routes)/(route)/_components/EquityCurve';
@@ -221,9 +221,10 @@ export const calculatePerformance = ({
   let initialCapitalDec = new Decimal(initialCapital);
   klineData?.map((kline, index, klineArr) => {
     let candleClosePrice = new Decimal(kline[4]);
+    const candleOpenTime = kline[0];
     const candleCloseTime = kline[6];
     const tradeOnCandle = tradeOrders?.trades.filter(
-      (trade) => +trade.time <= kline[6] && +trade.time >= kline[0],
+      (trade) => +addIntervalTime(new Date(trade.time), interval).getTime() <= candleCloseTime && +addIntervalTime(new Date(trade.time), interval).getTime() >= candleOpenTime,
     );
     let previousPosition;
     tradeOnCandle?.forEach((x) => {
