@@ -21,3 +21,7 @@ export * from './vertex';
 export * from './bars';
 export * from './trail';
 export * from './crown';
+export * from './wave-lines';
+export * from './bars-stripe';
+export * from './core-loop';
+export * from './orbit-loop';

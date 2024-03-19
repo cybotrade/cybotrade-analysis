@@ -11,7 +11,9 @@ const config = {
   ],
   prefix: '',
   theme: {
-    screens: {},
+    screens: {
+      '3xl': '1600px',
+    },
     container: {
       center: true,
       padding: '2rem',

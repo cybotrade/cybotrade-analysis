@@ -26,6 +26,9 @@ importers:
 
   apps/analysis:
     dependencies:
+      '@gsap/react':
+        specifier: 2.1.0
+        version: 2.1.0
       '@hookform/resolvers':
         specifier: ^3.3.3
         version: 3.3.4(react-hook-form@7.49.2)
@@ -92,6 +95,9 @@ importers:
       embla-carousel-wheel-gestures:
         specifier: 8.0.0-rc05
         version: 8.0.0-rc05(embla-carousel@8.0.0-rc18)
+      gsap:
+        specifier: 3.12.5
+        version: 3.12.5
       lightweight-charts:
         specifier: ^4.1.1
         version: 4.1.1
@@ -624,6 +630,13 @@ packages:
 
   /@floating-ui/utils@0.1.6:
     resolution: {integrity: sha512-OfX7E2oUDYxtBvsuS4e/jSn4Q9Qb6DzgeYtsAdkPZ47znpoNsMgZw0+tVijiv3uGNR6dgNlty6r9rzIzHjtd/A==}
+    dev: false
+
+  /@gsap/react@2.1.0:
+    resolution: {integrity: sha512-pwdFXvOM5IsRZXpWTKkQoEjb3/iUjDCU1BCJDlE6pHgVjG+7Ep/7+sszUgqVZ2Jc0mR8gnhtDWyx5cQAT4kwQw==}
+    dependencies:
+      gsap: 3.12.5
+      react: 18.2.0
     dev: false
 
   /@hookform/resolvers@3.3.4(react-hook-form@7.49.2):
@@ -4933,6 +4946,10 @@ packages:
 
   /grid-index@1.1.0:
     resolution: {integrity: sha512-HZRwumpOGUrHyxO5bqKZL0B0GlUpwtCAzZ42sgxUPniu33R1LSFH5yrIcBCHjkctCAh3mtWKcKd9J4vDDdeVHA==}
+    dev: false
+
+  /gsap@3.12.5:
+    resolution: {integrity: sha512-srBfnk4n+Oe/ZnMIOXt3gT605BX9x5+rh/prT2F1SsNJsU1XuMiP0E2aptW481OnonOGACZWBqseH5Z7csHxhQ==}
     dev: false
 
   /hammerjs@2.0.8:

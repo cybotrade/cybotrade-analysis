@@ -1,7 +1,15 @@
 import { PropsWithChildren } from 'react';
 
-const DashboardContentWrapper = ({ children }: PropsWithChildren) => {
-  return <div className="w-full h-[80%]">{children}</div>;
+import { cn } from '@app/_lib/utils';
+
+type DashboardContentWrapperProps = {
+  className?: string;
+};
+const DashboardContentWrapper = ({
+  children,
+  className,
+}: PropsWithChildren<DashboardContentWrapperProps>) => {
+  return <div className={cn('w-full h-[80%]', className)}>{children}</div>;
 };
 
 export default DashboardContentWrapper;
