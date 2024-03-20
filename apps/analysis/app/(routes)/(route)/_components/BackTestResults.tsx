@@ -12,7 +12,11 @@ import { useBacktests } from '@app/_hooks/useBacktests';
 import { useDebounce } from '@app/_hooks/useDebounce';
 import useDrawer, { IDrawer } from '@app/_hooks/useDrawer';
 import { useKline } from '@app/_hooks/useKline';
-import { PerformanceData, calculatePerformance, transformToClosedTrades } from '@app/_lib/calculation';
+import {
+  PerformanceData,
+  calculatePerformance,
+  transformToClosedTrades,
+} from '@app/_lib/calculation';
 import { cn, sortByTimestamp } from '@app/_lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@app/_ui/Accordion';
 import { Sheet, SheetContent } from '@app/_ui/Sheet';
@@ -71,7 +75,6 @@ const BackTestResultsDrawer = ({
     selectedPermutation,
     setSelectedPermutation,
   } = useBacktests(data);
-
   const sortedTrades = useMemo(() => {
     if (!selectedBacktest) return [];
     const trades = selectedBacktest.trades.map((trade) => {
@@ -85,7 +88,6 @@ const BackTestResultsDrawer = ({
     });
     return sortByTimestamp<ITrade>(trades);
   }, [selectedBacktest, userSettings.order_size_value, userSettings.fees]);
-
   const closedTrades = useMemo(
     () => (selectedBacktest ? transformToClosedTrades(selectedBacktest.trades) : []),
     [sortedTrades],
@@ -112,9 +114,7 @@ const BackTestResultsDrawer = ({
   const [debouncedDelimitor, delimitor, setDelimitor] = useDebounce<string>('=', 500);
   const [debouncedSeparator, separator, setSeparator] = useDebounce<string>(',', 500);
 
-  const [completeData, setCompleteData] = useState<(FullPerformance)[]>(
-    [],
-  );
+  const [completeData, setCompleteData] = useState<FullPerformance[]>([]);
 
   const [xAxisSelected, setxAxisSelected] = useState('');
   const [yAxisSelected, setyAxisSelected] = useState('');
@@ -128,16 +128,16 @@ const BackTestResultsDrawer = ({
   useEffect(() => {
     if (!doneFetchingKline) {
       setCompleteData([]);
-      return
-    };
+      return;
+    }
     if (!backtestData || !klineData) {
       setCompleteData([]);
-      return
-    };
+      return;
+    }
     if (backtestData.length === 0 || klineData.length === 0) {
       setCompleteData([]);
-      return
-    };
+      return;
+    }
     if (!debouncedDelimitor || !separator) {
       setCompleteData([]);
       return;
@@ -145,12 +145,12 @@ const BackTestResultsDrawer = ({
     const data = backtestData.map((d) => {
       let pairs;
       if (d.id.indexOf(debouncedDelimitor) === -1 || d.id.indexOf(debouncedSeparator) === -1) {
-        pairs = [{ key: "", value: 0 }]
+        pairs = [{ key: '', value: 0 }];
       } else {
         pairs = d.id
           .split(debouncedSeparator)
           .map((pair) => {
-            if (pair.indexOf(debouncedDelimitor) === -1) return { key: "", value: 0 };
+            if (pair.indexOf(debouncedDelimitor) === -1) return { key: '', value: 0 };
             const [key, value] = pair.split(debouncedDelimitor);
             return { key: key.trim(), value: +value };
           })
@@ -179,7 +179,8 @@ const BackTestResultsDrawer = ({
   const filteredDatasets = useMemo(() => {
     if (!completeData || completeData.length === 0) return [];
     const datasets = completeData.filter(
-      (d): d is { allPairs: Pair[]; id: string; performance: PerformanceData } => !!d && d.allPairs.length > 1,
+      (d): d is { allPairs: Pair[]; id: string; performance: PerformanceData } =>
+        !!d && d.allPairs.length > 1,
     );
 
     return datasets;
@@ -213,24 +214,22 @@ const BackTestResultsDrawer = ({
         <EquityCurve
           fullPerformance={completeData}
           selectedBacktest={selectedBacktest}
-        // klineData={klineData ?? []}
-        // userSettings={userSettings}
+          // klineData={klineData ?? []}
+          // userSettings={userSettings}
         />
       ),
     },
     {
       value: 'result-breakdown',
       label: 'Result Breakdown',
-      content: <ResultBreakdown fullPerformance={completeData} selectedBacktest={selectedBacktest} />,
+      content: (
+        <ResultBreakdown fullPerformance={completeData} selectedBacktest={selectedBacktest} />
+      ),
     },
     {
       value: 'sharpe-ratio',
       label: 'Sharpe Ratio',
-      content: (
-        <SharpeRatio
-          fullResult={completeData}
-        />
-      ),
+      content: <SharpeRatio fullResult={completeData} />,
     },
     {
       value: 'monte-carlo',
@@ -283,20 +282,20 @@ const BackTestResultsDrawer = ({
       <SheetContent
         side={'right'}
         className="min-w-[75%] overflow-y-scroll overflow-x-clip"
-      // overlayChildren={
-      //   // <div
-      //   //   className={cn(
-      //   //     'absolute h-[58px] w-[58px] m-8 bottom-0 bg-white rounded-full border-2 border-primary-light p-4 shadow-xl hover:bg-primary duration-200',
-      //   //     settingDrawer.isOpen ? 'opacity-0' : 'opacity-100',
-      //   //   )}
-      //   //   onPointerDown={(e) => {
-      //   //     e.stopPropagation();
-      //   //     settingDrawer.open();
-      //   //   }}
-      //   // >
-      //   //   {/* <ChevronRight color="#E1C3A0" strokeWidth={2.5} className="h-5 w-5" /> */}
-      //   // </div>
-      // }
+        // overlayChildren={
+        //   // <div
+        //   //   className={cn(
+        //   //     'absolute h-[58px] w-[58px] m-8 bottom-0 bg-white rounded-full border-2 border-primary-light p-4 shadow-xl hover:bg-primary duration-200',
+        //   //     settingDrawer.isOpen ? 'opacity-0' : 'opacity-100',
+        //   //   )}
+        //   //   onPointerDown={(e) => {
+        //   //     e.stopPropagation();
+        //   //     settingDrawer.open();
+        //   //   }}
+        //   // >
+        //   //   {/* <ChevronRight color="#E1C3A0" strokeWidth={2.5} className="h-5 w-5" /> */}
+        //   // </div>
+        // }
       >
         {/* <Sheet
           key={'2'}
