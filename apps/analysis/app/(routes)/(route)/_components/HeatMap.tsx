@@ -2,10 +2,10 @@ import * as d3 from 'd3';
 import Decimal from 'decimal.js';
 import { Dispatch, SetStateAction, useEffect, useMemo, useRef } from 'react';
 
+import { PerformanceData } from '@app/_lib/calculation';
 import { Input } from '@app/_ui/Input';
 import { Label } from '@app/_ui/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/_ui/Select';
-import { PerformanceData } from '@app/_lib/calculation';
 
 type Pair = {
   key: string;
@@ -74,8 +74,8 @@ const HeatMap = ({
       Array.from(heatMapContainerRef.current.children).forEach((c) => c.remove());
     }
 
-    const xDomain = [...new Set(chartData.map((d) => d.xPair!.value))];
-    const yDomain = [...new Set(chartData.map((d) => d.yPair!.value))];
+    const xDomain = [...new Set(chartData.map((d) => d.xPair!.value))].sort((a, b) => a - b);
+    const yDomain = [...new Set(chartData.map((d) => d.yPair!.value))].sort((a, b) => a - b);
     const correspondingData = chartData.find((d) => d.xPair!.key === xAxisSelected);
 
     const svg = d3
@@ -86,7 +86,7 @@ const HeatMap = ({
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const xScale = d3.scaleBand<number>().domain(xDomain).range([0, width]).padding(0.01);
+    const xScale = d3.scaleBand<number>().domain(xDomain).range([0, width]).padding(0).round(true);
     svg
       .append('g')
       .attr('class', 'x-axis')
@@ -107,11 +107,12 @@ const HeatMap = ({
       .style('font-family', '"DM Sans", sans-serif')
       .attr('text-anchor', 'start');
 
-    const yScale = d3.scaleBand<number>().range([height, 0]).domain(yDomain).padding(0.01);
+    const yScale = d3.scaleBand<number>().range([height, 0]).domain(yDomain).padding(0).round(true);
     svg
       .append('g')
       .attr('class', 'y-axis')
       .call(d3.axisLeft(yScale).tickSize(10).tickSizeOuter(0).tickPadding(15))
+      .style('text-anchor', 'end')
       .style('font-size', '15px')
       .style('font-family', '"DM Sans", sans-serif');
 
@@ -126,7 +127,7 @@ const HeatMap = ({
       .attr('fill', 'black')
       .style('font-size', '15px')
       .style('font-family', '"DM Sans", sans-serif')
-      .attr('text-anchor', 'middle');
+      .attr('text-anchor', 'end');
 
     const color = d3
       .scaleLinear<string>()
@@ -157,7 +158,8 @@ const HeatMap = ({
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
       .text((d) => d!.value.toFixed(2))
-      .style('fill', (d) => color(d!.value.toDecimalPlaces(2).toNumber()));
+      .style('fill', (d) => color(d!.value.toDecimalPlaces(2).toNumber()))
+      .style('stroke', 'none');
 
     svg
       .selectAll()

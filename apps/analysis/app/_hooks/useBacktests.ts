@@ -32,26 +32,24 @@ export function useBacktests(data: IBackTestDataMultiSymbols) {
       return acc;
     }, {});
 
-    const permutations = Object.entries(data.trades).map(([id, trades]) => {
+    const permutations = Object.entries(data.trades).flatMap(([id, trades]) => {
+      let parsedTrades = JSON.parse(trades).trades;
+      let symbols = Object.keys(parsedTrades)[0];
+      let interval = intervals[symbols];
+
+      if (parsedTrades[symbols].length === 0) return [];
+
       return {
         id: id || 'default=0,default=0',
-        trades: JSON.parse(trades).trades,
+        symbols: symbols,
+        intervals: interval,
+        trades: parsedTrades[symbols].map((trade: ITrade) => ({ ...trade, fees: 0 })),
+        start_time: roundIntervalDate(data.start_time, interval[0] as Interval).toString(),
+        end_time: roundIntervalDate(data.end_time, interval[0] as Interval).toString(),
       };
     });
-    setBacktestData(
-      permutations.map(({ id, trades }) => {
-        let interval = intervals[Object.keys(trades)[0]];
 
-        return {
-          id: id,
-          symbols: Object.keys(trades)[0],
-          intervals: interval,
-          trades: trades[Object.keys(trades)[0]].map((trade: ITrade) => ({ ...trade, fees: 0 })),
-          start_time: roundIntervalDate(data.start_time, interval[0] as Interval).toString(),
-          end_time: roundIntervalDate(data.end_time, interval[0] as Interval).toString(),
-        };
-      }),
-    );
+    setBacktestData(permutations);
     setSelectedPermutation(permutations[0].id);
   }, [setBacktestData]);
 
