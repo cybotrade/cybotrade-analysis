@@ -1,15 +1,27 @@
-import Decimal from 'decimal.js';
-import Plotly, { Layout } from 'plotly.js';
-import { Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
+'use client';
 
+import Decimal from 'decimal.js';
+import { Axis3D, Info, PencilIcon } from 'lucide-react';
+import Plotly from 'plotly.js';
+import { Dispatch, Fragment, SetStateAction, useEffect, useMemo, useRef } from 'react';
+
+import { PerformanceData } from '@app/_lib/calculation';
 import { Input } from '@app/_ui/Input';
 import { Label } from '@app/_ui/Label';
+import {
+  Menubar,
+  MenubarContent,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarTrigger,
+} from '@app/_ui/Menubar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/_ui/Select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@app/_ui/Tooltip';
+
 import { Pair } from './BackTestResults';
-import { PerformanceData } from '@app/_lib/calculation';
 
 type SurfacePlotProps = {
-  datasets: { allPairs: Pair[]; id: string, performance: PerformanceData }[];
+  datasets: { allPairs: Pair[]; id: string; performance: PerformanceData }[];
   delimitor: string;
   onDelimitorChange: Dispatch<SetStateAction<string>>;
   separator: string;
@@ -41,7 +53,7 @@ const SurfacePlot = ({
         let yPair = allPairs.find((pair) => pair.key === yAxisSelected);
         return { xPair, yPair, value: performance.sharpeRatio };
       })
-      .filter((d): d is { xPair: Pair; yPair: Pair, value: Decimal } => {
+      .filter((d): d is { xPair: Pair; yPair: Pair; value: Decimal } => {
         return !!d.xPair && !!d.yPair;
       });
   }, [datasets, xAxisSelected, yAxisSelected]);
@@ -58,7 +70,7 @@ const SurfacePlot = ({
     });
     return options;
   }, [datasets]);
-
+  //
   useEffect(() => {
     if (!surfacePlotContainerRef.current) return;
     if (plotData.length === 0) return;
@@ -82,9 +94,9 @@ const SurfacePlot = ({
       surfacePlotContainerRef.current,
       [
         {
+          z: zMatrix,
           x: uniqueX,
           y: uniqueY,
-          z: zMatrix,
           type: 'surface',
           colorbar: {
             tickmode: 'array',
@@ -162,68 +174,114 @@ const SurfacePlot = ({
   }, [plotData]);
 
   return (
-    <div className="relative h-auto bg-gradient-to-b from-10% from-[#FFFFFF] to-[#c6e0ff]">
+    <div className="relative h-full">
       {!plotData || plotData.length === 0 ? (
-        <div className="flex justify-center items-center h-[40rem] font-sans text-2xl">
-          No Records
-        </div>
+        <div className="flex justify-center items-center h-full font-sans text-2xl">No Records</div>
       ) : (
-        <div className="w-full min-h-[40rem]" ref={surfacePlotContainerRef}></div>
+        <Fragment>
+          <div className="absolute w-full h-full bg-gradient-to-b from-10% from-[#FFFFFF] to-[#c6e0ff] rounded-3xl border border-[#DFDFDF]" />
+          <div className="w-full min-h-[40rem]" ref={surfacePlotContainerRef}></div>
+          <div className="absolute right-10 top-10 min-w-max h-auto p-1 rounded-md flex items-center justify-left gap-4 font-sora">
+            <Menubar className="flex-col items-center h-fit border-none shadow-md">
+              <MenubarMenu>
+                <MenubarTrigger>
+                  <Axis3D className="w-6 h-6 opacity-40" />
+                </MenubarTrigger>
+                <MenubarContent side="left" sideOffset={30}>
+                  <div className="font-sans flex flex-col justify-left px-2 py-1.5">
+                    <Label className="font-sans text-md float-left font-bold">Axis</Label>
+                    <div className="font-sans flex items-center gap-8 px-2 py-1.5">
+                      <Label className="font-medium">x-axis</Label>
+                      <Select
+                        value={xAxisSelected || ''}
+                        onValueChange={(option) => onxAxisSelect(option)}
+                      >
+                        <SelectTrigger className="w-40 dark:bg-[#392910] data-[placeholder]:font-normal border-[#AD967B] data-[placeholder]:opacity-30">
+                          <SelectValue placeholder="Select One" defaultValue={xAxisSelected} />
+                        </SelectTrigger>
+                        <SelectContent className="h-auto overflow-auto dark:bg-[#392910]">
+                          {uniqueOptions.map((key) => (
+                            <SelectItem key={key} value={key}>
+                              {key}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="font-sans flex items-center gap-8 px-2 py-1.5">
+                      <Label className="font-medium">y-axis</Label>
+                      <Select
+                        value={yAxisSelected || ''}
+                        onValueChange={(option) => onyAxisSelect(option)}
+                      >
+                        <SelectTrigger className="w-40 dark:bg-[#392910] data-[placeholder]:font-normal border-[#AD967B] data-[placeholder]:opacity-30">
+                          <SelectValue placeholder="Select One" defaultValue={yAxisSelected} />
+                        </SelectTrigger>
+                        <SelectContent className="h-auto overflow-auto dark:bg-[#392910]">
+                          {uniqueOptions.map((key) => (
+                            <SelectItem key={key} value={key}>
+                              {key}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </MenubarContent>
+              </MenubarMenu>
+              <MenubarSeparator />
+              <MenubarMenu>
+                <MenubarTrigger>
+                  <PencilIcon className="w-6 h-6 opacity-40" />
+                </MenubarTrigger>
+                <MenubarContent side="left" sideOffset={30}>
+                  <div className="font-sans flex flex-col justify-left px-2 py-1.5">
+                    <Label className="flex justify-between items-center font-sans text-md float-left font-bold">
+                      <span>Edit</span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="w-4 h-4 opacity-40" />
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-white border border-primary rounded-xl p-4 max-w-[20rem]">
+                            <Label className="text-primary text-md">Edit Delimiter</Label>
+                            <p className="font-sora font-light text-[#706C6C] text-md mt-1">
+                              You are encouraged to edit your delimiter under this section, make
+                              sure the delimiters are correct.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </Label>
+                    <div className="font-sans flex items-center gap-8 px-2 py-1.5">
+                      <Label className="font-medium">Delimitor</Label>
+                      <Input
+                        className="w-40"
+                        type="text"
+                        value={delimitor}
+                        placeholder="Delimiter"
+                        onChange={(e) => onDelimitorChange(e.target.value)}
+                        maxLength={5}
+                      />
+                    </div>
+                    <div className="font-sans flex items-center gap-8 px-2 py-1.5">
+                      <Label className="font-medium">Separator</Label>
+                      <Input
+                        className="w-40"
+                        type="text"
+                        value={separator}
+                        placeholder="Separator"
+                        onChange={(e) => onSeparatorChange(e.target.value)}
+                        maxLength={5}
+                      />
+                    </div>
+                  </div>
+                </MenubarContent>
+              </MenubarMenu>
+            </Menubar>
+          </div>
+        </Fragment>
       )}
-      <div className="absolute right-10 top-10 min-w-max h-auto px-3 py-3 bg-white border border-[#DFDFDF] rounded-md flex items-center justify-left gap-4 font-sora">
-        <div className="flex flex-col gap-2">
-          <Label>Delimiter</Label>
-          <Input
-            className="w-40"
-            type="text"
-            value={delimitor}
-            placeholder="Delimiter"
-            onChange={(e) => onDelimitorChange(e.target.value)}
-            maxLength={5}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label>Separator</Label>
-          <Input
-            className="w-40"
-            type="text"
-            value={separator}
-            placeholder="Separator"
-            onChange={(e) => onSeparatorChange(e.target.value)}
-            maxLength={5}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label>x-axis</Label>
-          <Select value={xAxisSelected || ''} onValueChange={(option) => onxAxisSelect(option)}>
-            <SelectTrigger className="w-40 dark:bg-[#392910] data-[placeholder]:font-normal border-[#AD967B] data-[placeholder]:opacity-30">
-              <SelectValue placeholder="Select One" defaultValue={xAxisSelected} />
-            </SelectTrigger>
-            <SelectContent className="h-auto overflow-auto dark:bg-[#392910]">
-              {uniqueOptions.map((key) => (
-                <SelectItem key={key} value={key}>
-                  {key}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label>y-axis</Label>
-          <Select value={yAxisSelected || ''} onValueChange={(option) => onyAxisSelect(option)}>
-            <SelectTrigger className="w-40 dark:bg-[#392910] data-[placeholder]:font-normal border-[#AD967B] data-[placeholder]:opacity-30">
-              <SelectValue placeholder="Select One" defaultValue={yAxisSelected} />
-            </SelectTrigger>
-            <SelectContent className="h-auto overflow-auto dark:bg-[#392910]">
-              {uniqueOptions.map((key) => (
-                <SelectItem key={key} value={key}>
-                  {key}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
     </div>
   );
 };

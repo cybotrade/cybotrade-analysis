@@ -9,7 +9,7 @@ const DashboardContentWrapper = ({
   children,
   className,
 }: PropsWithChildren<DashboardContentWrapperProps>) => {
-  return <div className={cn('w-full h-[80%]', className)}>{children}</div>;
+  return <div className={cn('w-full h-[80%] my-4', className)}>{children}</div>;
 };
 
 export default DashboardContentWrapper;
