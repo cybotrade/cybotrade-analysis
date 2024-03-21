@@ -3,7 +3,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IBackTestData, IBackTestDataMultiSymbols, ITrade } from '@app/(routes)/(route)/type';
 import { Interval, roundIntervalDate, sortByTimestamp } from '@app/_lib/utils';
 
-export function useBacktests(data: IBackTestDataMultiSymbols) {
+export function useBacktests(
+  data: IBackTestDataMultiSymbols,
+  onAnalysisFailed: (error: string) => void,
+) {
   const [backtestData, setBacktestData] = useState<IBackTestData[]>([]);
   const [selectedPermutation, setSelectedPermutation] = useState('');
 
@@ -48,7 +51,9 @@ export function useBacktests(data: IBackTestDataMultiSymbols) {
         end_time: roundIntervalDate(data.end_time, interval[0] as Interval).toString(),
       };
     });
-
+    if (permutations.length === 0) {
+      return onAnalysisFailed('No trades available for analysis');
+    }
     setBacktestData(permutations);
     setSelectedPermutation(permutations[0].id);
   }, [setBacktestData]);
