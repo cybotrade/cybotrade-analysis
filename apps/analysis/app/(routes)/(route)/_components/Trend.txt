@@ -1,7 +1,9 @@
+'use client';
+
 import Decimal from 'decimal.js';
 import { WheelGesturesPlugin } from 'embla-carousel-wheel-gestures';
 import { FolderSearch } from 'lucide-react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Grid as GridIcon, Horizontal as HorizontalIcon } from '@app/_assets/icons';
 import TrendChartCard from '@app/_components/trend/TrendChartCard';
@@ -24,9 +26,9 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
     () =>
       closedTrades
         ? closedTrades.map(({ exitTime, entryPrice, exitPrice }, i) => ({
-          timestamp: exitTime,
-          value: new Decimal(exitPrice).sub(entryPrice),
-        }))
+            timestamp: exitTime,
+            value: new Decimal(exitPrice).sub(entryPrice),
+          }))
         : [],
     [closedTrades],
   );
@@ -44,7 +46,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
 
   if (!closedTrades) {
     return (
-      <div className="flex flex-col justify-center items-center w-full h-96 ">
+      <div className="flex flex-col justify-center items-center w-full h-full">
         <div className="icon">
           <FolderSearch className="w-24 h-24" />
         </div>
@@ -164,23 +166,25 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
   }, [embla]);
 
   return (
-    <div
-      className={cn(
-        {
-          'bg-gradient-to-b from-[#D9D9D900] to-[#FFF4E7] dark:bg-[#37332A]': view === 'block',
-        },
-        view === 'scroll' &&
-        currentSlideIndex > 0 &&
-        'bg-gradient-to-b from-[#D9D9D900] to-[#FFEBEB] dark:bg-[#37332A]',
-        view === 'scroll' &&
-        currentSlideIndex > 3 &&
-        'bg-gradient-to-b from-[#D9D9D900] to-[#E0F2E2] dark:bg-[#37332A]',
-        view === 'scroll' &&
-        currentSlideIndex > 6 &&
-        'bg-gradient-to-b from-[#D9D9D900] to-[#DBE8EC] dark:bg-[#37332A]',
-      )}
-    >
-      <div className="px-8 py-8 w-full flex flex-col gap-10">
+    <Fragment>
+      <div
+        className={cn(
+          'absolute w-full h-full top-0 left-0',
+          {
+            'bg-gradient-to-b from-[#D9D9D900] to-[#FFF4E7] dark:bg-[#37332A]': view === 'block',
+          },
+          view === 'scroll' &&
+            currentSlideIndex > 0 &&
+            'bg-gradient-to-b from-[#D9D9D900] to-[#FFEBEB] dark:bg-[#37332A]',
+          view === 'scroll' &&
+            currentSlideIndex > 3 &&
+            'bg-gradient-to-b from-[#D9D9D900] to-[#E0F2E2] dark:bg-[#37332A]',
+          view === 'scroll' &&
+            currentSlideIndex > 6 &&
+            'bg-gradient-to-b from-[#D9D9D900] to-[#DBE8EC] dark:bg-[#37332A]',
+        )}
+      ></div>
+      <div className="w-full h-full flex flex-col justify-center gap-10">
         <div className="flex items-center justify-end gap-4">
           <div>Sort By</div>
           <Select
@@ -249,7 +253,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
                 view === 'scroll' && 'text-[#B28249]',
               )}
               onClick={() => {
-                reset();
+                // reset();
                 setView('scroll');
               }}
             />
@@ -260,7 +264,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
                 view === 'block' && 'text-[#B28249]',
               )}
               onClick={() => {
-                reset();
+                // reset();
                 setView('block');
               }}
             />
@@ -290,7 +294,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
             <CarouselItem
               className={cn(
                 view === 'scroll' &&
-                'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
               )}
             >
               <TrendChartCard
@@ -307,7 +311,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
             <CarouselItem
               className={cn(
                 view === 'scroll' &&
-                'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
               )}
             >
               <TrendChartCard
@@ -324,7 +328,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
             <CarouselItem
               className={cn(
                 view === 'scroll' &&
-                'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
               )}
             >
               <TrendChartCard
@@ -341,7 +345,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
             <CarouselItem
               className={cn(
                 view === 'scroll' &&
-                'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
               )}
             >
               <TrendChartCard
@@ -358,7 +362,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
             <CarouselItem
               className={cn(
                 view === 'scroll' &&
-                'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
               )}
             >
               <TrendChartCard
@@ -375,7 +379,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
             <CarouselItem
               className={cn(
                 view === 'scroll' &&
-                'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
               )}
             >
               <TrendChartCard
@@ -392,7 +396,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
             <CarouselItem
               className={cn(
                 view === 'scroll' &&
-                'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
               )}
             >
               <TrendChartCard
@@ -409,7 +413,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
             <CarouselItem
               className={cn(
                 view === 'scroll' &&
-                'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
               )}
             >
               <TrendChartCard
@@ -426,7 +430,7 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
             <CarouselItem
               className={cn(
                 view === 'scroll' &&
-                'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
+                  'transition ease-in-out delay-150 hover:-translate-y-5 hover:scale-140 hover:border-primary duration-300 max-w-[400px] mt-8',
               )}
             >
               <TrendChartCard
@@ -442,8 +446,8 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
             </CarouselItem>
           </CarouselContent>
           {view === 'scroll' && (
-            <div className="mt-12 px-16">
-              <div className="w-full rounded-full bg-white px-4 py-2">
+            <div className="mt-12 ">
+              <div className="w-full rounded-full bg-white px-8 py-4 shadow-md">
                 <div className="scrollbar-area relative h-5">
                   <div ref={dotsRef} className="flex h-full items-center justify-between">
                     <div className="block font-sans">Max Drawdown</div>
@@ -463,9 +467,9 @@ export const Trend: React.FC<TrendProps> = ({ closedTrades, initialCapital = 100
                 </div>
               </div>
             </div>
-          )}{' '}
+          )}
         </CarouselContainer>
       </div>
-    </div>
+    </Fragment>
   );
 };
