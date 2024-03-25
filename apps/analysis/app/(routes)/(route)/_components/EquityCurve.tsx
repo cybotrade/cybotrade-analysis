@@ -1,4 +1,5 @@
-import { Kline } from 'binance';
+'use client';
+
 import { ColorType, createChart } from 'lightweight-charts';
 import type { IChartApi, UTCTimestamp } from 'lightweight-charts';
 import { FolderSearch } from 'lucide-react';
@@ -8,7 +9,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Loading } from '@app/_components/loading';
 
 import { IBackTestData } from '../type';
-import { SettingsValue } from './SettingsForm';
 import { FullPerformance } from './BackTestResults';
 
 export interface IEquityData {
@@ -18,10 +18,9 @@ export interface IEquityData {
 
 export const EquityCurve = ({
   fullPerformance,
-  selectedBacktest,
-  // klineData,
-  // userSettings,
-}: {
+  selectedBacktest, // klineData,
+} // userSettings,
+: {
   fullPerformance: FullPerformance[];
   selectedBacktest: IBackTestData;
   // klineData: Kline[];
@@ -30,16 +29,15 @@ export const EquityCurve = ({
   const { resolvedTheme } = useTheme();
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const [equityData, setEquityData] = useState<IEquityData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   let chart: IChartApi | null = null;
 
   const mapEquityData = async () => {
-    console.log("mapEquityData")
+    console.log('mapEquityData');
     let performanceData = fullPerformance.find((x) => x.id === selectedBacktest.id);
     setIsLoading(true);
     setEquityData(performanceData?.performance.equityData!);
     setIsLoading(false);
-
   };
 
   useEffect(() => {
@@ -57,8 +55,6 @@ export const EquityCurve = ({
           },
           textColor: resolvedTheme === 'dark' ? '#ffffff' : '#000000',
         },
-        width: chartContainerRef.current.clientWidth,
-        height: 370,
         grid: {
           vertLines: {
             color: 'rgba(0, 0, 0, 0)',
@@ -91,20 +87,20 @@ export const EquityCurve = ({
 
   if (isLoading)
     return (
-      <div className="flex justify-center items-center h-96">
+      <div className="flex justify-center items-center h-full">
         <Loading description="Loading ..." />
       </div>
     );
 
   return (
-    <div className={`p-4 ${resolvedTheme === 'dark' ? 'dark' : ''}`}>
-      <div className="w-full h-96 rounded-xlflex items-center justify-center">
+    <div className={`p-4 h-full  ${resolvedTheme === 'dark' ? 'dark' : ''}`}>
+      <div className="w-full h-full flex items-center justify-center">
         {equityData.length > 0 ? (
           <div className="pl-12 h-full w-full">
-            <div ref={chartContainerRef} />
+            <div ref={chartContainerRef} className="w-full h-full" />
           </div>
         ) : (
-          <div className="flex flex-col justify-center items-center w-full h-full ">
+          <div className="flex flex-col justify-center items-center w-full h-full">
             <div className="icon">
               <FolderSearch className="w-24 h-24" />
             </div>

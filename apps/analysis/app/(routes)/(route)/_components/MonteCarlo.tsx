@@ -1,3 +1,5 @@
+'use client';
+
 import {
   BarElement,
   CategoryScale,
@@ -14,10 +16,9 @@ import { FolderSearch } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 
-import { OrderSide } from '@app/_lib/utils';
-
 import { Loading } from '@app/_components/loading';
 import { pnl } from '@app/_lib/calculation';
+import { OrderSide } from '@app/_lib/utils';
 import { Input } from '@app/_ui/Input';
 
 import { IClosedTrade } from '../type';
@@ -186,14 +187,14 @@ export const MonteCarlo = ({
 
   if (closedTrades.length < 1)
     return (
-      <div className="h-[600px] flex justify-center items-center">
+      <div className="h-full flex justify-center items-center">
         <Loading description="Loading..."></Loading>
       </div>
     );
 
   if (tradesWithProfit.length === 0)
     return (
-      <div className="flex flex-col justify-center items-center w-full h-96 ">
+      <div className="flex flex-col justify-center items-center w-full h-full">
         <div className="icon">
           <FolderSearch className="w-24 h-24" />
         </div>
@@ -202,38 +203,34 @@ export const MonteCarlo = ({
     );
 
   return (
-    <div>
-      <div className="">
-        <form className="mb-4">
-          <div className="w-[300px] border rounded-lg border-[#DFDFDF] p-4 flex justify-between left-[85px] top-[130px] items-center relative bg-white/90 dark:bg-[#392910]/90 text-black dark:text-white z-50">
-            <div className="flex items-center">
-              <label className="mr-2">Number of Simulations:</label>
-              <Input
-                type="number"
-                value={numSimulations}
-                onChange={(e) => setNumSimulations(parseInt(e.target.value))}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    runSimulation();
-                  }
-                }}
-                className="w-[85px] h-8 border-[#f0ece9] border bg-[#fffcf6]/90"
-              />
-            </div>
-          </div>
-        </form>
-        {numSuccesses > 0 && <p>Successful simulations: {numSuccesses}</p>}
+    <div className="relative">
+      <div className="w-[300px] border rounded-lg border-[#DFDFDF] p-4 flex justify-between left-[1.7rem] top-2 items-center absolute bg-white/90 dark:bg-[#392910]/90 text-black dark:text-white z-50">
+        <div className="flex items-center">
+          <label className="mr-2">Number of Simulations:</label>
+          <Input
+            type="number"
+            value={numSimulations}
+            onChange={(e) => setNumSimulations(parseInt(e.target.value))}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                runSimulation();
+              }
+            }}
+            className="w-[85px] h-8 border-[#f0ece9] border bg-[#fffcf6]/90"
+          />
+        </div>
+      </div>
+      {numSuccesses > 0 && <p>Successful simulations: {numSuccesses}</p>}
 
-        <div className="relative">
-          {data ? <Line data={data} options={options} className="p-10" /> : <div>Loading...</div>}
-          <div className="bg-white/90 absolute  bottom-[75px] flex border p-3 right-[55px] w-auto justify-between space-x-4 dark:bg-[#392910]/90">
-            <div className="">
-              95 Percentile Max DD: <span className="text-xl">{meanDDResult.toFixed(2)} %</span>
-            </div>
-            <div className="">
-              95 Percentile Profit: <span className="text-xl">{meanMaxProfit.toFixed(2)} %</span>
-            </div>
+      <div className="relative">
+        {data ? <Line data={data} options={options} /> : <div>Loading...</div>}
+        <div className="bg-white/90 absolute  bottom-7 flex border p-3 right-3 w-auto justify-between space-x-4 dark:bg-[#392910]/90">
+          <div className="">
+            95 Percentile Max DD: <span className="text-xl">{meanDDResult.toFixed(2)} %</span>
+          </div>
+          <div className="">
+            95 Percentile Profit: <span className="text-xl">{meanMaxProfit.toFixed(2)} %</span>
           </div>
         </div>
       </div>

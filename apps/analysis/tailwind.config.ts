@@ -11,6 +11,9 @@ const config = {
   ],
   prefix: '',
   theme: {
+    screens: {
+      '3xl': '1600px',
+    },
     container: {
       center: true,
       padding: '2rem',
@@ -25,7 +28,7 @@ const config = {
         'primary-light2': '#FCE2B9',
         'brand-gray': '#4D4D4D',
         background: {
-          light: '#FFFAF6',
+          light: '#FFFDF9',
           dark: '#37332A',
         },
       },

@@ -213,7 +213,7 @@ const BackTestResultsDrawer = ({
       content: <CandleChart backtestData={selectedBacktest} klineData={klineData ?? []} />,
     },
     {
-      value: 'equity-curve',
+      value: 'analysis',
       label: 'Equity Curve',
       content: (
         <EquityCurve

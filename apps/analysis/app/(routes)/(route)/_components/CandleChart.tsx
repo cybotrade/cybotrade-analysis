@@ -1,3 +1,5 @@
+'use client';
+
 import { type Kline } from 'binance';
 import type {
   CandlestickData,
@@ -128,8 +130,6 @@ export const CandleChart = ({
         leftPriceScale: {
           visible: true,
         },
-        width: chartContainerRef.current.clientWidth,
-        height: 350,
       });
       const candleSeries = chart.addCandlestickSeries({
         upColor: resolvedTheme === 'dark' ? '#00FC65' : '#4bffb5',
@@ -243,7 +243,7 @@ export const CandleChart = ({
   }, [candleSeries, isTooltipVisible]);
 
   return (
-    <div className="h-96">
+    <div className="h-full">
       <div className="w-full h-full px-3 py-4" ref={chartContainerRef}>
         <div className="h-0">
           <div
