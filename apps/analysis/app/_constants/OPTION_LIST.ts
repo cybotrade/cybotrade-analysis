@@ -48,4 +48,4 @@ export const OPTION_LIST = [
   { category: 'MAX DRAWDOWN', options: MAX_DRAWDOWN_OPTION },
   { category: 'SHARPE', options: SHARPE_OPTION },
   { category: 'PERMUTATIONS', options: PERMUTATIONS_OPTION },
-];
+] as const;

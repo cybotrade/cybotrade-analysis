@@ -67,7 +67,7 @@ export const MonteCarlo = ({
   initialCapital = 10000,
 }: {
   closedTrades: IClosedTrade[];
-  initialCapital: number;
+  initialCapital?: number;
 }) => {
   const [meanDDResult, setMeanDDResult] = useState<number>(0);
   const [meanMaxProfit, setMeanMaxProfit] = useState<number>(0);

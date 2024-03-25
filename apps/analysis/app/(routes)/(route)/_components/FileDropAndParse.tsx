@@ -1,9 +1,9 @@
 'use client';
 
+import ProgressBar from 'app/_components/progress-bar';
 import { DragEvent, useEffect, useReducer, useState } from 'react';
 
 import { Attachment, CrossSolid, Upload } from '@app/_assets/icons';
-import ProgressBar from '@app/_components/progressBar';
 import { Button } from '@app/_ui/Button';
 
 interface State {

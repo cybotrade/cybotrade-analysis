@@ -6,5 +6,5 @@ type TextProps = {
 };
 
 export const Text = ({ content, className }: TextProps) => {
-  return <span className={cn('', className)}>{content}</span>;
+  return <div className={cn('', className)}>{content}</div>;
 };
