@@ -3,12 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { CSSProperties, useMemo, useState } from 'react';
 
-import {
-  ActiveEquityCurveMenuIcon,
-  ActiveSurfacePlotMenuIcon,
-  DisableEquityCurveMenuIcon,
-  DisableSurfacePlotMenuIcon,
-} from '@app/_assets/icons';
+import { EquityCurveMenuIcon } from '@app/_assets/icons';
 import { MenuItem } from '@app/_components/radial-menu/MenuItem';
 import { useActivePath } from '@app/_hooks/useActivePath';
 
@@ -23,7 +18,7 @@ const RadialMenu = () => {
         name: 'equity-curve',
         href: '/candle-chart',
         icon: (
-          <ActiveEquityCurveMenuIcon
+          <EquityCurveMenuIcon
             width="100%"
             height="100%"
             style={{
@@ -37,7 +32,7 @@ const RadialMenu = () => {
         name: 'equity-curve',
         href: '/candle-chart',
         icon: (
-          <ActiveEquityCurveMenuIcon
+          <EquityCurveMenuIcon
             width="100%"
             height="100%"
             style={{
