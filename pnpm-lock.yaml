@@ -168,6 +168,9 @@ importers:
       '@types/d3-fetch':
         specifier: 3.0.7
         version: 3.0.7
+      '@types/d3-format':
+        specifier: 3.0.4
+        version: 3.0.4
       '@types/d3-zoom':
         specifier: 3.0.8
         version: 3.0.8

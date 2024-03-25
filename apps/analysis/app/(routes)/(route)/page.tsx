@@ -47,6 +47,7 @@ const Backtest = () => {
             }
             setAnalysingProgress(percentage);
           }}
+          onAnalysisFailed={(error) => setAnalysisError(error)}
         />
       )}
       {/* Background element */}

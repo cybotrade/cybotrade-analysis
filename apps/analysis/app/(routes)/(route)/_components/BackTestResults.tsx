@@ -4,6 +4,7 @@ import Decimal from 'decimal.js';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { useEffect, useMemo, useState } from 'react';
+import { errorUtil } from 'zod/lib/helpers/errorUtil';
 
 import HeatMap from '@app/(routes)/(route)/_components/HeatMap';
 import SharpeRatio from '@app/(routes)/(route)/_components/SharpeRatio';
@@ -49,12 +50,14 @@ interface IBackTestResultsDrawer {
   data: IBackTestDataMultiSymbols;
   drawer: IDrawer;
   fetchedKlinesPercentage: (percentage: number, error?: string) => void;
+  onAnalysisFailed: (error: string) => void;
 }
 
 const BackTestResultsDrawer = ({
   data,
   drawer,
   fetchedKlinesPercentage,
+  onAnalysisFailed,
 }: IBackTestResultsDrawer) => {
   const [userSettings, setUserSettings] = useState<SettingsValue>({
     initial_capital: 10000,
@@ -66,6 +69,7 @@ const BackTestResultsDrawer = ({
     // stop_lost: [{ value: undefined }, { value: undefined }],
     // entry: [{ value: undefined }, { value: undefined }],
   });
+
   const {
     backtestData,
     selectedBacktest,
@@ -74,7 +78,7 @@ const BackTestResultsDrawer = ({
     permutationOptions,
     selectedPermutation,
     setSelectedPermutation,
-  } = useBacktests(data);
+  } = useBacktests(data, onAnalysisFailed);
 
   const sortedTrades = useMemo(() => {
     if (!selectedBacktest) return [];
@@ -89,7 +93,6 @@ const BackTestResultsDrawer = ({
     });
     return sortByTimestamp<ITrade>(trades);
   }, [selectedBacktest, userSettings.order_size_value, userSettings.fees]);
-
   const closedTrades = useMemo(
     () => (selectedBacktest ? transformToClosedTrades(selectedBacktest.trades) : []),
     [sortedTrades],
