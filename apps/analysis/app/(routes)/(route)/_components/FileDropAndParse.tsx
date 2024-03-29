@@ -1,6 +1,7 @@
 'use client';
 
 import ProgressBar from 'app/_components/progress-bar';
+import { useRouter } from 'next/navigation';
 import { DragEvent, useEffect, useReducer, useState } from 'react';
 
 import { Attachment, CrossSolid, Upload } from '@app/_assets/icons';
@@ -30,7 +31,6 @@ type Action = SetInDropZoneAction | AddFileToListAction | ResetAction;
 interface FileDropZoneProps {
   className?: string;
   onChange: (file?: File, result?: object) => void;
-  onShowResult: () => void;
   analysingProgress: number;
   error?: string;
 }
@@ -54,7 +54,6 @@ const reducer = (state: State, action: Action) => {
 const FileDropAndParse: React.FC<FileDropZoneProps> = ({
   className,
   onChange,
-  onShowResult,
   analysingProgress,
   error,
 }) => {
@@ -69,7 +68,7 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({
     inDropZone: false,
     fileList: [],
   });
-
+  const router = useRouter();
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -192,7 +191,8 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({
     setErrorMessage('');
     setUploadPercentage(0);
     setFile(undefined);
-    onChange(undefined, undefined);
+    router.replace('/');
+    // onChange(undefined, undefined)
     // setAnalysingPercentage(0);
   };
 
@@ -274,7 +274,7 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({
                 <p className="text-xs text-brand-gray">{file?.size && file.size / 1000} kb</p>
               </div>
             </div>
-            <Button onClick={onShowResult} className="w-full">
+            <Button onClick={() => router.replace('/new/analysis/candle-chart')} className="w-full">
               Show Result
             </Button>
             <Button
