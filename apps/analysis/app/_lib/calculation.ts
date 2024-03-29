@@ -2,7 +2,7 @@ import { type Kline } from 'binance';
 import { Decimal } from 'decimal.js';
 import { UTCTimestamp } from 'lightweight-charts';
 
-import { IEquityData } from '@app/(routes)/(route)/new/_components/EquityCurve';
+import { IEquityData } from '@app/(routes)/(route)/_components/EquityCurve';
 import { IClosedTrade, ITrade } from '@app/(routes)/(route)/type';
 import { Interval, OrderSide, intervalForDays } from '@app/_lib/utils';
 
@@ -388,6 +388,8 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
   let position: number = 0;
   let closedTrades: IClosedTrade[] = [];
   let globalSide: OrderSide | null = null;
+
+  if (inputTrades.length === 0) return [];
 
   inputTrades.map((trade, index) => {
     const { quantity, side, price, time } = trade;
