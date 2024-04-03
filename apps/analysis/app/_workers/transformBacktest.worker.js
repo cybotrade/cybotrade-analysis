@@ -24,20 +24,21 @@ onmessage = (e) => {
     let trades = new Map();
     let closedTrades = new Map();
     let performance = new Map();
+
     for (const [index, symbol] of symbols.entries()) {
       if (parsedTrades[symbol].length === 0) continue;
-
+      let sortedTrades = parsedTrades[symbol].sort((a, b) => a.time - b.time);
       trades.set(
         symbol,
-        parsedTrades[symbol].map((trade) => ({ ...trade, fees: 0 })),
+        sortedTrades.map((trade) => ({ ...trade, fees: 0 })),
       );
-      closedTrades.set(symbol, transformToClosedTrades(parsedTrades[symbol]));
+      closedTrades.set(symbol, transformToClosedTrades(sortedTrades));
       performance.set(
         symbol,
         calculatePerformance({
           tradeOrders: {
             klineData: klineData ?? [],
-            trades: parsedTrades[symbol],
+            trades: sortedTrades,
             interval: topics[index].interval,
           },
           parameters: {
@@ -71,6 +72,4 @@ onmessage = (e) => {
     view[i] = result.charCodeAt(i);
   }
   postMessage(buffer, [buffer]);
-  // const encoder = new TextEncoder().encode(result);
-  // postMessage(encoder.buffer, [encoder.buffer]);
 };

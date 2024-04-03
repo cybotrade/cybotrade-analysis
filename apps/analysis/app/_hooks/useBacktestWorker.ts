@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Dispatch, useEffect, useRef, useState } from 'react';
 
-import { IBacktest, IBacktestState, TActions } from '@app/_providers/backtest';
+import { IBacktest, TActions } from '@app/_providers/backtest';
 import { IFileContent } from '@app/_providers/file';
 
 export function useBacktestWorker(fileData: IFileContent | null, dispatch: Dispatch<TActions>) {
@@ -31,7 +31,6 @@ export function useBacktestWorker(fileData: IFileContent | null, dispatch: Dispa
           performance: new Map(performance),
         });
       }
-
       dispatch({
         type: 'SET_DATA',
         payload: {

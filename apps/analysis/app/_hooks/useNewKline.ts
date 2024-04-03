@@ -1,15 +1,13 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { KlinesParams } from 'binance';
-import { useRouter } from 'next/navigation';
-import { Dispatch, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Dispatch, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useKlineInfiniteQuery } from '@app/_hooks/useKlineInfiniteQuery';
 import { Interval, addIntervalTime } from '@app/_lib/utils';
-import { IFileContent, TActions } from '@app/_providers/file';
+import { TActions } from '@app/_providers/file';
 
 export function useNewKline(dispatch: Dispatch<TActions>) {
   const queryClient = useQueryClient();
-  const router = useRouter();
   const [params, setParams] = useState<KlinesParams | null>(null);
   const startTime = useRef(0);
   const endTime = useRef(0);
@@ -41,10 +39,11 @@ export function useNewKline(dispatch: Dispatch<TActions>) {
       });
       if (startTime.current >= endTime.current) {
         clearInterval(timerId.current);
+        timerId.current = null;
         return;
       }
 
-      fetchNextPage();
+      await fetchNextPage();
     }
   }, [data, isError]);
 

@@ -1,12 +1,8 @@
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { Kline, KlinesParams } from 'binance';
-import { useCallback, useRef, useState } from 'react';
-import { boolean } from 'zod';
 
-import { Interval, addIntervalTime } from '@app/_lib/utils';
-
-interface Page {
-  data: [Kline[]];
+export interface Page {
+  kline: Kline[];
   nextCursor?: Kline;
 }
 
@@ -43,10 +39,10 @@ export function useKlineInfiniteQuery(params: KlinesParams | null) {
       if (!params) {
         return undefined;
       }
+      if (!lastPage) return undefined;
       const nextCursor = lastPage.nextCursor;
       if (nextCursor && nextCursor[0] >= params.endTime!) return undefined;
       return Number(lastPage.nextCursor![0]);
     },
-    staleTime: Infinity,
   });
 }

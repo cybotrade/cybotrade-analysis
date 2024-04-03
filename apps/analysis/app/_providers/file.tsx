@@ -1,9 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { PropsWithChildren, createContext, useContext, useMemo, useReducer } from 'react';
 
-import { useKlineInfiniteQuery } from '@app/_hooks/useKlineInfiniteQuery';
 import { useNewKline } from '@app/_hooks/useNewKline';
 import { Interval } from '@app/_lib/utils';
 
