@@ -2,12 +2,10 @@
 
 import React, { Fragment, useState } from 'react';
 
-import BackTestResultsDrawer from '@app/(routes)/(route)/_components/BackTestResults';
 import FileDropAndParse from '@app/(routes)/(route)/_components/FileDropAndParse';
 import Header from '@app/_components/header';
 import useDrawer from '@app/_hooks/useDrawer';
 import { useFileAPI, useFileData } from '@app/_providers/file';
-import { useKlinesStore } from '@app/_providers/klines';
 
 import { IBackTestDataMultiSymbols } from './type';
 
@@ -38,7 +36,6 @@ const Backtest = () => {
         <FileDropAndParse
           className="max-w-xl z-10"
           onChange={(file, result) => onFileChange(file!, result!)}
-          onShowResult={drawer.open}
           analysingProgress={fetchedPercentage}
           error={error}
         />
