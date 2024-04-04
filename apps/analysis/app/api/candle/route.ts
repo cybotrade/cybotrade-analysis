@@ -23,7 +23,12 @@ export const GET = async (req: NextRequest) => {
     });
 
     if (Array.isArray(kline)) {
-      return NextResponse.json({ kline, nextCursor: kline[kline.length - 1] });
+      const lastCandle = kline[kline.length - 1];
+
+      if (lastCandle[0] < endTime) {
+        kline.pop();
+      }
+      return NextResponse.json({ kline, nextCursor: lastCandle });
     } else {
       // Check if the response contains an error property
       if (kline && 'error' in kline) {

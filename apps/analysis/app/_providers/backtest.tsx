@@ -17,7 +17,6 @@ interface ITopic {
 }
 
 export interface IBacktest {
-  // id: string;
   trades: Map<string, ITrade[]>;
   closedTrades: Map<string, IClosedTrade[]>;
   performance: Map<string, PerformanceData>;

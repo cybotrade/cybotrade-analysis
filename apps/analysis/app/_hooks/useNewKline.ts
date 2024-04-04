@@ -32,9 +32,12 @@ export function useNewKline(dispatch: Dispatch<TActions>) {
       ).getTime();
       dispatch({
         type: 'FETCHING_KLINE',
-        payload: Math.round(
-          ((startTime.current - params!.startTime!) / (params!.endTime! - params!.startTime!)) *
-            100,
+        payload: Math.min(
+          100,
+          Math.round(
+            ((startTime.current - params!.startTime!) / (params!.endTime! - params!.startTime!)) *
+              100,
+          ),
         ),
       });
       if (startTime.current >= endTime.current) {
