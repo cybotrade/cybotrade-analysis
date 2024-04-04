@@ -45,10 +45,10 @@ export const EquityCurveChart = ({ equityData }: TEquityCurveChart) => {
         textColor: '#9A9A9A',
       },
       leftPriceScale: {
-        visible: true,
+        visible: false,
       },
       rightPriceScale: {
-        visible: false,
+        visible: true,
       },
     }),
     [],

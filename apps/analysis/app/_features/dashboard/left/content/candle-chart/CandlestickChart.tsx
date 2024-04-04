@@ -1,5 +1,3 @@
-'use client';
-
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 import {
   CandlestickData,
@@ -16,17 +14,19 @@ import {
   type UTCTimestamp,
   createChart,
 } from 'lightweight-charts';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { ITrade } from '@app/(routes)/(route)/type';
 import { Page } from '@app/_hooks/useKlineInfiniteQuery';
 import { cn } from '@app/_lib/utils';
-import { useBacktestData } from '@app/_providers/backtest';
 import { debounce } from '@app/_utils/helper';
 
-type TNewCandleChartProps = {};
+type TCandlestickChartProps = {
+  data: InfiniteData<Page> | undefined;
+  trades: Map<string, ITrade[]>;
+};
 
-const NewCandleChart = ({}: TNewCandleChartProps) => {
+export const CandlestickChart = ({ data, trades }: TCandlestickChartProps) => {
   const chartOptions: DeepPartial<ChartOptions> = useMemo(
     () => ({
       layout: {
@@ -48,9 +48,8 @@ const NewCandleChart = ({}: TNewCandleChartProps) => {
         visible: true,
       },
       leftPriceScale: {
-        visible: true,
+        visible: false,
       },
-      trackingMode: {},
     }),
     [],
   );
@@ -68,22 +67,14 @@ const NewCandleChart = ({}: TNewCandleChartProps) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi | null>(null);
   const series = useRef<ISeriesApi<'Candlestick'> | null>(null);
-
-  const queryClient = useQueryClient();
-  const [queryKey, data] = queryClient.getQueriesData<InfiniteData<Page>>({
-    queryKey: ['candles'],
-  })[0];
-  const pageIndex = useRef(data ? data.pages.length - 2 : 0);
-
-  const { backtests } = useBacktestData();
-  const trades = useRef(new Map<string, ITrade[]>(backtests.values().next().value[1].trades));
-
   const chartTooltipRef = useRef<HTMLDivElement>(null);
   const tooltipLayout = useRef({
     width: 80,
     height: 80,
     margin: 15,
   });
+
+  const pageIndex = useRef(data ? data.pages.length - 2 : 0);
 
   const onVisibleLogicalRangeChanged = useCallback(
     (chart: IChartApi, candleSeries: ISeriesApi<'Candlestick'>) => {
@@ -182,7 +173,7 @@ const NewCandleChart = ({}: TNewCandleChartProps) => {
         close: parseFloat(close as string),
       }),
     );
-    const markers = trades.current
+    const markers = trades
       .values()
       .next()
       .value.map(({ price, quantity, side, time }: ITrade) => ({
@@ -221,5 +212,3 @@ const NewCandleChart = ({}: TNewCandleChartProps) => {
     </div>
   );
 };
-
-export default NewCandleChart;
