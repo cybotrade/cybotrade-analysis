@@ -1,8 +1,12 @@
-import { EquityCurve } from '@app/(routes)/(route)/_components/EquityCurve';
 import DashboardContentWrapper from '@app/_features/dashboard/DashboardContentWrapper';
+import { NewEquityCurve } from '@app/_features/dashboard/left/content/NewEquityCurve';
 
 const EquityCurvePage = () => {
-  return <DashboardContentWrapper>{/*<EquityCurve />*/}</DashboardContentWrapper>;
+  return (
+    <DashboardContentWrapper>
+      <NewEquityCurve />
+    </DashboardContentWrapper>
+  );
 };
 
 export default EquityCurvePage;

@@ -26,7 +26,7 @@ import { debounce } from '@app/_utils/helper';
 
 type TNewCandleChartProps = {};
 
-const NewCandleChart = ({}: TNewCandleChartProps) => {
+const Index = ({}: TNewCandleChartProps) => {
   const chartOptions: DeepPartial<ChartOptions> = useMemo(
     () => ({
       layout: {
@@ -111,7 +111,6 @@ const NewCandleChart = ({}: TNewCandleChartProps) => {
             close: parseFloat(close as string),
           }),
         );
-        // newCandles.pop();
         candleSeries.setData([...(newCandles ?? []), ...oldCandles] as CandlestickData[]);
         pageIndex.current -= 1;
       }
@@ -223,4 +222,4 @@ const NewCandleChart = ({}: TNewCandleChartProps) => {
   );
 };
 
-export default NewCandleChart;
+export default Index;
