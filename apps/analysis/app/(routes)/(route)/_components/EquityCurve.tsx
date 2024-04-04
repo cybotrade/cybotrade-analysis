@@ -8,8 +8,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Loading } from '@app/_components/loading';
 
 import { IBackTestData } from '../type';
-import { SettingsValue } from './SettingsForm';
 import { FullPerformance } from './BackTestResults';
+import { SettingsValue } from './SettingsForm';
 
 export interface IEquityData {
   value: number;
@@ -18,8 +18,7 @@ export interface IEquityData {
 
 export const EquityCurve = ({
   fullPerformance,
-  selectedBacktest,
-  // klineData,
+  selectedBacktest, // klineData,
   // userSettings,
 }: {
   fullPerformance: FullPerformance[];
@@ -34,12 +33,10 @@ export const EquityCurve = ({
   let chart: IChartApi | null = null;
 
   const mapEquityData = async () => {
-    console.log("mapEquityData")
     let performanceData = fullPerformance.find((x) => x.id === selectedBacktest.id);
     setIsLoading(true);
     setEquityData(performanceData?.performance.equityData!);
     setIsLoading(false);
-
   };
 
   useEffect(() => {
@@ -87,7 +84,7 @@ export const EquityCurve = ({
         chart?.remove();
       };
     }
-  }, [resolvedTheme === 'dark', equityData]);
+  }, [resolvedTheme === 'dark', equityData, selectedBacktest]);
 
   if (isLoading)
     return (
