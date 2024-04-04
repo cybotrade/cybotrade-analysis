@@ -111,7 +111,7 @@ const NewCandleChart = ({}: TNewCandleChartProps) => {
             close: parseFloat(close as string),
           }),
         );
-        newCandles.pop();
+        // newCandles.pop();
         candleSeries.setData([...(newCandles ?? []), ...oldCandles] as CandlestickData[]);
         pageIndex.current -= 1;
       }
