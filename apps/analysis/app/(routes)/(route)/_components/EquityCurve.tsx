@@ -19,8 +19,8 @@ export interface IEquityData {
 export const EquityCurve = ({
   fullPerformance,
   selectedBacktest, // klineData,
-} // userSettings,
-: {
+  // userSettings,
+}: {
   fullPerformance: FullPerformance[];
   selectedBacktest: IBackTestData;
   // klineData: Kline[];
@@ -33,13 +33,12 @@ export const EquityCurve = ({
   let chart: IChartApi | null = null;
 
   const mapEquityData = async () => {
-    console.log('mapEquityData');
     let performanceData = fullPerformance.find((x) => x.id === selectedBacktest.id);
     setIsLoading(true);
     setEquityData(performanceData?.performance.equityData!);
     setIsLoading(false);
   };
-  console.log(selectedBacktest);
+
   useEffect(() => {
     mapEquityData();
     const handleResize = () => {
@@ -85,7 +84,7 @@ export const EquityCurve = ({
         chart?.remove();
       };
     }
-  }, [resolvedTheme === 'dark', selectedBacktest]);
+  }, [resolvedTheme === 'dark', equityData, selectedBacktest]);
 
   if (isLoading)
     return (
