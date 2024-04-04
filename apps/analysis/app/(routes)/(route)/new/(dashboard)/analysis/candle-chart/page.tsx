@@ -1,10 +1,10 @@
 import DashboardContentWrapper from '@app/_features/dashboard/DashboardContentWrapper';
-import Index from '@app/_features/dashboard/left/content/equity-curve';
+import NewCandleChart from '@app/_features/dashboard/left/content/NewCandleChart';
 
 const CandleChartPage = () => {
   return (
     <DashboardContentWrapper>
-      <Index />
+      <NewCandleChart />
     </DashboardContentWrapper>
   );
 };
