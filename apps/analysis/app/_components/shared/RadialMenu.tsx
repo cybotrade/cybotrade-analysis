@@ -3,7 +3,14 @@
 import { useRouter } from 'next/navigation';
 import { CSSProperties, useMemo, useState } from 'react';
 
-import { EquityCurveMenuIcon } from '@app/_assets/icons';
+import {
+  CandleChartMenuIcon,
+  EquityCurveMenuIcon,
+  MonteCarloMenuIcon,
+  ResultBreakdownMenuIcon,
+  SurfacePlotMenuIcon,
+  TrendMenuIcon,
+} from '@app/_assets/icons';
 import { MenuItem } from '@app/_components/radial-menu/MenuItem';
 import { useActivePath } from '@app/_hooks/useActivePath';
 
@@ -18,7 +25,7 @@ const RadialMenu = () => {
         name: 'equity-curve',
         href: '/new/analysis/candle-chart',
         icon: (
-          <EquityCurveMenuIcon
+          <CandleChartMenuIcon
             width="100%"
             height="100%"
             style={{
@@ -43,10 +50,52 @@ const RadialMenu = () => {
         ),
       },
       {
-        name: 'equity-curve',
+        name: 'monte-carlo',
         href: '/new/analysis/monte-carlo',
         icon: (
-          <EquityCurveMenuIcon
+          <MonteCarloMenuIcon
+            width="100%"
+            height="100%"
+            style={{
+              transform: 'rotate(calc(var(--i) * (360deg / -12)))',
+              rotate: '-165deg',
+            }}
+          />
+        ),
+      },
+      {
+        name: 'surface-plot',
+        href: '/new/analysis/surface-plot',
+        icon: (
+          <SurfacePlotMenuIcon
+            width="100%"
+            height="100%"
+            style={{
+              transform: 'rotate(calc(var(--i) * (360deg / -12)))',
+              rotate: '-165deg',
+            }}
+          />
+        ),
+      },
+      {
+        name: 'result-breakdown',
+        href: '/new/overview/result-breakdown',
+        icon: (
+          <ResultBreakdownMenuIcon
+            width="100%"
+            height="100%"
+            style={{
+              transform: 'rotate(calc(var(--i) * (360deg / -12)))',
+              rotate: '-165deg',
+            }}
+          />
+        ),
+      },
+      {
+        name: 'trend',
+        href: '/new/overview/trend',
+        icon: (
+          <TrendMenuIcon
             width="100%"
             height="100%"
             style={{

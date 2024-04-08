@@ -20,7 +20,7 @@ export const MenuItem = ({ index, openMenu, href, icon, onItemClick }: MenuItemP
           opacity: openMenu ? 1 : 0,
         } as CSSProperties
       }
-      className="absolute transition-all ease-in-out duration-500 w-20"
+      className="absolute transition-all ease-in-out duration-500 w-16"
       onClick={onItemClick}
     >
       {icon}
