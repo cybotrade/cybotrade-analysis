@@ -1,8 +1,12 @@
-import { MonteCarlo } from '@app/(routes)/(route)/_components/MonteCarlo';
 import DashboardContentWrapper from '@app/_features/dashboard/DashboardContentWrapper';
+import { NewMonteCarlo } from '@app/_features/dashboard/left/content/monte-carlo';
 
 const MonteCarloPage = () => {
-  return <DashboardContentWrapper>{/*<MonteCarlo />*/}</DashboardContentWrapper>;
+  return (
+    <DashboardContentWrapper>
+      <NewMonteCarlo />
+    </DashboardContentWrapper>
+  );
 };
 
 export default MonteCarloPage;

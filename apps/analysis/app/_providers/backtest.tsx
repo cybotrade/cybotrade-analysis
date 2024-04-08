@@ -2,7 +2,7 @@
 
 import { PropsWithChildren, createContext, useContext, useReducer } from 'react';
 
-import { IClosedTrade, ITrade } from '@app/(routes)/(route)/type';
+import { IClosedTrade, IClosedTradeProfit, ITrade } from '@app/(routes)/(route)/type';
 import { Loading } from '@app/_components/loading';
 import { useBacktestWorker } from '@app/_hooks/useBacktestWorker';
 import { PerformanceData } from '@app/_lib/calculation';
@@ -19,6 +19,7 @@ interface ITopic {
 export interface IBacktest {
   trades: Map<string, ITrade[]>;
   closedTrades: Map<string, IClosedTrade[]>;
+  tradesWithProfit: Map<string, IClosedTradeProfit[]>;
   performance: Map<string, PerformanceData>;
 }
 

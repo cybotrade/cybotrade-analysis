@@ -114,7 +114,7 @@ export const BalanceChartWidget = () => {
         />
       </div>
       <div className="w-full">
-        <Bar className="!w-full !max-h-[12rem] " data={data} options={options.current} />
+        <Bar className="!w-full !max-h-[12rem]" data={data} options={options.current} />
       </div>
     </Widget>
   );
