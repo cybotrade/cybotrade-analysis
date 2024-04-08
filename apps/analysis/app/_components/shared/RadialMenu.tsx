@@ -42,6 +42,20 @@ const RadialMenu = () => {
           />
         ),
       },
+      {
+        name: 'equity-curve',
+        href: '/new/analysis/monte-carlo',
+        icon: (
+          <EquityCurveMenuIcon
+            width="100%"
+            height="100%"
+            style={{
+              transform: 'rotate(calc(var(--i) * (360deg / -12)))',
+              rotate: '-165deg',
+            }}
+          />
+        ),
+      },
     ],
     [],
   );

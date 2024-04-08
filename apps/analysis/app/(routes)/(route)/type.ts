@@ -36,3 +36,5 @@ export interface IClosedTrade {
   quantity: Decimal;
   side: OrderSide;
 }
+
+export type IClosedTradeProfit = IClosedTrade & { pnl: Decimal };

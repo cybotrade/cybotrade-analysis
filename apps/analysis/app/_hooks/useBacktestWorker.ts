@@ -24,10 +24,11 @@ export function useBacktestWorker(fileData: IFileContent | null, dispatch: Dispa
       const parsedJson = JSON.parse(result);
       const backtestsMap = new Map(parsedJson.backtests as [string, IBacktest][]);
 
-      for (const [id, { trades, closedTrades, performance }] of backtestsMap) {
+      for (const [id, { trades, closedTrades, tradesWithProfit, performance }] of backtestsMap) {
         backtestsMap.set(id, {
           trades: new Map(trades),
           closedTrades: new Map(closedTrades),
+          tradesWithProfit: new Map(tradesWithProfit),
           performance: new Map(performance),
         });
       }

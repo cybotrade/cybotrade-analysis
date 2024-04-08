@@ -16,3 +16,23 @@ export function debounce(fn: (...args: any[]) => void, delay: number) {
     }, delay);
   };
 }
+
+export function getPercentile(series: number[], percentile: number) {
+  series.sort(function (a, b) {
+    return a - b;
+  });
+
+  const index = (percentile / 100) * series.length;
+  let result;
+  if (Math.floor(index) == index) {
+    result = (series[index - 1] + series[index]) / 2;
+  } else {
+    result = series[Math.floor(index)];
+  }
+  return result;
+}
+
+export function random_hex_color_code() {
+  const n = (Math.random() * 0xfffff * 1000000).toString(16);
+  return '#' + n.slice(0, 6);
+}
