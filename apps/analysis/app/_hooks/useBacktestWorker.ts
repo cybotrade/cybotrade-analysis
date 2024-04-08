@@ -4,7 +4,12 @@ import { Dispatch, useEffect, useRef, useState } from 'react';
 import { IBacktest, TActions } from '@app/_providers/backtest';
 import { IFileContent } from '@app/_providers/file';
 
-export function useBacktestWorker(fileData: IFileContent | null, dispatch: Dispatch<TActions>) {
+export function useBacktestWorker(
+  fileData: IFileContent | null,
+  callbacks: {
+    onProcessSuccess: (result: string) => void;
+  },
+) {
   const queryClient = useQueryClient();
   const worker = useRef<Worker>();
   const [processing, setProcessing] = useState(true);
@@ -21,27 +26,7 @@ export function useBacktestWorker(fileData: IFileContent | null, dispatch: Dispa
         (data, byte) => data + String.fromCharCode(byte),
         '',
       );
-      const parsedJson = JSON.parse(result);
-      const backtestsMap = new Map(parsedJson.backtests as [string, IBacktest][]);
-
-      for (const [id, { trades, closedTrades, tradesWithProfit, performance }] of backtestsMap) {
-        backtestsMap.set(id, {
-          trades: new Map(trades),
-          closedTrades: new Map(closedTrades),
-          tradesWithProfit: new Map(tradesWithProfit),
-          performance: new Map(performance),
-        });
-      }
-      dispatch({
-        type: 'SET_DATA',
-        payload: {
-          topics: parsedJson.topics,
-          initialCapital: parsedJson.initial_capital,
-          backtests: parsedJson.backtests,
-          startTime: parsedJson.start_time,
-          endTime: parsedJson.end_time,
-        },
-      });
+      callbacks.onProcessSuccess(result);
       setProcessing(false);
     });
 
