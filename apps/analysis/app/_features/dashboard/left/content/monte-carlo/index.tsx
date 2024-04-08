@@ -7,15 +7,19 @@ import { MonteCarloChart } from '@app/_features/dashboard/left/content/monte-car
 import { useBacktestData } from '@app/_providers/backtest';
 
 export const NewMonteCarlo = () => {
-  const { backtests, initialCapital } = useBacktestData();
+  const { backtests, initialCapital, selectedPermutationId } = useBacktestData();
 
-  const tradesWithProfit = useRef(
-    new Map<string, IClosedTradeProfit[]>(backtests.values().next().value[1].tradesWithProfit),
+  const tradesWithProfit = new Map<string, IClosedTradeProfit[]>(
+    backtests.get(selectedPermutationId)?.tradesWithProfit,
   );
-  
+
   if (backtests.size === 0) throw new Error('Invalid Visit');
 
   return (
-    <MonteCarloChart initialCapital={initialCapital} tradesWithProfit={tradesWithProfit.current} />
+    <MonteCarloChart
+      key={selectedPermutationId}
+      initialCapital={initialCapital}
+      tradesWithProfit={tradesWithProfit}
+    />
   );
 };
