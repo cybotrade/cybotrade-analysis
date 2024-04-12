@@ -1,26 +1,10 @@
-import dynamic from 'next/dynamic';
-
-import { Loading } from '@app/_components/loading';
 import DashboardContentWrapper from '@app/_features/dashboard/DashboardContentWrapper';
+import { NewSurfacePlot } from '@app/_features/dashboard/left/content/surface-plot';
 
-const LoadingSurfacePlot = () => {
-  return (
-    <div className="flex justify-center items-center h-full">
-      <Loading description="Loading ..." />
-    </div>
-  );
-};
-
-const SurfacePlot = dynamic(() => import('@app/(routes)/(route)/_components/SurfacePlot'), {
-  loading: () => <LoadingSurfacePlot />,
-  ssr: false,
-});
 const SurfacePlotPage = () => {
   return (
     <DashboardContentWrapper>
-      {/*
-      <SurfacePlot />
-*/}
+      <NewSurfacePlot />
     </DashboardContentWrapper>
   );
 };

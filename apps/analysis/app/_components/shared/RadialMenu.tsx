@@ -22,7 +22,7 @@ const RadialMenu = () => {
   const actions = useMemo(
     () => [
       {
-        name: 'equity-curve',
+        name: 'candle-chart',
         href: '/new/analysis/candle-chart',
         icon: (
           <CandleChartMenuIcon
