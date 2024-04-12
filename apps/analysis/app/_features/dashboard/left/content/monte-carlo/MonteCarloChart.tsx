@@ -29,7 +29,7 @@ ChartJS.register(
   Legend,
 );
 
-type SimulationData = {
+type TSimulationData = {
   numberOfTrades: number[];
   simulations: number[][];
   monteCarloDrawdown: number;
@@ -60,7 +60,7 @@ export const MonteCarloChart = ({ initialCapital, tradesWithProfit }: TMonteCarl
   const [meanDDResult, setMeanDDResult] = useState<number>(0);
   const [meanMaxProfit, setMeanMaxProfit] = useState<number>(0);
 
-  const [simulationRuns, setSimulationRuns] = useState<SimulationData[]>([]);
+  const [simulationRuns, setSimulationRuns] = useState<TSimulationData[]>([]);
   const randomBorderColor = useRef(random_hex_color_code());
   const runSimulation = useCallback((numSimulations: number) => {
     if (tradesWithProfit.size === 0) return;
@@ -102,7 +102,7 @@ export const MonteCarloChart = ({ initialCapital, tradesWithProfit }: TMonteCarl
     const maxProfit95 = (getPercentile(sim_max_profit, 95) / initialCapital) * 100;
     setMeanMaxProfit(maxProfit95);
 
-    const simulationRun: SimulationData = {
+    const simulationRun: TSimulationData = {
       numberOfTrades: numberOfTrades,
       simulations: sim_balance_graph,
       monteCarloDrawdown: dd95,

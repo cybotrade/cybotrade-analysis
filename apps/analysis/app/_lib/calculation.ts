@@ -4,7 +4,7 @@ import { UTCTimestamp } from 'lightweight-charts';
 
 import { IEquityData } from '@app/(routes)/(route)/_components/EquityCurve';
 import { IClosedTrade, ITrade } from '@app/(routes)/(route)/type';
-import { Interval, OrderSide, intervalForDays } from '@app/_lib/utils';
+import { Interval, OrderSide, addIntervalTime, intervalForDays } from '@app/_lib/utils';
 
 import { intervalToDays } from './utils';
 
@@ -219,9 +219,12 @@ export const calculatePerformance = ({
   let initialCapitalDec = new Decimal(initialCapital);
   klineData?.map((kline, index, klineArr) => {
     let candleClosePrice = new Decimal(kline[4]);
+    const candleOpenTime = kline[0];
     const candleCloseTime = kline[6];
     const tradeOnCandle = tradeOrders?.trades.filter(
-      (trade) => +trade.time <= kline[6] && +trade.time >= kline[0],
+      (trade) =>
+        +addIntervalTime(new Date(trade.time), interval).getTime() <= candleCloseTime &&
+        +addIntervalTime(new Date(trade.time), interval).getTime() >= candleOpenTime,
     );
     let previousPosition;
     tradeOnCandle?.forEach((x) => {
@@ -280,7 +283,9 @@ export const calculatePerformance = ({
     }
 
     let priceChange =
-      index > 0 ? candleClosePrice.div(new Decimal(+klineArr[index - 1][4] - 1)) : new Decimal(0);
+      index > 0
+        ? candleClosePrice.div(new Decimal(+klineArr[index - 1][4])).sub(new Decimal(1))
+        : new Decimal(0);
     intervalPriceChanges.push(priceChange);
 
     // Geometric way of calculating unrealized pnl
@@ -334,9 +339,9 @@ export const calculatePerformance = ({
 
   let drawdowns = ariCumulativeUnrealizedPnlInfo.map((currentValue, index) => {
     const maxFromStart = Decimal.max(...ariCumulativeUnrealizedPnlInfo.slice(0, index + 1)); // Slice the array to get the sublist from 0 to index
-    return currentValue.minus(maxFromStart).abs();
+    return currentValue.minus(maxFromStart);
   });
-  let maxDrawdown = Decimal.max(...drawdowns);
+  let maxDrawdown = Decimal.min(...drawdowns).abs();
   let annualizedReturn = mean({ values: ariUnrealizedPnlInfo })
     .mul(365)
     .div(intervalForDays(interval));
@@ -390,7 +395,6 @@ export const transformToClosedTrades = (inputTrades: ITrade[]) => {
   let globalSide: OrderSide | null = null;
 
   if (inputTrades.length === 0) return [];
-
   inputTrades.map((trade, index) => {
     const { quantity, side, price, time } = trade;
 
