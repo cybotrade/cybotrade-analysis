@@ -1,5 +1,7 @@
 'use client';
 
+import { Decimal } from 'decimal.js';
+
 import { Dots } from '@app/_components/shared/Dots';
 import {
   AverageTradesDaysWidget,
@@ -12,29 +14,52 @@ import {
 import { useCarousel } from '@app/_hooks/useCarousel';
 import { CarouselContainer, CarouselContent, CarouselItem } from '@app/_ui/Carousel';
 
-export const DataCarousel = () => {
+type TDataCarouselProps = {
+  data: {
+    netProfit: Decimal;
+    initialCapital: Decimal;
+    winRate: Decimal;
+    bestTrade: Decimal;
+    largestRoi: Decimal;
+    maxDrawdown: Decimal;
+    averageTradesPerDay: number;
+  };
+};
+
+export const DataCarousel = ({
+  data: {
+    netProfit,
+    initialCapital,
+    winRate,
+    bestTrade,
+    largestRoi,
+    averageTradesPerDay,
+    maxDrawdown,
+  },
+}: TDataCarouselProps) => {
   const { setApi, selectedIndex, totalSlides, handleDotButtonClick } = useCarousel();
+
   return (
     <div className="h-fit row-[2]">
       <CarouselContainer setApi={setApi} className="flex flex-col justify-between">
         <CarouselContent className="h-[23rem] max-w-[26.5rem]">
           <CarouselItem className="pl-4">
-            <TotalReturnWidget />
+            <TotalReturnWidget netProfit={netProfit} initialCapital={initialCapital} />
           </CarouselItem>
           <CarouselItem className="pl-4">
-            <WinRateWidget />
+            <WinRateWidget winRate={winRate} />
           </CarouselItem>
           <CarouselItem className="pl-4">
-            <MaxDDWidget />
+            <MaxDDWidget maxDrawdown={maxDrawdown} />
           </CarouselItem>
           <CarouselItem className="pl-4">
-            <BestTradeWidget />
+            <BestTradeWidget bestTrade={bestTrade} />
           </CarouselItem>
           <CarouselItem className="pl-4">
-            <AverageTradesDaysWidget />
-          </CarouselItem>{' '}
+            <AverageTradesDaysWidget averageTradesPerDay={averageTradesPerDay} />
+          </CarouselItem>
           <CarouselItem className="pl-4">
-            <LargestRoiWidget />
+            <LargestRoiWidget largestRoi={largestRoi} />
           </CarouselItem>
         </CarouselContent>
         <Dots

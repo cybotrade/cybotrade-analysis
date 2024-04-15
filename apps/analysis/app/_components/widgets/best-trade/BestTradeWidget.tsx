@@ -1,8 +1,14 @@
+import { Decimal } from 'decimal.js';
+
 import { VertexBackground } from '@app/_assets/icons';
 import { Stat } from '@app/_components/shared/Stat';
 import { Widget } from '@app/_components/shared/Widget';
 
-export const BestTradeWidget = () => {
+type TBestTradeWidgetProps = {
+  bestTrade: Decimal;
+};
+
+export const BestTradeWidget = ({ bestTrade }: TBestTradeWidgetProps) => {
   return (
     <Widget
       className="bg-[#FFFBDB] relative flex flex-col justify-between gap-5"
@@ -13,7 +19,7 @@ export const BestTradeWidget = () => {
       <Stat
         containerClassName="items-left"
         label="Best Trade"
-        content="USDT 121.21241"
+        content={`${bestTrade.greaterThanOrEqualTo(0) ? '+' : '-'}${bestTrade.abs().toFixed(2)}`}
         labelClassName="text-xl order-last text-[#DBD6AC]"
         contentClassName="text-4xl"
       />

@@ -1,3 +1,5 @@
+import { hoursToMilliseconds, millisecondsToHours } from 'date-fns';
+
 export function capitalize(input: string) {
   if (input && typeof input === 'string') {
     return input.charAt(0).toUpperCase() + input.slice(1);
@@ -35,4 +37,12 @@ export function getPercentile(series: number[], percentile: number) {
 export function random_hex_color_code() {
   const n = (Math.random() * 0xfffff * 1000000).toString(16);
   return '#' + n.slice(0, 6);
+}
+
+export function daysToHours(days: number) {
+  const hoursInDay = 24;
+  const millisecondsInDay = hoursToMilliseconds(hoursInDay);
+  const totalMilliseconds = days * millisecondsInDay;
+  const totalHours = millisecondsToHours(totalMilliseconds);
+  return totalHours;
 }

@@ -1,15 +1,15 @@
-import { ActionHeader } from '@app/_features/dashboard/right/ActionHeader';
-import { DataCarousel } from '@app/_features/dashboard/right/DataCarousel';
-import { DataDetails } from '@app/_features/dashboard/right/DataDetails';
+'use client';
+
+import { RightColumnContent } from '@app/_features/dashboard/right/RightColumnContent';
+import { useBacktestData } from '@app/_providers/backtest';
 
 const DashboardRightSide = () => {
-  return (
-    <div className="col-[2] grid grid-rows-[5%_auto_min-content] w-full h-full gap-3 rounded-lg bg-[#FFFFFF] border border-[#E1D9D6] px-5 py-3">
-      <ActionHeader className="mb-3" />
-      <DataCarousel />
-      <DataDetails />
-    </div>
-  );
+  const { backtests, selectedPermutationId } = useBacktestData();
+  const performance = backtests.get(selectedPermutationId)?.performance.values().next().value;
+
+  if (backtests.size === 0) throw new Error('Invalid Visit');
+
+  return <RightColumnContent key={selectedPermutationId} performance={performance} />;
 };
 
 export default DashboardRightSide;

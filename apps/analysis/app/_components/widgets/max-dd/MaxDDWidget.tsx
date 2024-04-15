@@ -1,8 +1,14 @@
+import { Decimal } from 'decimal.js';
+
 import { TrailBackground } from '@app/_assets/icons';
 import { Stat } from '@app/_components/shared/Stat';
 import { Widget } from '@app/_components/shared/Widget';
 
-export const MaxDDWidget = () => {
+type TMaxDDWidgetProps = {
+  maxDrawdown: Decimal;
+};
+
+export const MaxDDWidget = ({ maxDrawdown }: TMaxDDWidgetProps) => {
   return (
     <Widget
       className="bg-gradient-to-b from-[#DDFFDC] to-80% to-[#FBFFFB] relative flex flex-col justify-between gap-5"
@@ -13,7 +19,7 @@ export const MaxDDWidget = () => {
       <Stat
         containerClassName="h-full items-left justify-between"
         label="Max DD."
-        content="5.11%"
+        content={`${maxDrawdown.mul(100).toFixed(2)}%`}
         labelClassName="text-2xl"
         contentClassName="text-5xl text-right"
       />

@@ -1,8 +1,14 @@
+import { Decimal } from 'decimal.js';
+
 import { BarsBackground } from '@app/_assets/icons';
 import { Stat } from '@app/_components/shared/Stat';
 import { Widget } from '@app/_components/shared/Widget';
 
-export const WinRateWidget = () => {
+type TWinRateWidgetProps = {
+  winRate: Decimal;
+};
+
+export const WinRateWidget = ({ winRate }: TWinRateWidgetProps) => {
   return (
     <Widget
       className="bg-gradient-to-b from-[#FFE5E4]  to-transparent relative flex flex-col justify-between gap-5"
@@ -13,7 +19,10 @@ export const WinRateWidget = () => {
       <Stat
         containerClassName="h-full items-left justify-between"
         label="Win Rate"
-        content="+34.5%"
+        content={`${winRate.greaterThanOrEqualTo(0) ? '+' : '-'}${winRate
+          .abs()
+          .mul(100)
+          .toFixed(2)}%`}
         labelClassName="text-2xl"
         contentClassName="text-5xl"
       />
