@@ -1,4 +1,5 @@
 import { type Kline } from 'binance';
+import { differenceInMilliseconds, millisecondsToHours } from 'date-fns';
 import { Decimal } from 'decimal.js';
 import { UTCTimestamp } from 'lightweight-charts';
 
@@ -40,6 +41,7 @@ export type PerformanceData = {
   smallestRoi: Decimal;
 
   averageTradesPerDay: number;
+  totalTradesDuration: number;
   annualizedReturn: Decimal;
   equityData: IEquityData[];
   intervalPriceChanges: Decimal[];
@@ -327,6 +329,7 @@ export const calculatePerformance = ({
       (+tradeOrders!.trades[tradeOrders!.trades.length - 1].time - +tradeOrders!.trades[0].time) /
         (1000 * 3600 * 24),
     );
+  let totalTradesDuration = calculateTotalTradesDuration(tradeOrders!.trades);
   let bestTradePnl = pnlList.length > 0 ? Decimal.max(...pnlList) : new Decimal(0);
   let worstTradePnl = pnlList.length > 0 ? Decimal.min(...pnlList) : new Decimal(0);
   let winningTrades = pnlList.filter((pnl) => pnl.greaterThan(0));
@@ -348,7 +351,7 @@ export const calculatePerformance = ({
   let performance = {
     // to calculate average total trade per day
     averageTradesPerDay: averageTradesPerDay,
-
+    totalTradesDuration,
     finalBalance,
     initialCapital: new Decimal(initialCapital),
     totalTrades: tradeOrders?.trades.length ?? 0,
@@ -472,4 +475,19 @@ export const calculateCalmarRatio = ({
   annualizedReturn: Decimal;
 }) => {
   return annualizedReturn.div(maxDrawdown);
+};
+
+export const calculateTotalTradesDuration = (trades: ITrade[]) => {
+  if (trades.length === 0) {
+    return 0;
+  }
+  const totalMilliseconds = trades.slice(1).reduce((total, trade, index) => {
+    const startTimestamp = trades[index].time;
+    if (+trade.time !== +startTimestamp) {
+      const duration = +trade.time - +startTimestamp;
+      return total + duration;
+    }
+    return total;
+  }, 0);
+  return millisecondsToHours(totalMilliseconds);
 };

@@ -1,9 +1,15 @@
+import { Decimal } from 'decimal.js';
+
 import { CircularBackground, VertexBackground } from '@app/_assets/icons';
 import { Stat } from '@app/_components/shared/Stat';
 import { Text } from '@app/_components/shared/Text';
 import { Widget } from '@app/_components/shared/Widget';
 
-export const LargestRoiWidget = () => {
+type TLargestRoiWidgetProps = {
+  largestRoi: Decimal;
+};
+
+export const LargestRoiWidget = ({ largestRoi }: TLargestRoiWidgetProps) => {
   return (
     <Widget
       className="bg-[#E4EFFF] relative flex flex-col justify-between gap-5"
@@ -20,7 +26,10 @@ export const LargestRoiWidget = () => {
       />
       <Text
         className="font-sora text-5xl absolute bottom-20 left-1/2 -translate-x-1/2"
-        content="56%"
+        content={`${largestRoi.greaterThanOrEqualTo(0) ? '+' : '-'}${largestRoi
+          .abs()
+          .mul(100)
+          .toFixed(2)}%`}
       />
     </Widget>
   );

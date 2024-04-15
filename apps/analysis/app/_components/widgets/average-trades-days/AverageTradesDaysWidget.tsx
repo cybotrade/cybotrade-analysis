@@ -2,7 +2,11 @@ import { CircleTileBackground, VertexBackground } from '@app/_assets/icons';
 import { Stat } from '@app/_components/shared/Stat';
 import { Widget } from '@app/_components/shared/Widget';
 
-export const AverageTradesDaysWidget = () => {
+type TAverageTradesDaysWidgetProps = {
+  averageTradesPerDay: number;
+};
+
+export const AverageTradesDaysWidget = ({ averageTradesPerDay }: TAverageTradesDaysWidgetProps) => {
   return (
     <Widget
       className="bg-gradient-to-b from-[#FBECFF] to-transparent relative flex flex-col justify-between gap-5"
@@ -13,7 +17,7 @@ export const AverageTradesDaysWidget = () => {
       <Stat
         containerClassName="items-left"
         label="Average  Trades / Days"
-        content="12"
+        content={averageTradesPerDay.toFixed(2)}
         labelClassName="text-xl order-last text-[#7E6F82]"
         contentClassName="text-4xl"
       />

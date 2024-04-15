@@ -127,21 +127,19 @@ export const CandlestickChart = ({ data, trades }: TCandlestickChartProps) => {
     } else {
       chartTooltipRef.current.style.display = 'flex';
       chartTooltipRef.current.style.flexDirection = 'column';
-
       const y = point.y;
+
       let left = point.x + tooltipLayout.current.margin;
-      if (left > chartContainerRef.current.clientWidth - tooltipLayout.current.width) {
-        left = point.x - tooltipLayout.current.margin - tooltipLayout.current.width;
-      }
-      if (left + 70 + chartTooltipRef.current.clientWidth > chartContainerRef.current.clientWidth) {
+      let top = y + tooltipLayout.current.margin;
+
+      if (left + chartTooltipRef.current.clientWidth > chartContainerRef.current.clientWidth) {
         left = left - chartTooltipRef.current.clientWidth - 12 - 20;
       }
 
-      let top = y + tooltipLayout.current.margin;
       if (top > chartContainerRef.current.clientHeight - tooltipLayout.current.height) {
         top = y - tooltipLayout.current.height - tooltipLayout.current.margin;
       }
-      chartTooltipRef.current.style.left = `${left + 70 || 0}px`;
+      chartTooltipRef.current.style.left = `${left || 0}px`;
       chartTooltipRef.current.style.top = `${top - 70 || 0}px`;
 
       chartTooltipRef.current.innerHTML = `<span>${Intl.DateTimeFormat('en-MY', {
@@ -197,7 +195,7 @@ export const CandlestickChart = ({ data, trades }: TCandlestickChartProps) => {
     return () => {
       chart.current?.remove();
     };
-  }, []);
+  }, [onCrosshairMoved]);
 
   return (
     <div className="h-full">
