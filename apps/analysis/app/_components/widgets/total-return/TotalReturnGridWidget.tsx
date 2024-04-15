@@ -4,7 +4,9 @@ import { WaveLinesBackground } from '@app/_assets/icons';
 import { Stat } from '@app/_components/shared/Stat';
 import { Widget } from '@app/_components/shared/Widget';
 
-export const TotalReturnGridWidget = () => {
+type TTotalReturnGridWidgetProps = { totalReturn: string };
+
+export const TotalReturnGridWidget = ({ totalReturn }: TTotalReturnGridWidgetProps) => {
   return (
     <Widget
       className="bg-[#FFF8EF] p-8 rounded-2xl relative flex flex-col justify-between h-full gap-2"
@@ -16,7 +18,7 @@ export const TotalReturnGridWidget = () => {
         containerClassName="gap-1"
         label="Total Return on Account $"
         labelClassName="text-md 3xl:text-xl"
-        content="+USDT 2731.03"
+        content={totalReturn}
         contentClassName="text-2xl 3xl:text-3xl font-bold text-[#009C3E]"
       />
     </Widget>

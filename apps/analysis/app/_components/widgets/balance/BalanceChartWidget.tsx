@@ -20,7 +20,8 @@ const dummyChartData = {
   label: ['1 Apr 23', '', '', '', 'JUL', '', '', '', '', '', '', 'SEP', '', '', '', '1 Jan 24'],
   data: [0.5, 0.55, 0.6, 0.7, 0.8, 0.85, 0.9, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.7, 0.75, 0.8],
 };
-export const BalanceChartWidget = () => {
+type TBalanceChartWidgetProps = { startingBalance: string; finalBalance: string };
+export const BalanceChartWidget = ({ startingBalance, finalBalance }: TBalanceChartWidgetProps) => {
   const data: ChartData<'bar'> = useMemo(
     () => ({
       labels: dummyChartData.label,
@@ -101,14 +102,14 @@ export const BalanceChartWidget = () => {
         <Stat
           containerClassName="float-left"
           label="Starting Balance"
-          content="USDT 10000"
+          content={startingBalance}
           labelClassName="text-[#9A9A9A] order-last"
           contentClassName="text-2xl text-primary font-bold"
         />
         <Stat
           containerClassName="float-right text-right"
           label="Final Balance"
-          content="USDT 12731.03"
+          content={finalBalance}
           labelClassName="text-[#9A9A9A] order-last"
           contentClassName="text-2xl text-primary font-bold"
         />
