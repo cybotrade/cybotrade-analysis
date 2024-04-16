@@ -23,6 +23,7 @@ export const PermutationSelect = ({ options, onOptionSelected }: TPermutationSel
   return (
     <Select
       open={open}
+      value={selectedOption}
       onOpenChange={setOpen}
       onValueChange={(option) => {
         setSelectedOption(option);
@@ -33,7 +34,7 @@ export const PermutationSelect = ({ options, onOptionSelected }: TPermutationSel
         className="text-black font-semibold dark:text-white w-fit focus:ring-0 data-[state=open]:border-primary"
         hideIcon
       >
-        <SelectValue placeholder="PERMUTATIONS">PERMUTATIONS</SelectValue>
+        <SelectValue placeholder="PERMUTATIONS">{selectedOption}</SelectValue>
         <SelectIcon asChild className="h-5 w-5 ml-3">
           {selectedOption ? (
             <button
@@ -53,7 +54,7 @@ export const PermutationSelect = ({ options, onOptionSelected }: TPermutationSel
           )}
         </SelectIcon>
       </SelectTrigger>
-      <SelectContent side="top" className="bg-[#FFFAF2] data-[state=open]:border-primary p-0">
+      <SelectContent side="top" className="bg-[#FFFAF2] data-[state=open]:border-primary p-0 h-32">
         {options.map(({ label, value }) => (
           <SelectItem
             key={value}

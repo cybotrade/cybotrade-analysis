@@ -21,8 +21,8 @@ export const DashboardHeader = () => {
       })),
     [],
   );
-
   if (permutationOptions.length === 0) throw new Error('No Permutation');
+
   return (
     <div className="font-sora flex w-full h-16 min-h-16 relative gap-2">
       <div className="relative rounded-xl w-full h-full bg-[#FFFFFF] border border-[#E1D9D6] p-4 flex justify-between items-center">
