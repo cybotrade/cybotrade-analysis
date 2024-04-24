@@ -1,4 +1,4 @@
-# Cybotrade Analysis (Unsecured)
+# Cybotrade Analysis
 
 This is an official starter Turborepo. 
 
