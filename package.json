@@ -5,6 +5,7 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
+    "lint:fix": "eslint --fix",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "prune:dist": "find . -name 'dist' -type d -prune -exec rm -rf '{}' +",
     "prune:node_modules": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +"
