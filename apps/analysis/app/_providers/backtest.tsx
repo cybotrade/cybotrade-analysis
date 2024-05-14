@@ -1,10 +1,20 @@
 'use client';
 
-import { PropsWithChildren, createContext, useContext, useMemo, useReducer, useState } from 'react';
+import { data } from 'autoprefixer';
+import {
+  PropsWithChildren,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState,
+} from 'react';
 
 import { IClosedTrade, IClosedTradeProfit, ITrade } from '@app/(routes)/(route)/type';
 import { Loading } from '@app/_components/loading';
 import { useBacktestWorker } from '@app/_hooks/useBacktestWorker';
+import { usePlotWorker } from '@app/_hooks/usePlotWorker';
 import { PerformanceData } from '@app/_lib/calculation';
 import { useFileData } from '@app/_providers/file';
 
@@ -17,17 +27,23 @@ interface ITopic {
 }
 
 export interface IBacktest {
-  permutationId: string;
-  trades: Map<string, ITrade[]>;
-  closedTrades: Map<string, IClosedTrade[]>;
-  tradesWithProfit: Map<string, IClosedTradeProfit[]>;
-  performance: Map<string, PerformanceData>;
+  trades: ITrade[];
+  closedTrades: IClosedTrade[];
+  tradesWithProfit: IClosedTradeProfit[];
+  performance: PerformanceData;
+}
+
+export interface IPlot {
+  id: string;
+  sharpeRatio: number;
 }
 
 export interface IBacktestState {
   topics: ITopic[];
   initialCapital: number;
+  permutationId: string;
   backtests: Map<string, IBacktest>;
+  plot?: IPlot[];
   startTime: number;
   endTime: number;
 }
@@ -37,12 +53,17 @@ interface IBacktestAPI {
 }
 
 const BacktestDataContext = createContext<
-  (IBacktestState & { selectedPermutationId: string }) | null
+  | (IBacktestState & {
+      processing: boolean;
+    })
+  | null
 >(null);
 const BacktestAPIContext = createContext<IBacktestAPI>({
   onPermutationSelect: () => {},
 });
-export type TActions = { type: 'SET_DATA'; payload: IBacktestState };
+export type TActions =
+  | { type: 'SET_DATA'; payload: IBacktestState }
+  | { type: 'SET_PLOT'; payload: IPlot[] };
 
 const BacktestReducer = (state: IBacktestState, action: TActions): IBacktestState => {
   switch (action.type) {
@@ -51,37 +72,51 @@ const BacktestReducer = (state: IBacktestState, action: TActions): IBacktestStat
         ...state,
         ...action.payload,
       };
+    case 'SET_PLOT':
+      return {
+        ...state,
+        plot: action.payload,
+      };
   }
 };
 export const BacktestDataProvider = ({ children }: PropsWithChildren) => {
-  const { data: fileData } = useFileData();
+  const {
+    data: { permutations, initialCapital, topics, startTime, endTime },
+  } = useFileData();
   const [state, dispatch] = useReducer(BacktestReducer, {} as IBacktestState);
-  const [permutationId, setPermutationId] = useState<string>('');
-  const { processing } = useBacktestWorker(fileData, {
-    onProcessSuccess: (result) => {
-      const parsedJson = JSON.parse(result);
-      const backtestsMap = new Map(parsedJson.backtests as [string, IBacktest][]);
+  const [permutationId, setPermutationId] = useState<string>(permutations.keys().next().value);
+  const workerMessage = useMemo(
+    () => ({
+      topics,
+      initialCapital,
+      permutation: [...permutations.entries()]
+        .filter(([key, value]) => key === permutationId)
+        .flat(),
+      startTime,
+      endTime,
+    }),
+    [permutationId],
+  );
+  usePlotWorker(topics, permutations, {
+    onProcessSuccess: (data) => {
+      dispatch({ type: 'SET_PLOT', payload: data });
+    },
+  });
+  const { processing } = useBacktestWorker(workerMessage, {
+    onProcessSuccess: (data) => {
+      let backtests = new Map<string, IBacktest>(JSON.parse(data.result));
 
-      for (const [id, { trades, closedTrades, tradesWithProfit, performance }] of backtestsMap) {
-        backtestsMap.set(id, {
-          permutationId: id,
-          trades: new Map(trades),
-          closedTrades: new Map(closedTrades),
-          tradesWithProfit: new Map(tradesWithProfit),
-          performance: new Map(performance),
-        });
-      }
       dispatch({
         type: 'SET_DATA',
         payload: {
-          topics: parsedJson.topics,
-          initialCapital: parsedJson.initial_capital,
-          backtests: backtestsMap,
-          startTime: parsedJson.start_time,
-          endTime: parsedJson.end_time,
+          topics,
+          initialCapital,
+          permutationId,
+          backtests,
+          startTime: startTime,
+          endTime: endTime,
         },
       });
-      setPermutationId(backtestsMap.keys().next().value);
     },
   });
 
@@ -94,14 +129,8 @@ export const BacktestDataProvider = ({ children }: PropsWithChildren) => {
   }, []);
   return (
     <BacktestAPIContext.Provider value={api}>
-      <BacktestDataContext.Provider value={{ ...state, selectedPermutationId: permutationId }}>
-        {processing ? (
-          <div className="flex justify-center items-center h-full">
-            <Loading description="Loading ..." />
-          </div>
-        ) : (
-          children
-        )}
+      <BacktestDataContext.Provider value={{ ...state, processing }}>
+        {children}
       </BacktestDataContext.Provider>
     </BacktestAPIContext.Provider>
   );

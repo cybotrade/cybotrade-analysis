@@ -3,16 +3,24 @@
 import React from 'react';
 
 import { ResultBreakdown } from '@app/_features/dashboard/left/content/result-breakdown';
+import { NoRecord } from '@app/_features/dashboard/status/no-record';
+import { Processing } from '@app/_features/dashboard/status/processing';
 import { PerformanceData } from '@app/_lib/calculation';
 import { useBacktestData } from '@app/_providers/backtest';
 
 const ResultBreakdownPage = () => {
-  const { backtests, selectedPermutationId } = useBacktestData();
-  const performance = backtests.get(selectedPermutationId)?.performance.values().next().value;
+  const { processing, backtests, permutationId } = useBacktestData();
 
-  if (backtests.size === 0) throw new Error('Invalid Visit');
-
-  return <ResultBreakdown key={selectedPermutationId} performance={performance} />;
+  return processing ? (
+    <Processing />
+  ) : backtests.size === 0 ? (
+    <NoRecord />
+  ) : (
+    <ResultBreakdown
+      key={permutationId}
+      performance={backtests.values().next().value.performance}
+    />
+  );
 };
 
 export default ResultBreakdownPage;

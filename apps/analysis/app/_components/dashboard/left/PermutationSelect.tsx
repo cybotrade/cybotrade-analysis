@@ -12,7 +12,7 @@ import {
 } from '@app/_ui/Select';
 
 type TPermutationSelectProps = {
-  options: { label: string; value: string }[];
+  options: string[];
   onOptionSelected: (option: string) => void;
 };
 
@@ -37,16 +37,16 @@ export const PermutationSelect = ({ options, onOptionSelected }: TPermutationSel
         <SelectValue placeholder="PERMUTATIONS">{selectedOption}</SelectValue>
         <SelectIcon asChild className="h-5 w-5 ml-3">
           {selectedOption ? (
-            <button
+            <i
               className="text-primary text-xl z-50  bg-neutral-50 dark:bg-[#392910]"
               onPointerDown={(e) => {
                 e.stopPropagation();
-                setSelectedOption(options[0].value);
-                onOptionSelected(options[0].value);
+                setSelectedOption(options[0]);
+                onOptionSelected(options[0]);
               }}
             >
               <X />
-            </button>
+            </i>
           ) : open ? (
             <ChevronUp />
           ) : (
@@ -55,22 +55,22 @@ export const PermutationSelect = ({ options, onOptionSelected }: TPermutationSel
         </SelectIcon>
       </SelectTrigger>
       <SelectContent side="top" className="bg-[#FFFAF2] data-[state=open]:border-primary p-0 h-32">
-        {options.map(({ label, value }) => (
+        {options.map((option) => (
           <SelectItem
-            key={value}
-            value={value}
+            key={option}
+            value={option}
             className="cursor-pointer py-3 items-center data-[highlighted]:bg-[#FEECD4]"
             hideCheck
           >
             <span
               className={cn(
                 'absolute left-2 top-1/2 -translate-y-1/2 flex h-4 w-4 items-center justify-center rounded-full',
-                value === selectedOption ? 'bg-primary' : 'border border-[#DFDFDF]',
+                option === selectedOption ? 'bg-primary' : 'border border-[#DFDFDF]',
               )}
             >
-              {value === selectedOption && <Check className="w-3 h-3 text-white" />}
+              {option === selectedOption && <Check className="w-3 h-3 text-white" />}
             </span>
-            {label}
+            {option}
           </SelectItem>
         ))}
       </SelectContent>

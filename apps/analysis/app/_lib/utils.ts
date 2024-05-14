@@ -256,3 +256,10 @@ export const addIntervalTime = (date: Date, interval: Interval) => {
   }
   return newDate;
 };
+
+export function replaceEmptyKeys(
+  obj: Record<string, string>,
+  defaultKey: string = 'default',
+): [string, string][] {
+  return Object.entries(obj).map(([k, v]) => [k === '' ? defaultKey : k, v]);
+}

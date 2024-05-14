@@ -1,15 +1,31 @@
 'use client';
 
+import React, { PropsWithChildren } from 'react';
+
 import { RightColumnContent } from '@app/_features/dashboard/right/RightColumnContent';
 import { useBacktestData } from '@app/_providers/backtest';
 
-const DashboardRightSide = () => {
-  const { backtests, selectedPermutationId } = useBacktestData();
-  const performance = backtests.get(selectedPermutationId)?.performance.values().next().value;
+type TDashboardRightSideProps = {
+  loading: React.ReactNode;
+  error: React.ReactNode;
+};
 
-  if (backtests.size === 0) throw new Error('Invalid Visit');
-
-  return <RightColumnContent key={selectedPermutationId} performance={performance} />;
+const DashboardRightSide = ({ loading, error }: TDashboardRightSideProps) => {
+  const { backtests, permutationId, processing } = useBacktestData();
+  return (
+    <div className="col-[2] grid grid-rows-[5%_auto_min-content] w-full h-full gap-3 rounded-lg bg-[#FFFFFF] border border-[#E1D9D6] px-5 py-3">
+      {processing ? (
+        loading
+      ) : backtests.size === 0 ? (
+        error
+      ) : (
+        <RightColumnContent
+          key={permutationId}
+          performance={backtests.values().next().value.performance}
+        />
+      )}
+    </div>
+  );
 };
 
 export default DashboardRightSide;

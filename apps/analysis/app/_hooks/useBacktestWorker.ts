@@ -2,41 +2,47 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Dispatch, useEffect, useRef, useState } from 'react';
 
 import { IBacktest, TActions } from '@app/_providers/backtest';
-import { IFileContent } from '@app/_providers/file';
+import { IFileContent, ITopic } from '@app/_providers/file';
 
 export function useBacktestWorker(
-  fileData: IFileContent | null,
+  message: {
+    topics: ITopic[];
+    initialCapital: number;
+    permutation: string[];
+    startTime: number;
+    endTime: number;
+  },
   callbacks: {
-    onProcessSuccess: (result: string) => void;
+    onProcessSuccess: (data: any) => void;
   },
 ) {
   const queryClient = useQueryClient();
-  const worker = useRef<Worker>();
   const [processing, setProcessing] = useState(true);
 
   useEffect(() => {
-    const kline = queryClient.getQueriesData({ queryKey: ['candles'] });
-    worker.current = new Worker(
+    setProcessing(true);
+    const worker = new Worker(
       new URL('@app/_workers/transformBacktest.worker.js', import.meta.url),
     );
-
-    worker.current.postMessage({ kline, fileData });
-    worker.current.addEventListener('message', (event) => {
-      const result = new Uint16Array(event.data).reduce(
-        (data, byte) => data + String.fromCharCode(byte),
-        '',
-      );
-      callbacks.onProcessSuccess(result);
-      setProcessing(false);
-    });
-
-    worker.current.addEventListener('error', (event) => {
+    
+    try {
+      const kline = queryClient.getQueriesData({ queryKey: ['candles'] });
+      worker.postMessage({ kline, message });
+      worker.addEventListener('message', (event) => {
+        callbacks.onProcessSuccess(event.data);
+        setProcessing(false);
+      });
+      worker.addEventListener('error', (event) => {
+        throw new Error('Process Failed');
+      });
+    } catch (e) {
       throw new Error('Process Failed');
-    });
+    }
+
     return () => {
-      worker.current?.terminate();
+      worker.terminate();
     };
-  }, []);
+  }, [message]);
 
   return { processing };
 }

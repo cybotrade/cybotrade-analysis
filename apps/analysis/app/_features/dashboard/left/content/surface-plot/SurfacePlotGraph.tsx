@@ -1,24 +1,10 @@
 import { Decimal } from 'decimal.js';
-import { Axis3D, Info, PencilIcon } from 'lucide-react';
 import Plotly from 'plotly.js';
-import { ChangeEvent, Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Pair } from '@app/(routes)/(route)/_components/BackTestResults';
 import { PlotAction } from '@app/_features/dashboard/left/content/surface-plot/PlotAction';
 import { useDebounce } from '@app/_hooks/useDebounce';
-import { PerformanceData } from '@app/_lib/calculation';
-import { IBacktest } from '@app/_providers/backtest';
-import { Input } from '@app/_ui/Input';
-import { Label } from '@app/_ui/Label';
-import {
-  Menubar,
-  MenubarContent,
-  MenubarMenu,
-  MenubarSeparator,
-  MenubarTrigger,
-} from '@app/_ui/Menubar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/_ui/Select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@app/_ui/Tooltip';
+import { IPlot } from '@app/_providers/backtest';
 
 export type TPair = {
   key: string;
@@ -37,9 +23,9 @@ type TCoordinate = {
 };
 
 export type TSurfacePlotGraphProps = {
-  backtests: Map<string, IBacktest>;
+  plot: IPlot[];
 };
-export const SurfacePlotGraph = ({ backtests }: TSurfacePlotGraphProps) => {
+export const SurfacePlotGraph = ({ plot }: TSurfacePlotGraphProps) => {
   const surfacePlotContainerRef = useRef<HTMLDivElement | null>(null);
   const [permutations, setPermutations] = useState<TPermutation[]>([]);
   const [debouncedDelimitor, delimitor, setDelimitor] = useDebounce<string>('=', 500);
@@ -51,11 +37,11 @@ export const SurfacePlotGraph = ({ backtests }: TSurfacePlotGraphProps) => {
   });
 
   const searchPermutations = useCallback(() => {
-    const data = Array.from(backtests.entries())
-      .map(([key, value], index, arr) => {
-        if (key.indexOf(debouncedDelimitor) === -1 || key.indexOf(debouncedSeparator) === -1)
+    const data = plot
+      .map(({ id, sharpeRatio }, index, arr) => {
+        if (id.indexOf(debouncedDelimitor) === -1 || id.indexOf(debouncedSeparator) === -1)
           return null;
-        let pairs = key.split(debouncedSeparator).map((pair) => {
+        let pairs = id.split(debouncedSeparator).map((pair) => {
           if (pair.indexOf(debouncedDelimitor) === -1) return { key: '', value: 0 };
           const [key, value] = pair.split(debouncedDelimitor);
           return { key: key.trim(), value: +value };
@@ -63,9 +49,7 @@ export const SurfacePlotGraph = ({ backtests }: TSurfacePlotGraphProps) => {
 
         return {
           pairs,
-          sharpeRatio: new Decimal(
-            value.performance.values().next().value.sharpeRatio,
-          ).toDecimalPlaces(2),
+          sharpeRatio: new Decimal(sharpeRatio).toDecimalPlaces(2),
         };
       })
       .filter((d): d is TPermutation => !!d && d.pairs.length > 1);
@@ -201,7 +185,7 @@ export const SurfacePlotGraph = ({ backtests }: TSurfacePlotGraphProps) => {
   return (
     <Fragment>
       <div className="absolute w-full h-full bg-gradient-to-b from-10% from-[#FFFFFF] to-[#c6e0ff] rounded-3xl border border-[#DFDFDF]" />
-      {backtests.size === 0 || coordinate.length === 0 ? (
+      {plot.length === 0 || coordinate.length === 0 ? (
         <div className="absolute flex justify-center items-center w-full h-full font-sans text-2xl">
           No Records
         </div>

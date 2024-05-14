@@ -23,7 +23,7 @@ import { debounce } from '@app/_utils/helper';
 
 type TCandlestickChartProps = {
   data: InfiniteData<Page> | undefined;
-  trades: Map<string, ITrade[]>;
+  trades: ITrade[];
 };
 
 export const CandlestickChart = ({ data, trades }: TCandlestickChartProps) => {
@@ -171,17 +171,14 @@ export const CandlestickChart = ({ data, trades }: TCandlestickChartProps) => {
         close: parseFloat(close as string),
       }),
     );
-    const markers = trades
-      .values()
-      .next()
-      .value.map(({ price, quantity, side, time }: ITrade) => ({
-        time: (+time / 1000) as UTCTimestamp,
-        position: side === 'sell' ? 'belowBar' : 'aboveBar',
-        color: side === 'sell' ? '#ff4976' : '#4bffb5',
-        shape: side === 'sell' ? 'arrowDown' : 'arrowUp',
-        text: `${side.toUpperCase()} ${quantity}\n${price}`,
-        id: `${new Date(time).getTime()}`,
-      })) as SeriesMarker<Time>[];
+    const markers = trades.map(({ price, quantity, side, time }: ITrade) => ({
+      time: (+time / 1000) as UTCTimestamp,
+      position: side === 'sell' ? 'belowBar' : 'aboveBar',
+      color: side === 'sell' ? '#ff4976' : '#4bffb5',
+      shape: side === 'sell' ? 'arrowDown' : 'arrowUp',
+      text: `${side.toUpperCase()} ${quantity}\n${price}`,
+      id: `${new Date(time).getTime()}`,
+    })) as SeriesMarker<Time>[];
 
     series.current.setData(candleStickData as CandlestickData[]);
     series.current.setMarkers(markers);

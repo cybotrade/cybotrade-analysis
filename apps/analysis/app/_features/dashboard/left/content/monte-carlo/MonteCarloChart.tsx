@@ -38,7 +38,7 @@ type TSimulationData = {
 
 type TMonteCarloChartProps = {
   initialCapital: number;
-  tradesWithProfit: Map<string, IClosedTradeProfit[]>;
+  tradesWithProfit: IClosedTradeProfit[];
 };
 
 export const MonteCarloChart = ({ initialCapital, tradesWithProfit }: TMonteCarloChartProps) => {
@@ -63,9 +63,9 @@ export const MonteCarloChart = ({ initialCapital, tradesWithProfit }: TMonteCarl
   const [simulationRuns, setSimulationRuns] = useState<TSimulationData[]>([]);
   const randomBorderColor = useRef(random_hex_color_code());
   const runSimulation = useCallback((numSimulations: number) => {
-    if (tradesWithProfit.size === 0) return;
+    if (tradesWithProfit.length === 0) return;
 
-    const trades = tradesWithProfit.values().next().value as IClosedTradeProfit[];
+    const trades = tradesWithProfit;
     const result_index = Array.from({ length: trades.length }, (_, index) => index);
     const numberOfTrades = Array.from({ length: trades.length }, (_, index) => index);
     const sim_balance_graph: number[][] = [];

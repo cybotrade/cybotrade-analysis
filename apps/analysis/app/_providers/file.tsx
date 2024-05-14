@@ -3,9 +3,9 @@
 import { PropsWithChildren, createContext, useContext, useMemo, useReducer } from 'react';
 
 import { useNewKline } from '@app/_hooks/useNewKline';
-import { Interval } from '@app/_lib/utils';
+import { replaceEmptyKeys } from '@app/_lib/utils';
 
-interface ITopic {
+export interface ITopic {
   category: string;
   exchange: string;
   interval: string;
@@ -18,18 +18,22 @@ export interface IFileContent {
   content: {
     candle_topics: string[];
     initial_capital: number;
-    trades: {
-      [permutations: string]: string;
-    };
+    trades: Record<string, string>;
     start_time: number;
     end_time: number;
     version: string;
   };
 }
 
-interface IFileDataState {
-  data: IFileContent | null;
-  topics: ITopic[];
+export interface IFileDataState {
+  data: {
+    file: File;
+    topics: ITopic[];
+    permutations: Map<string, string>;
+    initialCapital: number;
+    startTime: number;
+    endTime: number;
+  };
   fetchedPercentage: number;
   error: string;
 }
@@ -39,7 +43,12 @@ interface IFileAPI {
 }
 
 export type TActions =
-  | { type: 'ADD_FILE'; payload: { data: IFileContent; topics: ITopic[] } }
+  | {
+      type: 'ADD_FILE';
+      payload: {
+        data: IFileContent;
+      };
+    }
   | { type: 'FETCHING_KLINE'; payload: number }
   | { type: 'FETCH_FAILED'; payload: string };
 
@@ -50,10 +59,32 @@ const FileAPIContext = createContext<IFileAPI>({
 const FileReducer = (state: IFileDataState, action: TActions): IFileDataState => {
   switch (action.type) {
     case 'ADD_FILE':
+      const { file, content } = action.payload.data;
+      const splitedStrings = content.candle_topics.map((t) => t.split('|'));
+      const topics: ITopic[] = splitedStrings.map((topic) => {
+        const [category, interval, symbol, exchange] = topic[0].split('-');
+        const newSymbol = symbol.split('/').join('');
+        const type = topic[1];
+        return {
+          category,
+          interval,
+          symbol: newSymbol,
+          type,
+          exchange,
+        };
+      });
+
       return {
         ...state,
-        data: action.payload.data,
-        topics: action.payload.topics,
+        data: {
+          ...state.data,
+          file,
+          topics,
+          initialCapital: content.initial_capital,
+          permutations: new Map(replaceEmptyKeys(content.trades, 'default=0,default=0')),
+          startTime: content.start_time,
+          endTime: content.end_time,
+        },
       };
     case 'FETCHING_KLINE':
       return {
@@ -63,52 +94,44 @@ const FileReducer = (state: IFileDataState, action: TActions): IFileDataState =>
     case 'FETCH_FAILED':
       return {
         ...state,
-        data: null,
         error: action.payload,
       };
   }
 };
 export const FileDataProvider = ({ children }: PropsWithChildren) => {
   const [state, dispatch] = useReducer(FileReducer, { fetchedPercentage: 0 } as IFileDataState);
-  const { setParams } = useNewKline(dispatch);
 
-  const transformedTopics = (candle_topics: string[]) => {
-    const splitedStrings = candle_topics.map((t) => t.split('|'));
-    const topics: ITopic[] = splitedStrings.map((topic) => {
-      const [category, interval, symbol, exchange] = topic[0].split('-');
-      const newSymbol = symbol.split('/').join('');
-      const type = topic[1];
-      return {
-        category,
-        interval,
-        symbol: newSymbol,
-        type,
-        exchange,
-      };
-    });
-    return topics;
-  };
+  useNewKline(state, {
+    onFetchingKline: (progress) => {
+      dispatch({
+        type: 'FETCHING_KLINE',
+        payload: progress,
+      });
+    },
+    onFetchFailed: (error) => {
+      dispatch({
+        type: 'FETCH_FAILED',
+        payload: error,
+      });
+    },
+  });
+
   const api = useMemo(() => {
     const onFileChange = (file: File, content: Object) => {
-      const { candle_topics, start_time, end_time } = content as IFileContent['content'];
-      const topics = transformedTopics(candle_topics);
       dispatch({
         type: 'ADD_FILE',
         payload: {
-          data: { file, content: content as IFileContent['content'] },
-          topics,
+          data: {
+            file,
+            content: content as IFileContent['content'],
+          },
         },
-      });
-      setParams({
-        interval: topics[0].interval as Interval,
-        symbol: topics[0].symbol,
-        startTime: start_time,
-        endTime: end_time,
       });
     };
 
     return { onFileChange };
   }, []);
+
   return (
     <FileAPIContext.Provider value={api}>
       <FileDataContext.Provider value={state}>{children}</FileDataContext.Provider>

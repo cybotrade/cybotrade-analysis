@@ -1,16 +1,34 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { KlinesParams } from 'binance';
-import { Dispatch, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useKlineInfiniteQuery } from '@app/_hooks/useKlineInfiniteQuery';
 import { Interval, addIntervalTime } from '@app/_lib/utils';
-import { TActions } from '@app/_providers/file';
+import { IFileDataState } from '@app/_providers/file';
 
-export function useNewKline(dispatch: Dispatch<TActions>) {
+export function useNewKline(
+  state: IFileDataState,
+  {
+    onFetchingKline,
+    onFetchFailed,
+  }: {
+    onFetchingKline: (progress: number) => void;
+    onFetchFailed: (error: string) => void;
+  },
+) {
   const queryClient = useQueryClient();
-  const [params, setParams] = useState<KlinesParams | null>(null);
   const startTime = useRef(0);
+
   const endTime = useRef(0);
+  const params = useMemo<KlinesParams | null>(() => {
+    if (!state.data) return null;
+    return {
+      interval: state.data.topics[0].interval as Interval,
+      symbol: state.data.topics[0].symbol,
+      startTime: state.data.startTime,
+      endTime: state.data.endTime,
+    };
+  }, [state.data]);
   const { data, isError, fetchNextPage } = useKlineInfiniteQuery(params);
   const timerId = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -18,10 +36,7 @@ export function useNewKline(dispatch: Dispatch<TActions>) {
     if (!timerId.current) return;
     if (isError) {
       clearInterval(timerId.current);
-      dispatch({
-        type: 'FETCH_FAILED',
-        payload: 'Failed to fetch',
-      });
+      onFetchFailed('Failed to fetch');
     }
     if (data && data.pages.length > 0) {
       const lastPage = data.pages[data.pages.length - 1];
@@ -30,16 +45,16 @@ export function useNewKline(dispatch: Dispatch<TActions>) {
         new Date(nextCursor![0]),
         params?.interval as Interval,
       ).getTime();
-      dispatch({
-        type: 'FETCHING_KLINE',
-        payload: Math.min(
+      onFetchingKline(
+        Math.min(
           100,
           Math.round(
             ((startTime.current - params!.startTime!) / (params!.endTime! - params!.startTime!)) *
               100,
           ),
         ),
-      });
+      );
+
       if (startTime.current >= endTime.current) {
         clearInterval(timerId.current);
         timerId.current = null;
@@ -61,6 +76,4 @@ export function useNewKline(dispatch: Dispatch<TActions>) {
     timerId.current = setInterval(fetchData, 1000);
     return () => clearInterval(timerId.current!);
   }, [params, fetchData]);
-
-  return { setParams };
 }

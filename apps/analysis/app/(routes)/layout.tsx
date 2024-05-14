@@ -17,7 +17,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }):
       <body className="flex min-h-screen min-w-screen transition-colors duration-200">
         <ClientProvider>
           <FileDataProvider>
-            {/*<RadialMenu />*/}
             <div className="font-sans overflow-hidden">
               <main className="absolute top-0 left-0 w-full h-full p-4 overflow-hidden">
                 {children}
