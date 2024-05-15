@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { KlinesParams } from 'binance';
+import { isFuture } from 'date-fns';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useKlineInfiniteQuery } from '@app/_hooks/useKlineInfiniteQuery';
@@ -45,6 +46,12 @@ export function useNewKline(
         new Date(nextCursor![0]),
         params?.interval as Interval,
       ).getTime();
+      if (isFuture(startTime.current)) {
+        clearInterval(timerId.current);
+        timerId.current = null;
+        onFetchingKline(100);
+        return;
+      }
       onFetchingKline(
         Math.min(
           100,
