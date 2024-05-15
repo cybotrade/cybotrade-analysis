@@ -1,5 +1,5 @@
 import { Kline } from 'binance';
-import { addDays } from 'date-fns';
+import { isAfter, isBefore, isFuture, isPast } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 
 import { IBackTestData } from '@app/(routes)/(route)/type';
@@ -65,8 +65,8 @@ export function useKline(
           setklineData((prev) => {
             const filteredPrev: Kline[] = prev
               ? prev?.filter(
-                (r) => r[0] >= +selectedBacktest.start_time && r[0] <= +selectedBacktest.end_time,
-              )
+                  (r) => r[0] >= +selectedBacktest.start_time && r[0] <= +selectedBacktest.end_time,
+                )
               : [];
             return [...filteredPrev, ...res];
           });
@@ -87,10 +87,17 @@ export function useKline(
       let newStartTime = addIntervalTime(new Date(klineData[klineData.length - 1][0]), interval)
         .getTime()
         .toString();
+
+      if (isFuture(+newStartTime)) {
+        setDoneFetchingKline(true);
+        fetchedKlinePercentage(100);
+        return;
+      }
+
       const fetchedPercentage = Math.round(
         ((+newStartTime - +selectedBacktest.start_time) /
           (+selectedBacktest.end_time - +selectedBacktest.start_time)) *
-        100,
+          100,
       );
       fetchedKlinePercentage(fetchedPercentage);
 
