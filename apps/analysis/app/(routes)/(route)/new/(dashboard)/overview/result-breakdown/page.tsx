@@ -9,16 +9,16 @@ import { PerformanceData } from '@app/_lib/calculation';
 import { useBacktestData } from '@app/_providers/backtest';
 
 const ResultBreakdownPage = () => {
-  const { processing, backtests, permutationId } = useBacktestData();
+  const { processing, selectedBacktest } = useBacktestData();
 
   return processing ? (
     <Processing />
-  ) : backtests.size === 0 ? (
+  ) : !selectedBacktest || selectedBacktest.data.size === 0 ? (
     <NoRecord />
   ) : (
     <ResultBreakdown
-      key={permutationId}
-      performance={backtests.values().next().value.performance}
+      key={selectedBacktest.id}
+      performance={selectedBacktest.data.values().next().value.performance}
     />
   );
 };

@@ -9,11 +9,17 @@ import { Processing } from '@app/_features/dashboard/status/processing';
 import { useBacktestData } from '@app/_providers/backtest';
 
 const EquityCurvePage = () => {
-  const { processing, backtests } = useBacktestData();
+  const { processing, selectedBacktest } = useBacktestData();
 
   return (
     <DashboardContentWrapper>
-      {processing ? <Processing /> : backtests.size === 0 ? <NoRecord /> : <NewEquityCurve />}
+      {processing ? (
+        <Processing />
+      ) : !selectedBacktest || selectedBacktest.data.size === 0 ? (
+        <NoRecord />
+      ) : (
+        <NewEquityCurve />
+      )}
     </DashboardContentWrapper>
   );
 };

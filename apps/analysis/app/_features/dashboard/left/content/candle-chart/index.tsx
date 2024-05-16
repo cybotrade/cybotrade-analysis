@@ -15,12 +15,12 @@ const NewCandleChart = ({}: TNewCandleChartProps) => {
   const [queryKey, data] = queryClient.getQueriesData<InfiniteData<Page>>({
     queryKey: ['candles'],
   })[0];
-  const { permutationId, backtests } = useBacktestData();
+  const { selectedBacktest } = useBacktestData();
 
-  const trades = backtests.values().next().value.trades;
+  const trades = selectedBacktest.data.values().next().value.trades;
 
   if (data?.pages.length === 0) throw new Error('No candles Data');
-  return <CandlestickChart key={permutationId} data={data} trades={trades} />;
+  return <CandlestickChart key={selectedBacktest.id} data={data} trades={trades} />;
 };
 
 export default NewCandleChart;

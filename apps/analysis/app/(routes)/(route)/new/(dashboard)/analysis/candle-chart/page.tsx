@@ -9,10 +9,16 @@ import { Processing } from '@app/_features/dashboard/status/processing';
 import { useBacktestData } from '@app/_providers/backtest';
 
 const CandleChartPage = () => {
-  const { processing, backtests } = useBacktestData();
+  const { processing, selectedBacktest } = useBacktestData();
   return (
     <DashboardContentWrapper>
-      {processing ? <Processing /> : backtests.size === 0 ? <NoRecord /> : <NewCandleChart />}
+      {processing ? (
+        <Processing />
+      ) : !selectedBacktest || selectedBacktest.data.size === 0 ? (
+        <NoRecord />
+      ) : (
+        <NewCandleChart />
+      )}
     </DashboardContentWrapper>
   );
 };

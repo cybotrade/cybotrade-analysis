@@ -14,7 +14,7 @@ import {
 import { IClosedTrade, IClosedTradeProfit, ITrade } from '@app/(routes)/(route)/type';
 import { Loading } from '@app/_components/loading';
 import { useBacktestWorker } from '@app/_hooks/useBacktestWorker';
-import { usePlotWorker } from '@app/_hooks/usePlotWorker';
+import { usePermutationsWorker } from '@app/_hooks/usePermutationsWorker';
 import { PerformanceData } from '@app/_lib/calculation';
 import { useFileData } from '@app/_providers/file';
 
@@ -33,17 +33,15 @@ export interface IBacktest {
   performance: PerformanceData;
 }
 
-export interface IPlot {
-  id: string;
-  sharpeRatio: number;
-}
-
 export interface IBacktestState {
+  processing: boolean;
   topics: ITopic[];
   initialCapital: number;
-  permutationId: string;
-  backtests: Map<string, IBacktest>;
-  plot?: IPlot[];
+  permutations: Map<string, Map<string, IBacktest>> | null;
+  selectedBacktest: {
+    id: string;
+    data: Map<string, IBacktest>;
+  };
   startTime: number;
   endTime: number;
 }
@@ -52,18 +50,19 @@ interface IBacktestAPI {
   onPermutationSelect: (id: string) => void;
 }
 
-const BacktestDataContext = createContext<
-  | (IBacktestState & {
-      processing: boolean;
-    })
-  | null
->(null);
+const BacktestDataContext = createContext<IBacktestState | null>(null);
 const BacktestAPIContext = createContext<IBacktestAPI>({
   onPermutationSelect: () => {},
 });
 export type TActions =
-  | { type: 'SET_DATA'; payload: IBacktestState }
-  | { type: 'SET_PLOT'; payload: IPlot[] };
+  | {
+      type: 'SET_DATA';
+      payload: Omit<IBacktestState, 'selectedBacktest' | 'processing'>;
+    }
+  | {
+      type: 'SET_BACKTEST';
+      payload: Pick<IBacktestState, 'selectedBacktest'>;
+    };
 
 const BacktestReducer = (state: IBacktestState, action: TActions): IBacktestState => {
   switch (action.type) {
@@ -72,54 +71,55 @@ const BacktestReducer = (state: IBacktestState, action: TActions): IBacktestStat
         ...state,
         ...action.payload,
       };
-    case 'SET_PLOT':
+    case 'SET_BACKTEST':
       return {
         ...state,
-        plot: action.payload,
+        ...action.payload,
       };
   }
 };
+
 export const BacktestDataProvider = ({ children }: PropsWithChildren) => {
-  const {
-    data: { permutations, initialCapital, topics, startTime, endTime },
-  } = useFileData();
+  const { data: fileData } = useFileData();
   const [state, dispatch] = useReducer(BacktestReducer, {} as IBacktestState);
-  const [permutationId, setPermutationId] = useState<string>(permutations.keys().next().value);
-  const workerMessage = useMemo(
-    () => ({
-      topics,
-      initialCapital,
-      permutation: [...permutations.entries()]
-        .filter(([key, value]) => key === permutationId)
-        .flat(),
-      startTime,
-      endTime,
-    }),
-    [permutationId],
-  );
-  usePlotWorker(topics, permutations, {
-    onProcessSuccess: (data) => {
-      dispatch({ type: 'SET_PLOT', payload: data });
+  const [permutationId, setPermutationId] = useState(fileData.permutations.keys().next().value);
+
+  const { processing } = useBacktestWorker(
+    permutationId,
+    fileData,
+    state.permutations?.get(permutationId),
+    {
+      onProcessSuccess: ({ id, backtest }) => {
+        dispatch({
+          type: 'SET_BACKTEST',
+          payload: {
+            selectedBacktest: {
+              id,
+              data: backtest,
+            },
+          },
+        });
+      },
     },
-  });
-  const { processing } = useBacktestWorker(workerMessage, {
+  );
+
+  usePermutationsWorker(fileData, {
     onProcessSuccess: (data) => {
-      let backtests = new Map<string, IBacktest>(JSON.parse(data.result));
+      const permutations = new Map<string, Map<string, IBacktest>>(JSON.parse(data.result));
+
+      permutations.forEach((value, id) => {
+        permutations.set(id, new Map(value));
+      });
 
       dispatch({
         type: 'SET_DATA',
         payload: {
-          topics,
-          initialCapital,
-          permutationId,
-          backtests,
-          startTime: startTime,
-          endTime: endTime,
+          ...fileData,
+          permutations,
         },
       });
     },
   });
-
   const api = useMemo(() => {
     const onPermutationSelect = (id: string) => {
       setPermutationId(id);

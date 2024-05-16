@@ -4,7 +4,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 
 import { PlotAction } from '@app/_features/dashboard/left/content/surface-plot/PlotAction';
 import { useDebounce } from '@app/_hooks/useDebounce';
-import { IPlot } from '@app/_providers/backtest';
+import { IBacktest } from '@app/_providers/backtest';
 
 export type TPair = {
   key: string;
@@ -23,9 +23,9 @@ type TCoordinate = {
 };
 
 export type TSurfacePlotGraphProps = {
-  plot: IPlot[];
+  allPermutations: Map<string, Map<string, IBacktest>>;
 };
-export const SurfacePlotGraph = ({ plot }: TSurfacePlotGraphProps) => {
+export const SurfacePlotGraph = ({ allPermutations }: TSurfacePlotGraphProps) => {
   const surfacePlotContainerRef = useRef<HTMLDivElement | null>(null);
   const [permutations, setPermutations] = useState<TPermutation[]>([]);
   const [debouncedDelimitor, delimitor, setDelimitor] = useDebounce<string>('=', 500);
@@ -37,8 +37,8 @@ export const SurfacePlotGraph = ({ plot }: TSurfacePlotGraphProps) => {
   });
 
   const searchPermutations = useCallback(() => {
-    const data = plot
-      .map(({ id, sharpeRatio }, index, arr) => {
+    const data = Array.from(allPermutations.entries())
+      .map(([id, backtest], index, arr) => {
         if (id.indexOf(debouncedDelimitor) === -1 || id.indexOf(debouncedSeparator) === -1)
           return null;
         let pairs = id.split(debouncedSeparator).map((pair) => {
@@ -46,10 +46,12 @@ export const SurfacePlotGraph = ({ plot }: TSurfacePlotGraphProps) => {
           const [key, value] = pair.split(debouncedDelimitor);
           return { key: key.trim(), value: +value };
         });
-
+        
         return {
           pairs,
-          sharpeRatio: new Decimal(sharpeRatio).toDecimalPlaces(2),
+          sharpeRatio: new Decimal(
+            backtest.values().next().value?.performance.sharpeRatio || 0,
+          ).toDecimalPlaces(2),
         };
       })
       .filter((d): d is TPermutation => !!d && d.pairs.length > 1);
@@ -185,7 +187,7 @@ export const SurfacePlotGraph = ({ plot }: TSurfacePlotGraphProps) => {
   return (
     <Fragment>
       <div className="absolute w-full h-full bg-gradient-to-b from-10% from-[#FFFFFF] to-[#c6e0ff] rounded-3xl border border-[#DFDFDF]" />
-      {plot.length === 0 || coordinate.length === 0 ? (
+      {allPermutations.size === 0 || coordinate.length === 0 ? (
         <div className="absolute flex justify-center items-center w-full h-full font-sans text-2xl">
           No Records
         </div>

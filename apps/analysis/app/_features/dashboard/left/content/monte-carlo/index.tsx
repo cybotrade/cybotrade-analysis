@@ -7,15 +7,14 @@ import { MonteCarloChart } from '@app/_features/dashboard/left/content/monte-car
 import { useBacktestData } from '@app/_providers/backtest';
 
 export const NewMonteCarlo = () => {
-  const { permutationId, backtests, initialCapital } = useBacktestData();
+  const { selectedBacktest, initialCapital } = useBacktestData();
 
-  const tradesWithProfit = backtests.values().next().value.tradesWithProfit;
-  console.log(tradesWithProfit);
-  if (backtests.size === 0) throw new Error('Invalid Visit');
+  const tradesWithProfit = selectedBacktest.data.values().next().value.tradesWithProfit;
+  if (!tradesWithProfit) throw new Error('Invalid Visit');
 
   return (
     <MonteCarloChart
-      key={permutationId}
+      key={selectedBacktest.id}
       initialCapital={initialCapital}
       tradesWithProfit={tradesWithProfit}
     />

@@ -2,6 +2,7 @@ import React, { PropsWithChildren } from 'react';
 
 import { DashboardHeader } from '@app/_features/dashboard/left/DashboardHeader';
 import { DashboardSidebar } from '@app/_features/dashboard/left/DashboardSidebar';
+import { useBacktestData } from '@app/_providers/backtest';
 
 const DashboardLeftSide = ({ children }: PropsWithChildren) => {
   return (

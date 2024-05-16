@@ -25,7 +25,7 @@ export const GET = async (req: NextRequest) => {
     if (Array.isArray(kline)) {
       const lastCandle = kline[kline.length - 1];
 
-      if (lastCandle[0] < endTime) {
+      if (lastCandle && lastCandle[0] < endTime) {
         kline.pop();
       }
       return NextResponse.json({ kline, nextCursor: lastCandle });
