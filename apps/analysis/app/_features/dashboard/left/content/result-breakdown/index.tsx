@@ -37,7 +37,7 @@ export const ResultBreakdown = ({ performance }: TResultBreakdownProps) => {
 
   return (
     <Fragment>
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-[#F1F1F1]">
+      <div className="pointer-events-none absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-[#F1F1F1]">
         <Image
           className="w-full h-full object-cover"
           src="/images/particles_bg.png"

@@ -6,11 +6,17 @@ import { Processing } from '@app/_features/dashboard/status/processing';
 import { useBacktestData } from '@app/_providers/backtest';
 
 export const NewSurfacePlot = () => {
-  const { plot } = useBacktestData();
+  const { permutations } = useBacktestData();
 
   return (
     <div className="relative h-full">
-      {!plot ? <Processing /> : plot.length === 0 ? <NoRecord /> : <SurfacePlotGraph plot={plot} />}
+      {!permutations ? (
+        <Processing />
+      ) : permutations.size === 0 ? (
+        <NoRecord />
+      ) : (
+        <SurfacePlotGraph allPermutations={permutations} />
+      )}
     </div>
   );
 };

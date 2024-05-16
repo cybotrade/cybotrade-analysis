@@ -1,30 +1,17 @@
 import { Decimal } from 'decimal.js';
 
 import { calculatePerformance, pnl, transformToClosedTrades } from '../_lib/calculation';
-import { OrderSide } from '../_lib/utils';
 
-onmessage = (e) => {
+onmessage = async (event) => {
   const {
+    fileData: { permutations, topics },
+    permutationId,
     kline,
-    message: { permutation, topics },
-  } = e.data;
-  // const { initial_capital, candle_topics, trades, start_time, end_time } = fileData.content;
-  // const splitedStrings = candle_topics.map((t) => t.split('|'));
-  // const topics = splitedStrings.map((topic) => {
-  //   const [category, interval, symbol, exchange] = topic[0].split('-');
-  //   const type = topic[1];
-  //   return {
-  //     category,
-  //     interval,
-  //     symbol,
-  //     type,
-  //     exchange,
-  //   };
-  // });
-  const klineData = kline[0][1].pages.map((page) => page.kline).flat();
-  const [id, orders] = permutation;
+  } = event.data;
 
-  let parsedTrades = JSON.parse(orders).trades;
+  const klineData = kline[0][1].pages.map((page) => page.kline).flat();
+
+  let parsedTrades = JSON.parse(permutations.get(permutationId)).trades;
   let symbols = Object.keys(parsedTrades);
 
   const data = [];

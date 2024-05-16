@@ -6,14 +6,14 @@ import { cn } from '@app/_lib/utils';
 import { useBacktestData } from '@app/_providers/backtest';
 
 export const NewEquityCurve = () => {
-  const { permutationId, backtests } = useBacktestData();
-  const performance = backtests.values().next().value.performance;
+  const { selectedBacktest } = useBacktestData();
+  const performance = selectedBacktest.data.values().next().value.performance;
   const equityData = performance.equityData;
 
-  if (backtests.size === 0) throw new Error('Invalid Visit');
+  if (!performance) throw new Error('Invalid Visit');
   return (
     <div className={cn('w-full h-full rounded-xl flex items-center justify-center')}>
-      <EquityCurveChart key={permutationId} equityData={equityData} />
+      <EquityCurveChart key={selectedBacktest.id} equityData={equityData} />
     </div>
   );
 };

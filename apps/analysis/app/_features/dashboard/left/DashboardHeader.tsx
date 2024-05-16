@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
+
 import { CybotradeLogo, NotificationIcon, SettingsIcon } from '@app/_assets/icons';
 import { PermutationSelect } from '@app/_components/dashboard/left/PermutationSelect';
 import { Text } from '@app/_components/shared/Text';
-import { useBacktestAPI } from '@app/_providers/backtest';
+import { useBacktestAPI, useBacktestData } from '@app/_providers/backtest';
 import { useFileData } from '@app/_providers/file';
 
 export const DashboardHeader = () => {
@@ -11,7 +13,13 @@ export const DashboardHeader = () => {
     data: { file, permutations },
   } = useFileData();
   const { onPermutationSelect } = useBacktestAPI();
+  const [selectedOption, setSelectedOption] = useState('');
 
+  const handleSelectPermutation = (option: string) => {
+    setSelectedOption(option);
+    onPermutationSelect(option);
+  };
+  console.log(selectedOption);
   if (permutations.size === 0) throw new Error('No Permutations');
   return (
     <div className="font-sora flex w-full h-16 min-h-16 relative gap-2">
@@ -20,8 +28,10 @@ export const DashboardHeader = () => {
         <div className="flex items-center gap-5 z-10">
           <Text content={file.name || ''} className="text-md underline font-bold" />
           <PermutationSelect
+            key={selectedOption}
+            selectedOption={selectedOption}
             options={[...permutations.keys()]}
-            onOptionSelected={onPermutationSelect}
+            onOptionSelected={handleSelectPermutation}
           />
         </div>
         <div className="flex justify-end items-center gap-5 z-10">

@@ -12,13 +12,17 @@ import {
 } from '@app/_ui/Select';
 
 type TPermutationSelectProps = {
+  selectedOption: string;
   options: string[];
   onOptionSelected: (option: string) => void;
 };
 
-export const PermutationSelect = ({ options, onOptionSelected }: TPermutationSelectProps) => {
+export const PermutationSelect = ({
+  selectedOption,
+  options,
+  onOptionSelected,
+}: TPermutationSelectProps) => {
   const [open, setOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState('');
 
   return (
     <Select
@@ -26,7 +30,6 @@ export const PermutationSelect = ({ options, onOptionSelected }: TPermutationSel
       value={selectedOption}
       onOpenChange={setOpen}
       onValueChange={(option) => {
-        setSelectedOption(option);
         onOptionSelected(option);
       }}
     >
@@ -41,7 +44,6 @@ export const PermutationSelect = ({ options, onOptionSelected }: TPermutationSel
               className="text-primary text-xl z-50  bg-neutral-50 dark:bg-[#392910]"
               onPointerDown={(e) => {
                 e.stopPropagation();
-                setSelectedOption(options[0]);
                 onOptionSelected(options[0]);
               }}
             >
