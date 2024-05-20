@@ -48,11 +48,6 @@ export const WinLoseWidget = ({
           />
         </div>
       </div>
-      <div className="border border-t-0 border-[#DFDFDF]"></div>
-      <div className="flex w-full justify-between">
-        <Stat content="1 Apr 23" contentClassName="float-left" />
-        <Stat content="1 Jan 24" contentClassName="float-right" />
-      </div>
     </Widget>
   );
 };
