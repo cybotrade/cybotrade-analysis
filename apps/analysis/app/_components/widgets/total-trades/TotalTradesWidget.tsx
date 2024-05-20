@@ -4,9 +4,10 @@ import { Widget } from '@app/_components/shared/Widget';
 
 type TTotalTradesWidgetProps = {
   totalTrades: number;
+  totalTradesDays: number;
 };
 
-export const TotalTradesWidget = ({ totalTrades }: TTotalTradesWidgetProps) => {
+export const TotalTradesWidget = ({ totalTrades, totalTradesDays }: TTotalTradesWidgetProps) => {
   return (
     <Widget
       className="bg-[#FFF5F5] relative"
@@ -18,7 +19,7 @@ export const TotalTradesWidget = ({ totalTrades }: TTotalTradesWidgetProps) => {
         <Text content="Total Trades" className="text-xl 3xl:text-2xl" />
         <div className="inline-flex items-end gap-1">
           <Text content={totalTrades} className="text-4xl 3xl:text-5xl" />
-          <Text content="90D" className="text-lg 3xl:text-2xl text-[#FFD4D4]" />
+          <Text content={`${totalTradesDays}D`} className="text-lg 3xl:text-2xl text-[#FFD4D4]" />
         </div>
       </div>
     </Widget>

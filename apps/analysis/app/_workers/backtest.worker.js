@@ -4,7 +4,7 @@ import { calculatePerformance, pnl, transformToClosedTrades } from '../_lib/calc
 
 onmessage = async (event) => {
   const {
-    fileData: { permutations, topics },
+    fileData: { permutations, topics, startTime, endTime },
     permutationId,
     kline,
   } = event.data;
@@ -50,6 +50,8 @@ onmessage = async (event) => {
         riskFreeRate: 0.02,
         fees: 0,
       },
+      startTime,
+      endTime,
     });
 
     data.push([

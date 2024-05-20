@@ -1,5 +1,10 @@
 import { type Kline } from 'binance';
-import { differenceInMilliseconds, millisecondsToHours } from 'date-fns';
+import {
+  differenceInDays,
+  differenceInMilliseconds,
+  isSameDay,
+  millisecondsToHours,
+} from 'date-fns';
 import { Decimal } from 'decimal.js';
 import { UTCTimestamp } from 'lightweight-charts';
 
@@ -42,6 +47,7 @@ export type PerformanceData = {
 
   averageTradesPerDay: number;
   totalTradesDuration: number;
+  totalTradesDays: number;
   annualizedReturn: Decimal;
   equityData: IEquityData[];
   intervalPriceChanges: Decimal[];
@@ -200,9 +206,13 @@ export const returns = ({ values }: { values: Decimal[] }): Decimal[] =>
 export const calculatePerformance = ({
   parameters: { initialCapital, comission, riskFreeRate, fees },
   tradeOrders,
+  startTime,
+  endTime,
 }: {
   parameters: { initialCapital: number; comission: number; riskFreeRate: number; fees?: number };
   tradeOrders?: { klineData: Kline[]; trades: ITrade[]; interval: Interval };
+  startTime: number;
+  endTime: number;
 }): PerformanceData => {
   let interval = tradeOrders?.interval ?? Interval.OneDay;
   let intervalPriceChanges: Decimal[] = [];
@@ -330,6 +340,7 @@ export const calculatePerformance = ({
         (1000 * 3600 * 24),
     );
   let totalTradesDuration = calculateTotalTradesDuration(tradeOrders!.trades);
+  let totalTradesDays = isSameDay(endTime, startTime) ? 1 : differenceInDays(endTime, startTime);
   let bestTradePnl = pnlList.length > 0 ? Decimal.max(...pnlList) : new Decimal(0);
   let worstTradePnl = pnlList.length > 0 ? Decimal.min(...pnlList) : new Decimal(0);
   let winningTrades = pnlList.filter((pnl) => pnl.greaterThan(0));
@@ -352,6 +363,7 @@ export const calculatePerformance = ({
     // to calculate average total trade per day
     averageTradesPerDay: averageTradesPerDay,
     totalTradesDuration,
+    totalTradesDays,
     finalBalance,
     initialCapital: new Decimal(initialCapital),
     totalTrades: tradeOrders?.trades.length ?? 0,

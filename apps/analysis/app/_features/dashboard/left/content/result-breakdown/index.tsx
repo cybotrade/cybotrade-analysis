@@ -22,19 +22,20 @@ type TResultBreakdownProps = {
 };
 
 export const ResultBreakdown = ({ performance }: TResultBreakdownProps) => {
-  const netProfit = new Decimal(performance.netProfit);
-  const initialCapital = new Decimal(performance.initialCapital);
-  const finalBalance = new Decimal(performance.finalBalance);
-  const totalWinningTrades = parseFloat(String(performance.totalWinningTrades));
-  const totalLosingTrades = parseFloat(String(performance.totalLosingTrades));
-  const totalTrades = parseFloat(String(performance.totalTrades));
-  const profitFactor = new Decimal(performance.profitFactor);
-  const winRate = new Decimal(performance.winRate);
-  const largestRoi = new Decimal(performance.largestRoi);
-  const smallestRoi = new Decimal(performance.smallestRoi);
-  const bestTrade = new Decimal(performance.bestTradePnl);
-  const worstTrade = new Decimal(performance.worstTradePnl);
-  const averageTradesPerDay = new Decimal(String(performance.averageTradesPerDay));
+  let netProfit = new Decimal(performance.netProfit);
+  let initialCapital = new Decimal(performance.initialCapital);
+  let finalBalance = new Decimal(performance.finalBalance);
+  let totalWinningTrades = parseFloat(String(performance.totalWinningTrades));
+  let totalLosingTrades = parseFloat(String(performance.totalLosingTrades));
+  let totalTrades = parseFloat(String(performance.totalTrades));
+  let profitFactor = new Decimal(performance.profitFactor);
+  let winRate = new Decimal(performance.winRate);
+  let largestRoi = new Decimal(performance.largestRoi);
+  let smallestRoi = new Decimal(performance.smallestRoi);
+  let bestTrade = new Decimal(performance.bestTradePnl);
+  let worstTrade = new Decimal(performance.worstTradePnl);
+  let averageTradesPerDay = new Decimal(performance.averageTradesPerDay);
+  let totalTradesDays = parseFloat(String(performance.totalTradesDays));
 
   return (
     <Fragment>
@@ -84,7 +85,7 @@ export const ResultBreakdown = ({ performance }: TResultBreakdownProps) => {
             </div>
             <div className="grid auto-rows-[50%_1fr] gap-3">
               <div className="grid grid-cols-3 gap-3">
-                <TotalTradesWidget totalTrades={totalTrades} />
+                <TotalTradesWidget totalTrades={totalTrades} totalTradesDays={totalTradesDays} />
                 <ProfitToLossWidget profitFactor={profitFactor.toDecimalPlaces(2).toNumber()} />
                 <TradingFrequencyWidget
                   averageTradesPerDay={averageTradesPerDay.toDecimalPlaces(2).toNumber()}

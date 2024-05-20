@@ -5,7 +5,7 @@ import { calculatePerformance, pnl, transformToClosedTrades } from '../_lib/calc
 onmessage = (e) => {
   const {
     kline,
-    fileData: { permutations, topics },
+    fileData: { permutations, topics, startTime, endTime },
   } = e.data;
   const klineData = kline[0][1].pages.map((page) => page.kline).flat();
   const result = [];
@@ -50,6 +50,8 @@ onmessage = (e) => {
           riskFreeRate: 0.02,
           fees: 0,
         },
+        startTime,
+        endTime,
       });
 
       data.push([
@@ -63,7 +65,7 @@ onmessage = (e) => {
         },
       ]);
     }
-    
+
     result.push([id, data]);
   });
 
