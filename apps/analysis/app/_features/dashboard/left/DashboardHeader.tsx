@@ -19,7 +19,6 @@ export const DashboardHeader = () => {
     setSelectedOption(option);
     onPermutationSelect(option);
   };
-  console.log(selectedOption);
   if (permutations.size === 0) throw new Error('No Permutations');
   return (
     <div className="font-sora flex w-full h-16 min-h-16 relative gap-2">

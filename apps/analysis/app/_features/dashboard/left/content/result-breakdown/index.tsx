@@ -34,6 +34,7 @@ export const ResultBreakdown = ({ performance }: TResultBreakdownProps) => {
   const smallestRoi = new Decimal(performance.smallestRoi);
   const bestTrade = new Decimal(performance.bestTradePnl);
   const worstTrade = new Decimal(performance.worstTradePnl);
+  const averageTradesPerDay = new Decimal(String(performance.averageTradesPerDay));
 
   return (
     <Fragment>
@@ -85,7 +86,9 @@ export const ResultBreakdown = ({ performance }: TResultBreakdownProps) => {
               <div className="grid grid-cols-3 gap-3">
                 <TotalTradesWidget totalTrades={totalTrades} />
                 <ProfitToLossWidget profitFactor={profitFactor.toDecimalPlaces(2).toNumber()} />
-                <TradingFrequencyWidget />
+                <TradingFrequencyWidget
+                  averageTradesPerDay={averageTradesPerDay.toDecimalPlaces(2).toNumber()}
+                />
               </div>
               <DetailsWidget
                 details={{ winRate, profitFactor, largestRoi, smallestRoi, bestTrade, worstTrade }}
