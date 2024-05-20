@@ -2,7 +2,11 @@ import { OrbitLoopBackground } from '@app/_assets/icons';
 import { Stat } from '@app/_components/shared/Stat';
 import { Widget } from '@app/_components/shared/Widget';
 
-export const TradingFrequencyWidget = () => {
+type TradingFrequencyWidgetProps = {
+  averageTradesPerDay: number;
+};
+
+export const TradingFrequencyWidget = ({ averageTradesPerDay }: TradingFrequencyWidgetProps) => {
   return (
     <Widget
       className="bg-[#FBF0FF] relative flex flex-col justify-between gap-5"
@@ -11,7 +15,7 @@ export const TradingFrequencyWidget = () => {
       <Stat
         containerClassName="z-10 h-full items-left justify-between"
         label="Trading Frequency"
-        content="37.63%"
+        content={averageTradesPerDay}
         labelClassName="text-xl 3xl:text-2xl"
         contentClassName="text-4xl 3xl:text-5xl"
       />
