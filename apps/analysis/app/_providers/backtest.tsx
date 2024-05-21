@@ -44,24 +44,31 @@ export interface IBacktestState {
   };
   startTime: number;
   endTime: number;
+  mode: 'ARITHMETIC' | 'GEOMETRIC';
 }
 
 interface IBacktestAPI {
   onPermutationSelect: (id: string) => void;
+  onArithmeticToggle: (isToggle: boolean) => void;
 }
 
 const BacktestDataContext = createContext<IBacktestState | null>(null);
 const BacktestAPIContext = createContext<IBacktestAPI>({
   onPermutationSelect: () => {},
+  onArithmeticToggle: () => {},
 });
 export type TActions =
   | {
       type: 'SET_DATA';
-      payload: Omit<IBacktestState, 'selectedBacktest' | 'processing'>;
+      payload: Omit<IBacktestState, 'selectedBacktest' | 'processing' | 'mode'>;
     }
   | {
       type: 'SET_BACKTEST';
       payload: Pick<IBacktestState, 'selectedBacktest'>;
+    }
+  | {
+      type: 'SET_MODE';
+      payload: IBacktestState['mode'];
     };
 
 const BacktestReducer = (state: IBacktestState, action: TActions): IBacktestState => {
@@ -76,12 +83,17 @@ const BacktestReducer = (state: IBacktestState, action: TActions): IBacktestStat
         ...state,
         ...action.payload,
       };
+    case 'SET_MODE':
+      return {
+        ...state,
+        mode: action.payload,
+      };
   }
 };
 
 export const BacktestDataProvider = ({ children }: PropsWithChildren) => {
   const { data: fileData } = useFileData();
-  const [state, dispatch] = useReducer(BacktestReducer, {} as IBacktestState);
+  const [state, dispatch] = useReducer(BacktestReducer, { mode: 'ARITHMETIC' } as IBacktestState);
   const [permutationId, setPermutationId] = useState(fileData.permutations.keys().next().value);
 
   const { processing } = useBacktestWorker(
@@ -125,7 +137,14 @@ export const BacktestDataProvider = ({ children }: PropsWithChildren) => {
       setPermutationId(id);
     };
 
-    return { onPermutationSelect };
+    const onArithmeticToggle = (isTgggle: boolean) => {
+      dispatch({
+        type: 'SET_MODE',
+        payload: isTgggle ? 'GEOMETRIC' : 'ARITHMETIC',
+      });
+    };
+
+    return { onPermutationSelect, onArithmeticToggle };
   }, []);
   return (
     <BacktestAPIContext.Provider value={api}>

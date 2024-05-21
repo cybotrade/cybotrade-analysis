@@ -36,6 +36,8 @@ export const ResultBreakdown = ({ performance }: TResultBreakdownProps) => {
   let worstTrade = new Decimal(performance.worstTradePnl);
   let averageTradesPerDay = new Decimal(performance.averageTradesPerDay);
   let totalTradesDays = parseFloat(String(performance.totalTradesDays));
+  let ariCumulativeUnrealizedPnlInfo = performance.ariCumulativeUnrealizedPnlInfo;
+  let geoCumulativeUnrealizedPnlInfo = performance.geoCumulativeUnrealizedPnlInfo;
 
   return (
     <Fragment>
@@ -68,6 +70,8 @@ export const ResultBreakdown = ({ performance }: TResultBreakdownProps) => {
               <BalanceChartWidget
                 startingBalance={`USDT ${initialCapital.toFixed(2)}`}
                 finalBalance={`USDT ${finalBalance.toFixed(2)}`}
+                ariCumulativeUnrealizedPnlInfo={ariCumulativeUnrealizedPnlInfo}
+                geoCumulativeUnrealizedPnlInfo={geoCumulativeUnrealizedPnlInfo}
               />
               <div className="grid grid-cols-2 gap-3">
                 <WinLoseWidget
