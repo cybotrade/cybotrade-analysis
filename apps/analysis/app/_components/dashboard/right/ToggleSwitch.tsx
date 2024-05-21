@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-
 import { cn } from '@app/_lib/utils';
 import { useBacktestAPI, useBacktestData } from '@app/_providers/backtest';
 
