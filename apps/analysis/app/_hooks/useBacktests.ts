@@ -89,5 +89,7 @@ export function useBacktests(
     permutationOptions,
     selectedPermutation,
     setSelectedPermutation,
+    startTime: +data.start_time,
+    endTime: +data.end_time,
   };
 }

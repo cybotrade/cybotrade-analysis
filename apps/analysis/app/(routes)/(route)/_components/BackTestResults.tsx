@@ -78,6 +78,8 @@ const BackTestResultsDrawer = ({
     permutationOptions,
     selectedPermutation,
     setSelectedPermutation,
+    startTime,
+    endTime,
   } = useBacktests(data, onAnalysisFailed);
 
   const sortedTrades = useMemo(() => {
@@ -169,6 +171,8 @@ const BackTestResultsDrawer = ({
           riskFreeRate: 0.02,
           fees: 0,
         },
+        startTime,
+        endTime,
       });
 
       return {
