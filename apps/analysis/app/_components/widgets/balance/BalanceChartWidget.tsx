@@ -8,26 +8,48 @@ import {
   ScriptableContext,
   registerables,
 } from 'chart.js';
+import { format } from 'date-fns';
 import React, { useMemo, useRef } from 'react';
 import { Bar } from 'react-chartjs-2';
 
 import { Stat } from '@app/_components/shared/Stat';
 import { Widget } from '@app/_components/shared/Widget';
+import { PnlInfo } from '@app/_lib/calculation';
+import { useBacktestData } from '@app/_providers/backtest';
 
 Chart.register(...registerables);
 
-const dummyChartData = {
-  label: ['1 Apr 23', '', '', '', 'JUL', '', '', '', '', '', '', 'SEP', '', '', '', '1 Jan 24'],
-  data: [0.5, 0.55, 0.6, 0.7, 0.8, 0.85, 0.9, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.7, 0.75, 0.8],
+type TBalanceChartWidgetProps = {
+  startingBalance: string;
+  finalBalance: string;
+  ariCumulativeUnrealizedPnlInfo: PnlInfo[];
+  geoCumulativeUnrealizedPnlInfo: PnlInfo[];
 };
-type TBalanceChartWidgetProps = { startingBalance: string; finalBalance: string };
-export const BalanceChartWidget = ({ startingBalance, finalBalance }: TBalanceChartWidgetProps) => {
-  const data: ChartData<'bar'> = useMemo(
-    () => ({
-      labels: dummyChartData.label,
+export const BalanceChartWidget = ({
+  startingBalance,
+  finalBalance,
+  ariCumulativeUnrealizedPnlInfo,
+  geoCumulativeUnrealizedPnlInfo,
+}: TBalanceChartWidgetProps) => {
+  const { mode } = useBacktestData();
+  const data: ChartData<'bar'> = useMemo(() => {
+    let chartData: { labels: string[]; data: number[] } = { labels: [], data: [] };
+    if (mode === 'ARITHMETIC') {
+      chartData = {
+        labels: ariCumulativeUnrealizedPnlInfo.map((info, i) => format(info.time, 'd MMM yy')),
+        data: ariCumulativeUnrealizedPnlInfo.map((info) => Number(info.value)),
+      };
+    } else if (mode === 'GEOMETRIC') {
+      chartData = {
+        labels: geoCumulativeUnrealizedPnlInfo.map((info, i) => format(info.time, 'd MMM yy')),
+        data: geoCumulativeUnrealizedPnlInfo.map((info) => Number(info.value)),
+      };
+    }
+    return {
+      labels: chartData.labels,
       datasets: [
         {
-          data: dummyChartData.data,
+          data: chartData.data,
           fill: 'start',
           backgroundColor: (context: ScriptableContext<'bar'>) => {
             const ctx = context.chart.ctx;
@@ -38,13 +60,12 @@ export const BalanceChartWidget = ({ startingBalance, finalBalance }: TBalanceCh
           },
           borderRadius: 50,
           borderSkipped: false,
-          barPercentage: 0.8,
-          categoryPercentage: 1.0,
+          // barPercentage: 0.8,
+          // categoryPercentage: 1.0,
         },
       ],
-    }),
-    [],
-  );
+    };
+  }, []);
   const options = useRef<ChartOptions<'bar'>>({
     maintainAspectRatio: false,
     responsive: true,
@@ -54,11 +75,6 @@ export const BalanceChartWidget = ({ startingBalance, finalBalance }: TBalanceCh
           display: false,
         },
         ticks: {
-          callback: (value, index) => {
-            if (index === 0 || index === 4 || index === 11 || index === 15) {
-              return String(data.labels![index]);
-            }
-          },
           color: '#232222',
           font: {
             family: 'Sora, sans-serif',
@@ -70,16 +86,8 @@ export const BalanceChartWidget = ({ startingBalance, finalBalance }: TBalanceCh
         },
       },
       y: {
-        min: 0,
-        max: 1,
         ticks: {
-          maxTicksLimit: 3,
-          callback: (value, index, ticks) => `${value}%`,
-          color: '#8A8A8A',
-          font: {
-            family: 'Sora, sans-serif',
-            size: 16,
-          },
+          display: false,
         },
         grid: {
           display: false,

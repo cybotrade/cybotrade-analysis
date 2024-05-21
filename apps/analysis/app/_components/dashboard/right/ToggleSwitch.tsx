@@ -1,13 +1,21 @@
 'use client';
 
+import { useState } from 'react';
+
 import { cn } from '@app/_lib/utils';
+import { useBacktestAPI, useBacktestData } from '@app/_providers/backtest';
 
 export const ToggleSwitch = () => {
+  const { mode } = useBacktestData();
+  const { onArithmeticToggle } = useBacktestAPI();
+
   return (
     <div className={cn('font-sora relative w-60 h-10 min-h-min rounded-full', 'md:w-52 2xl:w-60')}>
       <input
         type="checkbox"
+        defaultChecked={mode === 'GEOMETRIC'}
         className={cn('relative w-full h-full p-0 m-0 opacity-0 z-[3] cursor-pointer', 'peer')}
+        onClick={(e) => onArithmeticToggle(!e.currentTarget.defaultChecked)}
       />
       <div
         className={cn(

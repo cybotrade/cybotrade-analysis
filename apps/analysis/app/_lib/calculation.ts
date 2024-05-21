@@ -51,6 +51,14 @@ export type PerformanceData = {
   annualizedReturn: Decimal;
   equityData: IEquityData[];
   intervalPriceChanges: Decimal[];
+
+  geoCumulativeUnrealizedPnlInfo: PnlInfo[];
+  ariCumulativeUnrealizedPnlInfo: PnlInfo[];
+};
+
+export type PnlInfo = {
+  time: UTCTimestamp;
+  value: Decimal;
 };
 
 /**
@@ -219,9 +227,9 @@ export const calculatePerformance = ({
   let klineData = tradeOrders?.klineData;
   let equityData: { value: number; time: UTCTimestamp }[] = [];
   let geoUnrealizedPnlInfo: Decimal[] = [];
-  let geoCumulativeUnrealizedPnlInfo: Decimal[] = [];
+  let geoCumulativeUnrealizedPnlInfo: PnlInfo[] = [];
   let ariUnrealizedPnlInfo: Decimal[] = [];
-  let ariCumulativeUnrealizedPnlInfo: Decimal[] = [];
+  let ariCumulativeUnrealizedPnlInfo: PnlInfo[] = [];
   let globalEntryPrice: Decimal = new Decimal(0);
   let globalSide: OrderSide | null = null;
   let position: Decimal = new Decimal(0);
@@ -304,9 +312,12 @@ export const calculatePerformance = ({
     geoUnrealizedPnlInfo.push(geometricUnrealizedPnl);
     let prevGeoCumUnrealizedPnl =
       geoCumulativeUnrealizedPnlInfo.length > 0
-        ? geoCumulativeUnrealizedPnlInfo[geoCumulativeUnrealizedPnlInfo.length - 1]
+        ? geoCumulativeUnrealizedPnlInfo[geoCumulativeUnrealizedPnlInfo.length - 1].value
         : new Decimal(0);
-    geoCumulativeUnrealizedPnlInfo.push(prevGeoCumUnrealizedPnl.add(geometricUnrealizedPnl));
+    geoCumulativeUnrealizedPnlInfo.push({
+      time: candleCloseTime as UTCTimestamp,
+      value: prevGeoCumUnrealizedPnl.add(geometricUnrealizedPnl).toDecimalPlaces(2),
+    });
 
     let arimetricUnrealizedPnl = (
       positionList.length > 0 ? positionList[positionList.length - 1] : new Decimal(0)
@@ -323,9 +334,12 @@ export const calculatePerformance = ({
     ariUnrealizedPnlInfo.push(arimetricUnrealizedPnl);
     let prevAriCumUnrealizedPnl =
       ariCumulativeUnrealizedPnlInfo.length > 0
-        ? ariCumulativeUnrealizedPnlInfo[ariCumulativeUnrealizedPnlInfo.length - 1]
+        ? ariCumulativeUnrealizedPnlInfo[ariCumulativeUnrealizedPnlInfo.length - 1].value
         : new Decimal(0);
-    ariCumulativeUnrealizedPnlInfo.push(prevAriCumUnrealizedPnl.add(arimetricUnrealizedPnl));
+    ariCumulativeUnrealizedPnlInfo.push({
+      time: candleCloseTime as UTCTimestamp,
+      value: prevAriCumUnrealizedPnl.add(arimetricUnrealizedPnl).toDecimalPlaces(2),
+    });
 
     // This is to get the interval equity curve
     equityData.push({
@@ -351,9 +365,11 @@ export const calculatePerformance = ({
   let totalLosingTrades = losingTrades.length;
   let finalBalance = new Decimal(equityData[equityData.length - 1].value);
 
-  let drawdowns = ariCumulativeUnrealizedPnlInfo.map((currentValue, index) => {
-    const maxFromStart = Decimal.max(...ariCumulativeUnrealizedPnlInfo.slice(0, index + 1)); // Slice the array to get the sublist from 0 to index
-    return currentValue.minus(maxFromStart);
+  let drawdowns = ariCumulativeUnrealizedPnlInfo.map((info, index) => {
+    const maxFromStart = Decimal.max(
+      ...ariCumulativeUnrealizedPnlInfo.slice(0, index + 1).map((info) => info.value),
+    ); // Slice the array to get the sublist from 0 to index
+    return info.value.minus(maxFromStart);
   });
   let maxDrawdown = Decimal.min(...drawdowns).abs();
   let annualizedReturn = mean({ values: ariUnrealizedPnlInfo })
@@ -398,6 +414,9 @@ export const calculatePerformance = ({
     smallestRoi: initialCapital === 0 ? new Decimal(0) : worstTradePnl.div(initialCapital),
     equityData,
     intervalPriceChanges,
+
+    ariCumulativeUnrealizedPnlInfo,
+    geoCumulativeUnrealizedPnlInfo,
   };
   return performance;
 };
