@@ -46,3 +46,7 @@ export function daysToHours(days: number) {
   const totalHours = millisecondsToHours(totalMilliseconds);
   return totalHours;
 }
+
+export function convertBytes(megabytes: number) {
+  return megabytes * Math.pow(1024, 2);
+}
