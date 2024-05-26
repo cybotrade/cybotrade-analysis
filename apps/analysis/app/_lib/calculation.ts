@@ -342,7 +342,8 @@ export const calculatePerformance = ({
   let maxDrawdown = Decimal.min(...drawdowns).abs();
   let annualizedReturn = mean({ values: ariUnrealizedPnlInfo })
     .mul(365)
-    .div(intervalForDays(interval));
+    .mul(intervalForDays(interval));
+  console.log(pnlList)
   let performance = {
     // to calculate average total trade per day
     averageTradesPerDay: averageTradesPerDay,
