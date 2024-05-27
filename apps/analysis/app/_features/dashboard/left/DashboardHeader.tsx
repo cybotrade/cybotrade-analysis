@@ -12,8 +12,9 @@ export const DashboardHeader = () => {
   const {
     data: { file, permutations },
   } = useFileData();
+  const { selectedBacktest } = useBacktestData();
   const { onPermutationSelect } = useBacktestAPI();
-  const [selectedOption, setSelectedOption] = useState('');
+  const [selectedOption, setSelectedOption] = useState(selectedBacktest.id || '');
 
   const handleSelectPermutation = (option: string) => {
     setSelectedOption(option);

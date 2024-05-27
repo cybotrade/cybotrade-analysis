@@ -1,51 +1,60 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { IBacktest } from '@app/_providers/backtest';
-import { IFileDataState, ITopic } from '@app/_providers/file';
+import { IFileDataState } from '@app/_providers/file';
 
 export function useBacktestWorker(
-  permutationId: string,
   fileData: IFileDataState['data'],
-  backtestExist: Map<string, IBacktest> | undefined,
-  callbacks: {
-    onProcessSuccess: (data: { id: string; backtest: Map<string, IBacktest> }) => void;
+  {
+    onProcessing,
+    onProcessSuccess,
+  }: {
+    onProcessing: (progress: number) => void;
+    onProcessSuccess: (data: {
+      id: string;
+      backtest: Map<string, IBacktest>;
+      progress: number;
+    }) => void;
   },
 ) {
-  const [processing, setProcessing] = useState(false);
+  const worker = useRef<Worker | null>(null);
   const queryClient = useQueryClient();
+  const startBacktestWorker = useCallback(
+    (permutationId: string, backtestExist: Map<string, IBacktest> | undefined) => {
+      if (backtestExist) {
+        onProcessSuccess({ id: permutationId, backtest: backtestExist, progress: 100 });
+        return;
+      }
+      if (!worker.current)
+        worker.current = new Worker(new URL('@app/_workers/backtest.worker.js', import.meta.url));
+      onProcessing(0);
 
-  useEffect(() => {
-    if (backtestExist) {
-      callbacks.onProcessSuccess({ id: permutationId, backtest: backtestExist });
-      return;
-    }
+      try {
+        const kline = queryClient.getQueriesData({ queryKey: ['candles'] });
 
-    setProcessing(true);
-    const worker = new Worker(new URL('@app/_workers/backtest.worker.js', import.meta.url));
+        worker.current.postMessage({ fileData, permutationId, kline });
 
-    try {
-      const kline = queryClient.getQueriesData({ queryKey: ['candles'] });
+        worker.current.addEventListener('message', (event) => {
+          let percent = Math.max(0, Math.min(1, event.data.progress)) * 100;
+          onProcessing(percent);
+          if (event.data.type === 'COMPLETE') {
+            setTimeout(() => {
+              const backtest = new Map<string, IBacktest>(JSON.parse(event.data.result));
+              onProcessSuccess({ id: permutationId, backtest, progress: 100 });
+            }, 4000);
+          }
+        });
 
-      worker.postMessage({ fileData, permutationId, kline });
-
-      worker.addEventListener('message', (event) => {
-        const backtest = new Map<string, IBacktest>(JSON.parse(event.data.result));
-        callbacks.onProcessSuccess({ id: permutationId, backtest });
-        setProcessing(false);
-      });
-
-      worker.addEventListener('error', (event) => {
+        worker.current.addEventListener('error', (event) => {
+          throw new Error('Plot Failed');
+        });
+      } catch (e) {
         throw new Error('Plot Failed');
-      });
-    } catch (e) {
-      throw new Error('Plot Failed');
-    }
+      }
+    },
+    [fileData],
+  );
 
-    return () => {
-      worker.terminate();
-    };
-  }, [permutationId]);
-
-  return { processing };
+  return { startBacktestWorker };
 }

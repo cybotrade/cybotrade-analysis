@@ -34,30 +34,42 @@ export interface IFileDataState {
     startTime: number;
     endTime: number;
   };
-  fetchedPercentage: number;
-  error: string;
+  mode:
+    | 'PRE_UPLOAD'
+    | 'UPLOADING'
+    | 'POST_UPLOAD'
+    | 'ANALYSING'
+    | 'PROCESSING'
+    | 'DONE_ANALYSING'
+    | 'ERROR';
 }
 
 interface IFileAPI {
   onFileChange: (file: File, content: Object) => void;
+  onModeChange: (mode: IFileDataState['mode']) => void;
 }
 
 export type TActions =
+  | { type: 'SET_MODE'; payload: IFileDataState['mode'] }
   | {
       type: 'ADD_FILE';
       payload: {
         data: IFileContent;
       };
-    }
-  | { type: 'FETCHING_KLINE'; payload: number }
-  | { type: 'FETCH_FAILED'; payload: string };
+    };
 
 const FileDataContext = createContext<IFileDataState | null>(null);
 const FileAPIContext = createContext<IFileAPI>({
   onFileChange: () => {},
+  onModeChange: () => {},
 });
 const FileReducer = (state: IFileDataState, action: TActions): IFileDataState => {
   switch (action.type) {
+    case 'SET_MODE':
+      return {
+        ...state,
+        mode: action.payload,
+      };
     case 'ADD_FILE':
       const { file, content } = action.payload.data;
       const splitedStrings = content.candle_topics.map((t) => t.split('|'));
@@ -86,35 +98,12 @@ const FileReducer = (state: IFileDataState, action: TActions): IFileDataState =>
           endTime: content.end_time,
         },
       };
-    case 'FETCHING_KLINE':
-      return {
-        ...state,
-        fetchedPercentage: action.payload,
-      };
-    case 'FETCH_FAILED':
-      return {
-        ...state,
-        error: action.payload,
-      };
   }
 };
 export const FileDataProvider = ({ children }: PropsWithChildren) => {
-  const [state, dispatch] = useReducer(FileReducer, { fetchedPercentage: 0 } as IFileDataState);
-
-  useNewKline(state, {
-    onFetchingKline: (progress) => {
-      dispatch({
-        type: 'FETCHING_KLINE',
-        payload: progress,
-      });
-    },
-    onFetchFailed: (error) => {
-      dispatch({
-        type: 'FETCH_FAILED',
-        payload: error,
-      });
-    },
-  });
+  const [state, dispatch] = useReducer(FileReducer, {
+    mode: 'PRE_UPLOAD',
+  } as IFileDataState);
 
   const api = useMemo(() => {
     const onFileChange = (file: File, content: Object) => {
@@ -129,7 +118,14 @@ export const FileDataProvider = ({ children }: PropsWithChildren) => {
       });
     };
 
-    return { onFileChange };
+    const onModeChange = (mode: IFileDataState['mode']) => {
+      dispatch({
+        type: 'SET_MODE',
+        payload: mode,
+      });
+    };
+
+    return { onFileChange, onModeChange };
   }, []);
 
   return (

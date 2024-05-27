@@ -8,12 +8,14 @@ import { Interval, addIntervalTime } from '@app/_lib/utils';
 import { IFileDataState } from '@app/_providers/file';
 
 export function useNewKline(
-  state: IFileDataState,
+  fileData: IFileDataState['data'],
   {
     onFetchingKline,
+    onFetchComplete,
     onFetchFailed,
   }: {
     onFetchingKline: (progress: number) => void;
+    onFetchComplete: () => void;
     onFetchFailed: (error: string) => void;
   },
 ) {
@@ -22,14 +24,14 @@ export function useNewKline(
 
   const endTime = useRef(0);
   const params = useMemo<KlinesParams | null>(() => {
-    if (!state.data) return null;
+    if (!fileData) return null;
     return {
-      interval: state.data.topics[0].interval as Interval,
-      symbol: state.data.topics[0].symbol,
-      startTime: state.data.startTime,
-      endTime: state.data.endTime,
+      interval: fileData.topics[0].interval as Interval,
+      symbol: fileData.topics[0].symbol,
+      startTime: fileData.startTime,
+      endTime: fileData.endTime,
     };
-  }, [state.data]);
+  }, [fileData]);
   const { data, isError, fetchNextPage } = useKlineInfiniteQuery(params);
   const timerId = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -65,6 +67,7 @@ export function useNewKline(
       if (startTime.current >= endTime.current) {
         clearInterval(timerId.current);
         timerId.current = null;
+        onFetchComplete();
         return;
       }
 
