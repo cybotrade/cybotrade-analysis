@@ -34,8 +34,6 @@ export interface IFileDataState {
     startTime: number;
     endTime: number;
   };
-  fetchedPercentage: number;
-  error: string;
   mode:
     | 'PRE_UPLOAD'
     | 'UPLOADING'
@@ -104,7 +102,6 @@ const FileReducer = (state: IFileDataState, action: TActions): IFileDataState =>
 };
 export const FileDataProvider = ({ children }: PropsWithChildren) => {
   const [state, dispatch] = useReducer(FileReducer, {
-    fetchedPercentage: 0,
     mode: 'PRE_UPLOAD',
   } as IFileDataState);
 

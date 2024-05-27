@@ -32,7 +32,7 @@ const Case = ({ children }: PropsWithChildren<{ value: IFileDataState['mode'] }>
 
 const FileDropzone = () => {
   const router = useRouter();
-  const { mode, data, fetchedPercentage, error } = useFileData();
+  const { mode, data } = useFileData();
   const { onModeChange, onFileChange } = useFileAPI();
   const [errorMessage, setErrorMessage] = useState('Failed');
 
@@ -120,7 +120,7 @@ const FileDropzone = () => {
                 onProgressComplete={() =>
                   setTimeout(() => {
                     onModeChange('DONE_ANALYSING');
-                    router.push('/new/analysis/candle-chart');
+                    router.push('/analysis/candle-chart');
                   }, 1000)
                 }
               />
