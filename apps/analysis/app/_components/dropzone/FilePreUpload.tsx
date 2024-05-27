@@ -2,9 +2,7 @@ import { DropzoneState } from 'react-dropzone';
 
 import { Upload } from '@app/_assets/icons';
 
-interface IFilePreUploadProps extends DropzoneState {}
-
-const FilePreUpload = ({ getRootProps, getInputProps }: IFilePreUploadProps) => {
+const FilePreUpload = ({ getRootProps, getInputProps }: DropzoneState) => {
   return (
     <div
       {...getRootProps({ className: 'dropzone' })}

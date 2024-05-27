@@ -1,8 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Dispatch, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { IBacktest, TActions } from '@app/_providers/backtest';
-import { IFileContent, IFileDataState, ITopic } from '@app/_providers/file';
+import { IFileDataState } from '@app/_providers/file';
 
 export function usePermutationsWorker(
   fileData: IFileDataState['data'],
@@ -10,26 +9,26 @@ export function usePermutationsWorker(
     onProcessSuccess: (data: any) => void;
   },
 ) {
+  const worker = useRef<Worker | null>(null);
+
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const worker = new Worker(new URL('@app/_workers/permutations.worker.js', import.meta.url));
-
+  const startPermutationsWorker = useCallback(() => {
+    if (!worker.current)
+      worker.current = new Worker(new URL('@app/_workers/permutations.worker.js', import.meta.url));
     try {
       const kline = queryClient.getQueriesData({ queryKey: ['candles'] });
-      worker.postMessage({ kline, fileData });
-      worker.addEventListener('message', (event) => {
+      worker.current.postMessage({ kline, fileData });
+      worker.current.addEventListener('message', (event) => {
         callbacks.onProcessSuccess(event.data);
       });
-      worker.addEventListener('error', (event) => {
+      worker.current.addEventListener('error', (event) => {
         throw new Error('Process Failed');
       });
     } catch (e) {
       throw new Error('Process Failed');
     }
+  }, [fileData]);
 
-    return () => {
-      worker.terminate();
-    };
-  }, []);
+  return { startPermutationsWorker };
 }

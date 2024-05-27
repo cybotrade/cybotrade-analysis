@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import RadialMenu from '@app/_components/shared/RadialMenu';
+import { BacktestDataProvider } from '@app/_providers/backtest';
 import { ClientProvider } from '@app/_providers/client';
 import { FileDataProvider } from '@app/_providers/file';
 import '@app/globals.css';
@@ -17,11 +17,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }):
       <body className="flex min-h-screen min-w-screen transition-colors duration-200">
         <ClientProvider>
           <FileDataProvider>
-            <div className="font-sans overflow-hidden">
-              <main className="absolute top-0 left-0 w-full h-full p-4 overflow-hidden">
-                {children}
-              </main>
-            </div>
+            <BacktestDataProvider>
+              <div className="font-sans overflow-hidden">
+                <main className="absolute top-0 left-0 w-full h-full p-4 overflow-hidden">
+                  {children}
+                </main>
+              </div>
+            </BacktestDataProvider>
           </FileDataProvider>
         </ClientProvider>
       </body>

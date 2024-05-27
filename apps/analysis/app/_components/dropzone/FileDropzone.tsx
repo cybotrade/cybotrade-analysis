@@ -1,14 +1,17 @@
 'use client';
 
 import { filesize } from 'filesize';
+import { useRouter } from 'next/navigation';
 import { PropsWithChildren, ReactNode, isValidElement, useEffect, useState } from 'react';
 import Dropzone, { DropEvent, ErrorCode, FileRejection } from 'react-dropzone';
 
 import FileError from '@app/_components/dropzone/FileError';
 import FilePostUpload from '@app/_components/dropzone/FilePostUpload';
 import FilePreUpload from '@app/_components/dropzone/FilePreUpload';
+import FilePreview from '@app/_components/dropzone/FilePreview';
 import FileProgress from '@app/_components/dropzone/FileProgress';
 import KlineProgress from '@app/_components/dropzone/KlineProgress';
+import WorkersProgress from '@app/_components/dropzone/WorkersProgress';
 import { cn } from '@app/_lib/utils';
 import { IFileDataState, useFileAPI, useFileData } from '@app/_providers/file';
 import { convertBytes } from '@app/_utils/helper';
@@ -28,6 +31,7 @@ const Case = ({ children }: PropsWithChildren<{ value: IFileDataState['mode'] }>
 );
 
 const FileDropzone = () => {
+  const router = useRouter();
   const { mode, data, fetchedPercentage, error } = useFileData();
   const { onModeChange, onFileChange } = useFileAPI();
   const [errorMessage, setErrorMessage] = useState('Failed');
@@ -93,25 +97,36 @@ const FileDropzone = () => {
             </Case>
             <Case value="UPLOADING">
               <FileProgress
-                file={props.acceptedFiles[0]}
+                file={data?.file}
                 onProgressComplete={() => onModeChange('POST_UPLOAD')}
               />
             </Case>
             <Case value="POST_UPLOAD">
-              <FilePostUpload
-                file={props.acceptedFiles[0]}
-                onAnalysis={() => onModeChange('ANALYSING')}
-              />
+              <FilePostUpload file={data?.file} onAnalysis={() => onModeChange('ANALYSING')} />
             </Case>
             <Case value="ANALYSING">
               <KlineProgress
                 fileData={data}
-                onFetchComplete={() => console.log('Complete')}
+                onFetchComplete={() => setTimeout(() => onModeChange('PROCESSING'), 1000)}
                 onFetchFailed={(error) => {
                   setErrorMessage(error);
                   onModeChange('ERROR');
                 }}
               />
+            </Case>
+            <Case value="PROCESSING">
+              <WorkersProgress
+                fileData={data}
+                onProgressComplete={() =>
+                  setTimeout(() => {
+                    onModeChange('DONE_ANALYSING');
+                    router.push('/new/analysis/candle-chart');
+                  }, 1000)
+                }
+              />
+            </Case>
+            <Case value="DONE_ANALYSING">
+              <FilePreview file={data?.file} onShowResult={() => router.forward()} />
             </Case>
             <Case value="ERROR">
               <FileError

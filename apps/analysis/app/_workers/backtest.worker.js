@@ -14,6 +14,8 @@ onmessage = async (event) => {
   let parsedTrades = JSON.parse(permutations.get(permutationId)).trades;
   let symbols = Object.keys(parsedTrades);
 
+  postMessage({ type: 'PROCESSING', progress: 0.2 });
+
   const data = [];
 
   for (const [index, symbol] of symbols.entries()) {
@@ -65,7 +67,15 @@ onmessage = async (event) => {
       },
     ]);
   }
-  postMessage({
-    result: JSON.stringify(data),
-  });
+  postMessage({ type: 'PROCESSING', progress: 0.5 });
+
+  setTimeout(
+    () =>
+      postMessage({
+        type: 'COMPLETE',
+        result: JSON.stringify(data),
+        progress: 0.7,
+      }),
+    2000,
+  );
 };
