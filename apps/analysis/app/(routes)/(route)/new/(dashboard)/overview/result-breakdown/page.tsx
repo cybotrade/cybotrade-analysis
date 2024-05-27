@@ -9,9 +9,9 @@ import { PerformanceData } from '@app/_lib/calculation';
 import { useBacktestData } from '@app/_providers/backtest';
 
 const ResultBreakdownPage = () => {
-  const { processing, selectedBacktest } = useBacktestData();
+  const { progress, selectedBacktest } = useBacktestData();
 
-  return processing ? (
+  return progress !== 100 ? (
     <Processing />
   ) : !selectedBacktest || selectedBacktest.data.size === 0 ? (
     <NoRecord />

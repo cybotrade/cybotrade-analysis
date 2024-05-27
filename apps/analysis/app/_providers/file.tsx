@@ -36,7 +36,14 @@ export interface IFileDataState {
   };
   fetchedPercentage: number;
   error: string;
-  mode: 'PRE_UPLOAD' | 'UPLOADING' | 'POST_UPLOAD' | 'ANALYSING' | 'DONE_ANALYSING' | 'ERROR';
+  mode:
+    | 'PRE_UPLOAD'
+    | 'UPLOADING'
+    | 'POST_UPLOAD'
+    | 'ANALYSING'
+    | 'PROCESSING'
+    | 'DONE_ANALYSING'
+    | 'ERROR';
 }
 
 interface IFileAPI {

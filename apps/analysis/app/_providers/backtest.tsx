@@ -1,6 +1,5 @@
 'use client';
 
-import { data } from 'autoprefixer';
 import {
   PropsWithChildren,
   createContext,
@@ -34,7 +33,7 @@ export interface IBacktest {
 }
 
 export interface IBacktestState {
-  processing: boolean;
+  progress: number;
   topics: ITopic[];
   initialCapital: number;
   permutations: Map<string, Map<string, IBacktest>> | null;
@@ -50,21 +49,27 @@ export interface IBacktestState {
 interface IBacktestAPI {
   onPermutationSelect: (id: string) => void;
   onArithmeticToggle: (isToggle: boolean) => void;
+  computeAllPermutations: () => void;
 }
 
 const BacktestDataContext = createContext<IBacktestState | null>(null);
 const BacktestAPIContext = createContext<IBacktestAPI>({
   onPermutationSelect: () => {},
   onArithmeticToggle: () => {},
+  computeAllPermutations: () => {},
 });
 export type TActions =
   | {
       type: 'SET_DATA';
-      payload: Omit<IBacktestState, 'selectedBacktest' | 'processing' | 'mode'>;
+      payload: Omit<IBacktestState, 'selectedBacktest' | 'progress' | 'mode'>;
+    }
+  | {
+      type: 'PROCESSING_BACKTEST';
+      payload: Pick<IBacktestState, 'progress'>;
     }
   | {
       type: 'SET_BACKTEST';
-      payload: Pick<IBacktestState, 'selectedBacktest'>;
+      payload: Pick<IBacktestState, 'selectedBacktest' | 'progress'>;
     }
   | {
       type: 'SET_MODE';
@@ -74,6 +79,11 @@ export type TActions =
 const BacktestReducer = (state: IBacktestState, action: TActions): IBacktestState => {
   switch (action.type) {
     case 'SET_DATA':
+      return {
+        ...state,
+        ...action.payload,
+      };
+    case 'PROCESSING_BACKTEST':
       return {
         ...state,
         ...action.payload,
@@ -94,28 +104,30 @@ const BacktestReducer = (state: IBacktestState, action: TActions): IBacktestStat
 export const BacktestDataProvider = ({ children }: PropsWithChildren) => {
   const { data: fileData } = useFileData();
   const [state, dispatch] = useReducer(BacktestReducer, { mode: 'ARITHMETIC' } as IBacktestState);
-  const [permutationId, setPermutationId] = useState(fileData.permutations.keys().next().value);
-
-  const { processing } = useBacktestWorker(
-    permutationId,
-    fileData,
-    state.permutations?.get(permutationId),
-    {
-      onProcessSuccess: ({ id, backtest }) => {
-        dispatch({
-          type: 'SET_BACKTEST',
-          payload: {
-            selectedBacktest: {
-              id,
-              data: backtest,
-            },
-          },
-        });
-      },
+  const { startBacktestWorker } = useBacktestWorker(fileData, {
+    onProcessing: (progress) => {
+      dispatch({
+        type: 'PROCESSING_BACKTEST',
+        payload: {
+          progress,
+        },
+      });
     },
-  );
+    onProcessSuccess: ({ id, backtest, progress }) => {
+      dispatch({
+        type: 'SET_BACKTEST',
+        payload: {
+          progress,
+          selectedBacktest: {
+            id,
+            data: backtest,
+          },
+        },
+      });
+    },
+  });
 
-  usePermutationsWorker(fileData, {
+  const { startPermutationsWorker } = usePermutationsWorker(fileData, {
     onProcessSuccess: (data) => {
       const permutations = new Map<string, Map<string, IBacktest>>(JSON.parse(data.result));
 
@@ -134,9 +146,11 @@ export const BacktestDataProvider = ({ children }: PropsWithChildren) => {
   });
   const api = useMemo(() => {
     const onPermutationSelect = (id: string) => {
-      setPermutationId(id);
+      startBacktestWorker(id, state.permutations?.get(id));
     };
-
+    const computeAllPermutations = () => {
+      startPermutationsWorker();
+    };
     const onArithmeticToggle = (isTgggle: boolean) => {
       dispatch({
         type: 'SET_MODE',
@@ -144,13 +158,11 @@ export const BacktestDataProvider = ({ children }: PropsWithChildren) => {
       });
     };
 
-    return { onPermutationSelect, onArithmeticToggle };
-  }, []);
+    return { onPermutationSelect, onArithmeticToggle, computeAllPermutations };
+  }, [startBacktestWorker, startPermutationsWorker, state.permutations]);
   return (
     <BacktestAPIContext.Provider value={api}>
-      <BacktestDataContext.Provider value={{ ...state, processing }}>
-        {children}
-      </BacktestDataContext.Provider>
+      <BacktestDataContext.Provider value={{ ...state }}>{children}</BacktestDataContext.Provider>
     </BacktestAPIContext.Provider>
   );
 };

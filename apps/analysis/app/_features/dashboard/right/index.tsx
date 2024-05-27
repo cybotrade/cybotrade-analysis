@@ -11,10 +11,10 @@ type TDashboardRightSideProps = {
 };
 
 const DashboardRightSide = ({ loading, error }: TDashboardRightSideProps) => {
-  const { processing, selectedBacktest } = useBacktestData();
+  const { progress, selectedBacktest } = useBacktestData();
   return (
     <div className="col-[2] grid grid-rows-[5%_auto_min-content] w-full h-full gap-3 rounded-lg bg-[#FFFFFF] border border-[#E1D9D6] px-5 py-3">
-      {processing ? (
+      {progress !== 100 ? (
         loading
       ) : !selectedBacktest || selectedBacktest.data.size === 0 ? (
         error

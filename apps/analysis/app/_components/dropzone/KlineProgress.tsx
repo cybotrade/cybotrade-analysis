@@ -23,7 +23,7 @@ const KlineProgress = ({ fileData, onFetchComplete, onFetchFailed }: TKlineProgr
     <div className="border border-primary min-h-full rounded-md flex flex-col justify-end p-7 bg-gradient-to-r from-[#FFEFDC] to-white dark:bg-gradient-to-r dark:from-[#2E1C05] dark:to-[#73501A] gap-2">
       <p className="text-xl max-w-[190px]">Please do not close the window</p>
       <div className="text-xs text-brand-gray">
-        {fetchProgress}%{/* | Second remaining */}
+        Fetching kline {fetchProgress}%{/* | Second remaining */}
       </div>
       <ProgressBar percent={`${fetchProgress}%`} />
     </div>
