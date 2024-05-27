@@ -1,13 +1,7 @@
-'use client';
+import React, { Fragment } from 'react';
 
-import React, { Fragment, useState } from 'react';
-
-import FileDropAndParse from '@app/(routes)/(route)/_components/FileDropAndParse';
+import FileDropzone from '@app/_components/dropzone/FileDropzone';
 import Header from '@app/_components/header';
-import useDrawer from '@app/_hooks/useDrawer';
-import { useFileAPI, useFileData } from '@app/_providers/file';
-
-import { IBackTestDataMultiSymbols } from './type';
 
 const FloatCard = ({ text, className }: { text: string; className: string }) => (
   <div
@@ -16,13 +10,7 @@ const FloatCard = ({ text, className }: { text: string; className: string }) => 
     {text}
   </div>
 );
-
-const Backtest = () => {
-  const drawer = useDrawer();
-  const [analysingError, setAnalysisError] = useState<string | undefined>();
-  const { fetchedPercentage, error } = useFileData();
-  const { onFileChange } = useFileAPI();
-
+const HomePage = () => {
   return (
     <Fragment>
       <Header />
@@ -33,25 +21,7 @@ const Backtest = () => {
             Your most comprehensive and professional backtest reporting system
           </p>
         </div>
-        <FileDropAndParse
-          className="max-w-xl z-10"
-          onChange={(file, result) => onFileChange(file!, result!)}
-          analysingProgress={fetchedPercentage}
-          error={error}
-        />
-        {/*{data && (*/}
-        {/*  <BackTestResultsDrawer*/}
-        {/*    data={data}*/}
-        {/*    drawer={drawer}*/}
-        {/*    fetchedKlinesPercentage={(percentage, error) => {*/}
-        {/*      if (error) {*/}
-        {/*        setAnalysisError(error);*/}
-        {/*      }*/}
-        {/*      setAnalysingProgress(percentage);*/}
-        {/*    }}*/}
-        {/*    onAnalysisFailed={(error) => setAnalysisError(error)}*/}
-        {/*  />*/}
-        {/*)}*/}
+        <FileDropzone />
         {/* Background element */}
         <div className="rounded-full h-[815px] min-w-[815px] border border-primary-light2 absolute top-[-235px] left-[-216px]"></div>
         <div className="rounded-full h-[815px] min-w-[815px] border border-primary-light2 absolute bottom-[-336px] right-[-175px]"></div>
@@ -72,4 +42,4 @@ const Backtest = () => {
   );
 };
 
-export default Backtest;
+export default HomePage;

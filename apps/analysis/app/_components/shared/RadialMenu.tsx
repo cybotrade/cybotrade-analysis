@@ -23,7 +23,7 @@ const RadialMenu = () => {
     () => [
       {
         name: 'candle-chart',
-        href: '/new/analysis/candle-chart',
+        href: '/analysis/candle-chart',
         icon: (
           <CandleChartMenuIcon
             width="100%"
@@ -37,7 +37,7 @@ const RadialMenu = () => {
       },
       {
         name: 'equity-curve',
-        href: '/new/analysis/equity-curve',
+        href: '/analysis/equity-curve',
         icon: (
           <EquityCurveMenuIcon
             width="100%"
@@ -51,7 +51,7 @@ const RadialMenu = () => {
       },
       {
         name: 'monte-carlo',
-        href: '/new/analysis/monte-carlo',
+        href: '/analysis/monte-carlo',
         icon: (
           <MonteCarloMenuIcon
             width="100%"
@@ -65,7 +65,7 @@ const RadialMenu = () => {
       },
       {
         name: 'surface-plot',
-        href: '/new/analysis/surface-plot',
+        href: '/analysis/surface-plot',
         icon: (
           <SurfacePlotMenuIcon
             width="100%"
@@ -79,7 +79,7 @@ const RadialMenu = () => {
       },
       {
         name: 'result-breakdown',
-        href: '/new/overview/result-breakdown',
+        href: '/overview/result-breakdown',
         icon: (
           <ResultBreakdownMenuIcon
             width="100%"
@@ -91,20 +91,20 @@ const RadialMenu = () => {
           />
         ),
       },
-      {
-        name: 'trend',
-        href: '/new/overview/trend',
-        icon: (
-          <TrendMenuIcon
-            width="100%"
-            height="100%"
-            style={{
-              transform: 'rotate(calc(var(--i) * (360deg / -12)))',
-              rotate: '-165deg',
-            }}
-          />
-        ),
-      },
+      // {
+      //   name: 'trend',
+      //   href: '/overview/trend',
+      //   icon: (
+      //     <TrendMenuIcon
+      //       width="100%"
+      //       height="100%"
+      //       style={{
+      //         transform: 'rotate(calc(var(--i) * (360deg / -12)))',
+      //         rotate: '-165deg',
+      //       }}
+      //     />
+      //   ),
+      // },
     ],
     [],
   );
