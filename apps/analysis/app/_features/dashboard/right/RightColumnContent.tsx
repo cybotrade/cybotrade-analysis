@@ -25,7 +25,7 @@ export const RightColumnContent = ({ performance }: TRightColumnContentProps) =>
 
   return (
     <Fragment>
-      <ActionHeader className="mb-3" />
+      <ActionHeader className="mb-3" performance={performance} />
       <DataCarousel
         data={{
           netProfit,

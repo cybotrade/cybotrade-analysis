@@ -2,6 +2,7 @@ export type Selection = {
   id: string;
   value: string;
 };
+
 export const WIDGETS_DATA_SELECTIONS: Selection[] = [
   {
     id: 'return-on-account',
@@ -54,40 +55,40 @@ export const LISTING_DATA_SELECTIONS: Selection[] = [
     id: 'average-trades-per-day',
     value: 'Average Trades per Day',
   },
-  {
-    id: 'worst-trade',
-    value: 'Worst Trade',
-  },
-  {
-    id: 'return-on-account',
-    value: 'Return on Account',
-  },
-  {
-    id: 'profit-factor',
-    value: 'Profit Factor',
-  },
-  {
-    id: 'clamar-ratio',
-    value: 'Clamar Ratio',
-  },
-  {
-    id: 'max-trade-duration',
-    value: 'Max Trade Duration',
-  },
-  {
-    id: 'sharpe-ratio',
-    value: 'Sharpe Ratio',
-  },
-  {
-    id: 'sortino-ratio',
-    value: 'Sortino Ratio',
-  },
-  {
-    id: 'average-trade-duration',
-    value: 'Average Trade Duration',
-  },
-  {
-    id: 'roi',
-    value: 'ROI',
-  },
+  // {
+  //   id: 'worst-trade',
+  //   value: 'Worst Trade',
+  // },
+  // {
+  //   id: 'return-on-account',
+  //   value: 'Return on Account',
+  // },
+  // {
+  //   id: 'profit-factor',
+  //   value: 'Profit Factor',
+  // },
+  // {
+  //   id: 'clamar-ratio',
+  //   value: 'Clamar Ratio',
+  // },
+  // {
+  //   id: 'max-trade-duration',
+  //   value: 'Max Trade Duration',
+  // },
+  // {
+  //   id: 'sharpe-ratio',
+  //   value: 'Sharpe Ratio',
+  // },
+  // {
+  //   id: 'sortino-ratio',
+  //   value: 'Sortino Ratio',
+  // },
+  // {
+  //   id: 'average-trade-duration',
+  //   value: 'Average Trade Duration',
+  // },
+  // {
+  //   id: 'roi',
+  //   value: 'ROI',
+  // },
 ];

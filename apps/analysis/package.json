@@ -9,6 +9,10 @@
     "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
+    "@dnd-kit/core": "6.1.0",
+    "@dnd-kit/modifiers": "7.0.0",
+    "@dnd-kit/sortable": "8.0.0",
+    "@dnd-kit/utilities": "3.2.2",
     "@gsap/react": "2.1.0",
     "@hookform/resolvers": "^3.3.3",
     "@radix-ui/react-accordion": "^1.1.2",
@@ -35,6 +39,7 @@
     "embla-carousel-react": "8.0.0-rc18",
     "embla-carousel-wheel-gestures": "8.0.0-rc05",
     "filesize": "10.1.2",
+    "framer-motion": "11.2.9",
     "gsap": "3.12.5",
     "lightweight-charts": "^4.1.1",
     "lucide-react": "^0.299.0",

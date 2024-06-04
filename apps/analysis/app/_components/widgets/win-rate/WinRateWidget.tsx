@@ -11,9 +11,9 @@ type TWinRateWidgetProps = {
 export const WinRateWidget = ({ winRate }: TWinRateWidgetProps) => {
   return (
     <Widget
-      className="bg-gradient-to-b from-[#FFE5E4]  to-transparent relative flex flex-col justify-between gap-5"
+      className="min-w-[170px] min-h-[170px] 3xl:p-3 bg-gradient-to-b from-[#FFE5E4] to-transparent relative flex flex-col justify-between gap-5"
       background={
-        <BarsBackground className="absolute w-full h-full bottom-1/3 left-1/2 -translate-x-1/2 translate-y-1/3 p-12" />
+        <BarsBackground className="absolute w-full h-full bottom-1/3 left-1/2 -translate-x-1/2 translate-y-1/3 p-4" />
       }
     >
       <Stat
@@ -23,8 +23,8 @@ export const WinRateWidget = ({ winRate }: TWinRateWidgetProps) => {
           .abs()
           .mul(100)
           .toFixed(2)}%`}
-        labelClassName="text-2xl"
-        contentClassName="text-5xl"
+        labelClassName="text-lg"
+        contentClassName="text-2xl"
       />
     </Widget>
   );

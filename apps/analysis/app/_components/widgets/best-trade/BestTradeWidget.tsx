@@ -11,7 +11,7 @@ type TBestTradeWidgetProps = {
 export const BestTradeWidget = ({ bestTrade }: TBestTradeWidgetProps) => {
   return (
     <Widget
-      className="bg-[#FFFBDB] relative flex flex-col justify-between gap-5"
+      className="min-w-[170px] min-h-[170px] 3xl:p-3 bg-[#FFFBDB] relative flex flex-col justify-between gap-5"
       background={
         <VertexBackground className="absolute w-full h-full bottom-1/3 left-1/2 -translate-x-1/2 translate-y-1/3" />
       }
@@ -20,8 +20,8 @@ export const BestTradeWidget = ({ bestTrade }: TBestTradeWidgetProps) => {
         containerClassName="items-left"
         label="Best Trade"
         content={`${bestTrade.greaterThanOrEqualTo(0) ? '+' : '-'}${bestTrade.abs().toFixed(2)}`}
-        labelClassName="text-xl order-last text-[#DBD6AC]"
-        contentClassName="text-4xl"
+        labelClassName="text-lg order-last text-[#DBD6AC]"
+        contentClassName="text-2xl"
       />
     </Widget>
   );
