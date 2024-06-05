@@ -12,7 +12,7 @@ type TLargestRoiWidgetProps = {
 export const LargestRoiWidget = ({ largestRoi }: TLargestRoiWidgetProps) => {
   return (
     <Widget
-      className="min-w-[170px] min-h-[170px] 3xl:p-3 bg-[#E4EFFF] relative flex flex-col justify-between gap-5"
+      className="min-w-[140px] min-h-[140px] p-3 3xl:p-3 bg-[#E4EFFF] relative flex flex-col justify-between gap-5"
       background={
         <CircularBackground className="absolute w-full h-full bottom-1/3 left-1/2 -translate-x-1/2 translate-y-1/3" />
       }

@@ -23,8 +23,8 @@ const HomePage = () => {
         </div>
         <FileDropzone />
         {/* Background element */}
-        <div className="rounded-full h-[815px] min-w-[815px] border border-primary-light2 absolute top-[-235px] left-[-216px]"></div>
-        <div className="rounded-full h-[815px] min-w-[815px] border border-primary-light2 absolute bottom-[-336px] right-[-175px]"></div>
+        <div className="pointer-events-none rounded-full h-[815px] min-w-[815px] border border-primary-light2 absolute top-[-235px] left-[-216px]"></div>
+        <div className="pointer-events-none rounded-full h-[815px] min-w-[815px] border border-primary-light2 absolute bottom-[-336px] right-[-175px]"></div>
         <FloatCard
           text="Comparing results"
           className="text-[#ADF79A] border-[#ADF79A] absolute top-[40%] left-[7%]"

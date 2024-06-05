@@ -19,7 +19,7 @@ const DashboardMainWrapper = ({ children }: PropsWithChildren) => {
   return (
     <Fragment>
       <RadialMenu />
-      <div className="w-full h-full grid auto-cols-[1fr_28rem] gap-8">
+      <div className="w-full h-full grid auto-cols-[1fr_24rem] gap-8">
         <DashboardLeftSide>
           {children}
           {segment === 'analysis' && <DashboardFooter />}

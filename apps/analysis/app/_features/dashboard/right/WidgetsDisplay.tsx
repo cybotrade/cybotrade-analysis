@@ -2,6 +2,7 @@
 
 import { Decimal } from 'decimal.js';
 
+import { MainWidget } from '@app/_components/dashboard/right/MainWidget';
 import { Dots } from '@app/_components/shared/Dots';
 import {
   AverageTradesDaysWidget,
@@ -26,7 +27,7 @@ type TDataCarouselProps = {
   };
 };
 
-export const DataCarousel = ({
+export const WidgetsDisplay = ({
   data: {
     netProfit,
     initialCapital,
@@ -40,27 +41,29 @@ export const DataCarousel = ({
   const { setApi, selectedIndex, totalSlides, handleDotButtonClick } = useCarousel();
 
   return (
-    <div className="h-fit row-[2]">
-      <CarouselContainer setApi={setApi} className="flex flex-col justify-between">
-        <CarouselContent className="h-[23rem] max-w-[26.5rem]">
-          <CarouselItem className="pl-4">
-            <TotalReturnWidget netProfit={netProfit} initialCapital={initialCapital} />
-          </CarouselItem>
-          <CarouselItem className="pl-4">
+    <div className="h-full flex flex-col gap-2">
+      <MainWidget
+        content={<TotalReturnWidget netProfit={netProfit} initialCapital={initialCapital} />}
+      />
+
+      <CarouselContainer setApi={setApi} opts={{ slidesToScroll: 2 }}>
+        <CarouselContent className="-ml-2 h-[9rem] max-w-[22rem]">
+          <CarouselItem className="pl-2 basis-1/2 max-w-[1]">
             <WinRateWidget winRate={winRate} />
           </CarouselItem>
-          <CarouselItem className="pl-4">
-            <MaxDDWidget maxDrawdown={maxDrawdown} />
-          </CarouselItem>
-          <CarouselItem className="pl-4">
+          <CarouselItem className="pl-2 basis-1/2">
             <BestTradeWidget bestTrade={bestTrade} />
           </CarouselItem>
-          <CarouselItem className="pl-4">
-            <AverageTradesDaysWidget averageTradesPerDay={averageTradesPerDay} />
-          </CarouselItem>
-          <CarouselItem className="pl-4">
+          <CarouselItem className="pl-2 basis-1/2">
             <LargestRoiWidget largestRoi={largestRoi} />
           </CarouselItem>
+          <CarouselItem className="pl-2 basis-1/2">
+            <MaxDDWidget maxDrawdown={maxDrawdown} />
+          </CarouselItem>
+          <CarouselItem className="pl-2 basis-1/2">
+            <AverageTradesDaysWidget averageTradesPerDay={averageTradesPerDay} />
+          </CarouselItem>
+          <CarouselItem className="pl-2 basis-1/2"></CarouselItem>
         </CarouselContent>
         <Dots
           activeIndex={selectedIndex}

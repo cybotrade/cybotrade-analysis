@@ -8,7 +8,7 @@ const DashboardLeftSide = ({ children }: PropsWithChildren) => {
   return (
     <div className="flex gap-5">
       <DashboardSidebar />
-      <div className="w-full h-auto">
+      <div className="w-full grid auto-rows-[min-content_1fr_min-content]">
         <DashboardHeader />
         {children}
       </div>

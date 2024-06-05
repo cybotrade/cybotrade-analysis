@@ -2,8 +2,8 @@ import { Decimal } from 'decimal.js';
 import { Fragment } from 'react';
 
 import { ActionHeader } from '@app/_features/dashboard/right/ActionHeader';
-import { DataCarousel } from '@app/_features/dashboard/right/DataCarousel';
 import { DataDetails } from '@app/_features/dashboard/right/DataDetails';
+import { WidgetsDisplay } from '@app/_features/dashboard/right/WidgetsDisplay';
 import { PerformanceData } from '@app/_lib/calculation';
 
 type TRightColumnContentProps = {
@@ -26,7 +26,7 @@ export const RightColumnContent = ({ performance }: TRightColumnContentProps) =>
   return (
     <Fragment>
       <ActionHeader className="mb-3" performance={performance} />
-      <DataCarousel
+      <WidgetsDisplay
         data={{
           netProfit,
           initialCapital,

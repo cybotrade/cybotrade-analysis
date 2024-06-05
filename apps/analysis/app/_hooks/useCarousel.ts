@@ -51,16 +51,16 @@ export function useCarousel() {
     if (!api) return;
     onInit(api);
     onSlideSelect(api);
-    onScroll(api);
+    // onScroll(api);
 
     api.on('reInit', onInit);
     api.on('select', onSlideSelect);
-    api.on('scroll', onScroll);
+    // api.on('scroll', onScroll);
 
     return () => {
       api.off('reInit', onInit);
       api.off('select', onSlideSelect);
-      api.off('scroll', onScroll);
+      // api.off('scroll', onScroll);
     };
   }, [api, onInit, onSlideSelect, onScroll]);
 
