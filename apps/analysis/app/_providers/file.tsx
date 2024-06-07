@@ -1,9 +1,17 @@
 'use client';
 
-import { PropsWithChildren, createContext, useContext, useMemo, useReducer } from 'react';
+import { UniqueIdentifier } from '@dnd-kit/core';
+import React, {
+  PropsWithChildren,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+} from 'react';
 
-import { useNewKline } from '@app/_hooks/useNewKline';
 import { replaceEmptyKeys } from '@app/_lib/utils';
+import { createRange } from '@app/_utils/helper';
 
 export interface ITopic {
   category: string;
@@ -12,6 +20,13 @@ export interface ITopic {
   symbol: string;
   type: string;
 }
+
+export type TCell = {
+  id: UniqueIdentifier;
+  children: {
+    type: UniqueIdentifier;
+  } | null;
+};
 
 export interface IFileContent {
   file: File;
@@ -33,7 +48,7 @@ export interface IFileDataState {
     initialCapital: number;
     startTime: number;
     endTime: number;
-  };
+  } | null;
   mode:
     | 'PRE_UPLOAD'
     | 'UPLOADING'
@@ -42,11 +57,13 @@ export interface IFileDataState {
     | 'PROCESSING'
     | 'DONE_ANALYSING'
     | 'ERROR';
+  widgets: Record<string, TCell[]>;
 }
 
 interface IFileAPI {
   onFileChange: (file: File, content: Object) => void;
   onModeChange: (mode: IFileDataState['mode']) => void;
+  onWidgetsChange: (widgets: Record<string, TCell[]>) => void;
 }
 
 export type TActions =
@@ -56,12 +73,17 @@ export type TActions =
       payload: {
         data: IFileContent;
       };
+    }
+  | {
+      type: 'SET_WIDGETS';
+      payload: IFileDataState['widgets'];
     };
 
 const FileDataContext = createContext<IFileDataState | null>(null);
 const FileAPIContext = createContext<IFileAPI>({
   onFileChange: () => {},
   onModeChange: () => {},
+  onWidgetsChange: () => {},
 });
 const FileReducer = (state: IFileDataState, action: TActions): IFileDataState => {
   switch (action.type) {
@@ -98,12 +120,42 @@ const FileReducer = (state: IFileDataState, action: TActions): IFileDataState =>
           endTime: content.end_time,
         },
       };
+    case 'SET_WIDGETS':
+      return {
+        ...state,
+        widgets: action.payload,
+      };
   }
 };
+const defaultWidgets = [
+  'win-rate',
+  'best-trade',
+  'largest-roi',
+  'max-drawdown',
+  'average-trades-per-day',
+];
 export const FileDataProvider = ({ children }: PropsWithChildren) => {
   const [state, dispatch] = useReducer(FileReducer, {
+    data: null,
     mode: 'PRE_UPLOAD',
+    widgets: {
+      A: createRange(6, (index) => ({
+        id: `A${index + 1}`,
+        children: defaultWidgets[index] ? { type: defaultWidgets[index] } : null,
+      })),
+    },
   } as IFileDataState);
+
+  useEffect(() => {
+    const storedWidgets = localStorage.getItem('widgets');
+
+    if (storedWidgets) {
+      dispatch({
+        type: 'SET_WIDGETS',
+        payload: JSON.parse(storedWidgets),
+      });
+    }
+  }, []);
 
   const api = useMemo(() => {
     const onFileChange = (file: File, content: Object) => {
@@ -117,7 +169,6 @@ export const FileDataProvider = ({ children }: PropsWithChildren) => {
         },
       });
     };
-
     const onModeChange = (mode: IFileDataState['mode']) => {
       dispatch({
         type: 'SET_MODE',
@@ -125,7 +176,16 @@ export const FileDataProvider = ({ children }: PropsWithChildren) => {
       });
     };
 
-    return { onFileChange, onModeChange };
+    const onWidgetsChange = (widgets: Record<string, TCell[]>) => {
+      localStorage.setItem('widgets', JSON.stringify(widgets));
+
+      dispatch({
+        type: 'SET_WIDGETS',
+        payload: widgets,
+      });
+    };
+
+    return { onFileChange, onModeChange, onWidgetsChange };
   }, []);
 
   return (

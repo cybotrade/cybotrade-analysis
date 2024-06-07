@@ -1,8 +1,6 @@
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import ProgressBar from '@app/_components/progress-bar';
-import { useBacktestWorker } from '@app/_hooks/useBacktestWorker';
 import { useBacktestAPI, useBacktestData } from '@app/_providers/backtest';
 import { IFileDataState } from '@app/_providers/file';
 
@@ -15,6 +13,8 @@ const WorkersProgress = ({ fileData, onProgressComplete }: TWorkersProgressProps
   const { progress } = useBacktestData();
   const { onPermutationSelect, computeAllPermutations } = useBacktestAPI();
   useEffect(() => {
+    if (!fileData) throw new Error('No File Data');
+
     computeAllPermutations();
     onPermutationSelect(fileData.permutations.keys().next().value);
   }, []);

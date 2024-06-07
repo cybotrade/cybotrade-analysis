@@ -129,6 +129,8 @@ export const BacktestDataProvider = ({ children }: PropsWithChildren) => {
 
   const { startPermutationsWorker } = usePermutationsWorker(fileData, {
     onProcessSuccess: (data) => {
+      if (!fileData) throw new Error('No File Data');
+
       const permutations = new Map<string, Map<string, IBacktest>>(JSON.parse(data.result));
 
       permutations.forEach((value, id) => {

@@ -9,9 +9,8 @@ import { useBacktestAPI, useBacktestData } from '@app/_providers/backtest';
 import { useFileData } from '@app/_providers/file';
 
 export const DashboardHeader = () => {
-  const {
-    data: { file, permutations },
-  } = useFileData();
+  const { data } = useFileData();
+
   const { selectedBacktest } = useBacktestData();
   const { onPermutationSelect } = useBacktestAPI();
   const [selectedOption, setSelectedOption] = useState(selectedBacktest.id || '');
@@ -20,17 +19,19 @@ export const DashboardHeader = () => {
     setSelectedOption(option);
     onPermutationSelect(option);
   };
-  if (permutations.size === 0) throw new Error('No Permutations');
+  if (!data) throw new Error('No File Data');
+  if (data.permutations.size === 0) throw new Error('No Permutations');
+
   return (
     <div className="font-sora flex w-full h-16 min-h-16 relative gap-2">
       <div className="relative rounded-xl w-full h-full bg-[#FFFFFF] border border-[#E1D9D6] p-4 flex justify-between items-center">
         <CybotradeLogo className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
         <div className="flex items-center gap-5 z-10">
-          <Text content={file.name || ''} className="text-md underline font-bold" />
+          <Text content={data.file.name || ''} className="text-md underline font-bold" />
           <PermutationSelect
             key={selectedOption}
             selectedOption={selectedOption}
-            options={[...permutations.keys()]}
+            options={[...data.permutations.keys()]}
             onOptionSelected={handleSelectPermutation}
           />
         </div>

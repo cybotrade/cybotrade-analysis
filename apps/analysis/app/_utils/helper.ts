@@ -50,3 +50,7 @@ export function daysToHours(days: number) {
 export function convertBytes(megabytes: number) {
   return megabytes * Math.pow(1024, 2);
 }
+
+export function createRange<T = number>(length: number, initializer: (index: number) => T): T[] {
+  return [...new Array(length)].map((_, index) => initializer(index));
+}

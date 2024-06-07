@@ -2,8 +2,8 @@ import { Decimal } from 'decimal.js';
 import { Fragment } from 'react';
 
 import { ActionHeader } from '@app/_features/dashboard/right/ActionHeader';
-import { DataCarousel } from '@app/_features/dashboard/right/DataCarousel';
 import { DataDetails } from '@app/_features/dashboard/right/DataDetails';
+import { WidgetsDisplay } from '@app/_features/dashboard/right/WidgetsDisplay';
 import { PerformanceData } from '@app/_lib/calculation';
 
 type TRightColumnContentProps = {
@@ -11,9 +11,6 @@ type TRightColumnContentProps = {
 };
 
 export const RightColumnContent = ({ performance }: TRightColumnContentProps) => {
-  const netProfit = new Decimal(performance.netProfit);
-  const initialCapital = new Decimal(performance.initialCapital);
-  const winRate = new Decimal(performance.winRate);
   const sharpeRatio = new Decimal(performance.sharpeRatio);
   const calmarRatio = new Decimal(performance.calmarRatio);
   const maxDrawdown = new Decimal(performance.maxDrawdown);
@@ -25,18 +22,8 @@ export const RightColumnContent = ({ performance }: TRightColumnContentProps) =>
 
   return (
     <Fragment>
-      <ActionHeader className="mb-3" />
-      <DataCarousel
-        data={{
-          netProfit,
-          initialCapital,
-          winRate,
-          maxDrawdown,
-          bestTrade,
-          largestRoi,
-          averageTradesPerDay,
-        }}
-      />
+      <ActionHeader className="mb-3" performance={performance} />
+      <WidgetsDisplay performance={performance} />
       <DataDetails
         details={{
           sharpeRatio,

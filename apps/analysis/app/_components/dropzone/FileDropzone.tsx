@@ -96,13 +96,17 @@ const FileDropzone = () => {
               <FilePreUpload {...props} />
             </Case>
             <Case value="UPLOADING">
-              <FileProgress
-                file={data?.file}
-                onProgressComplete={() => onModeChange('POST_UPLOAD')}
-              />
+              {data && (
+                <FileProgress
+                  file={data?.file}
+                  onProgressComplete={() => onModeChange('POST_UPLOAD')}
+                />
+              )}
             </Case>
             <Case value="POST_UPLOAD">
-              <FilePostUpload file={data?.file} onAnalysis={() => onModeChange('ANALYSING')} />
+              {data && (
+                <FilePostUpload file={data?.file} onAnalysis={() => onModeChange('ANALYSING')} />
+              )}
             </Case>
             <Case value="ANALYSING">
               <KlineProgress
@@ -126,7 +130,7 @@ const FileDropzone = () => {
               />
             </Case>
             <Case value="DONE_ANALYSING">
-              <FilePreview file={data?.file} onShowResult={() => router.forward()} />
+              {data && <FilePreview file={data?.file} onShowResult={() => router.forward()} />}{' '}
             </Case>
             <Case value="ERROR">
               <FileError

@@ -36,13 +36,13 @@ export const DataDetails = ({
         <Stat
           label="Sharpe Ratio"
           content={sharpeRatio.toFixed(2)}
-          labelClassName="text-sm md:text-xs 2xl:text-md"
+          labelClassName="text-xs 2xl:text-md"
           contentClassName="font-bold md:text-sm 2xl:text-lg"
         />
         <Stat
           label="Calmar Ratio"
           content={calmarRatio.toFixed(2)}
-          labelClassName="text-sm md:text-xs text-end 2xl:text-md"
+          labelClassName="text-xs text-end 2xl:text-md"
           contentClassName="font-bold text-end md:text-sm 2xl:text-lg"
         />
       </div>
@@ -51,13 +51,13 @@ export const DataDetails = ({
         <Stat
           label="Sortino Ratio"
           content="37.63%"
-          labelClassName="text-sm md:text-xs 2xl:text-md"
+          labelClassName="text-xs 2xl:text-md"
           contentClassName="font-bold md:text-sm 2xl:text-lg"
         />
         <Stat
           label="MDD"
           content={`${maxDrawdown.mul(100).toFixed(2)}%`}
-          labelClassName="text-sm md:text-xs text-end 2xl:text-md"
+          labelClassName="text-xs text-end 2xl:text-md"
           contentClassName="font-bold text-end md:text-sm 2xl:text-lg"
         />
       </div>
@@ -69,7 +69,7 @@ export const DataDetails = ({
             .abs()
             .mul(100)
             .toFixed(2)}%`}
-          labelClassName="text-sm md:text-xs 2xl:text-md"
+          labelClassName="text-xs 2xl:text-md"
           contentClassName={cn(
             'font-bold md:text-sm 2xl:text-lg',
             largestRoi.greaterThanOrEqualTo(0)
@@ -80,7 +80,7 @@ export const DataDetails = ({
         <Stat
           label="Avg. Trades/Day"
           content={averageTradesPerDay.toFixed(2)}
-          labelClassName="text-sm md:text-xs text-end 2xl:text-md"
+          labelClassName="text-xs text-end 2xl:text-md"
           contentClassName="font-bold text-end md:text-sm 2xl:text-lg"
         />
       </div>
@@ -89,7 +89,7 @@ export const DataDetails = ({
         <Stat
           label="Best Trade"
           content={`${bestTrade.greaterThanOrEqualTo(0) ? '+' : '-'}${bestTrade.abs().toFixed(2)}`}
-          labelClassName="text-sm md:text-xs 2xl:text-md"
+          labelClassName="text-xs 2xl:text-md"
           contentClassName={cn(
             'font-bold md:text-sm 2xl:text-lg',
             bestTrade.greaterThanOrEqualTo(0)
@@ -105,7 +105,7 @@ export const DataDetails = ({
           content={`${worstTrade.greaterThanOrEqualTo(0) ? '+' : '-'}${worstTrade
             .abs()
             .toFixed(2)}`}
-          labelClassName="text-sm md:text-xs 2xl:text-md"
+          labelClassName="text-xs 2xl:text-md"
           contentClassName={cn(
             'font-bold md:text-sm 2xl:text-lg',
             worstTrade.greaterThanOrEqualTo(0)
@@ -119,13 +119,13 @@ export const DataDetails = ({
         <Stat
           label="Max Trade Duration"
           content={`${totalTradesDuration} Hours`}
-          labelClassName="text-sm md:text-xs 2xl:text-md"
+          labelClassName="text-xs 2xl:text-md"
           contentClassName="font-bold md:text-sm 2xl:text-lg"
         />
         <Stat
           label="Avg. Trade Duration"
           content={`${daysToHours(averageTradesPerDay)} Hours`}
-          labelClassName="text-sm md:text-xs text-end 2xl:text-md"
+          labelClassName="text-xs text-end 2xl:text-md"
           contentClassName="font-bold text-end md:text-sm 2xl:text-lg"
         />
       </div>
