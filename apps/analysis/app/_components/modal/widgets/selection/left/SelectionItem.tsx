@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 
 import { Selection } from '@app/_constants/DATA_DISPLAY_SELECTION_LIST';
@@ -16,7 +17,11 @@ export const SelectionItem = ({ item, dropped }: TSelectionItemProps) => {
         dropped && 'text-primary bg-[#FFFCF6] border-primary cursor-default',
       )}
     >
-      {dropped && <Check className="w-4 h-4" />}
+      {dropped && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <Check className="w-4 h-4" />
+        </motion.div>
+      )}
       <span>{item.value}</span>
     </button>
   );

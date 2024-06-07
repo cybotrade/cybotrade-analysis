@@ -1,20 +1,23 @@
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
-import React from 'react';
+import React, { PropsWithChildren } from 'react';
 
-import { TCell } from '@app/_components/modal/widgets/type';
 import { cn } from '@app/_lib/utils';
+import { TCell } from '@app/_providers/file';
 
 type TSortableItemProps = {
   containerId: UniqueIdentifier;
   id: UniqueIdentifier;
   item: TCell;
-  onItemDelete: (id: UniqueIdentifier) => void;
 };
 
-export const SortableItem = ({ id, containerId, item, onItemDelete }: TSortableItemProps) => {
+export const SortableItem = ({
+  id,
+  containerId,
+  item,
+  children,
+}: PropsWithChildren<TSortableItemProps>) => {
   const { setNodeRef, listeners, attributes, transform, isOver } = useSortable({
     id,
     data: {
@@ -49,13 +52,7 @@ export const SortableItem = ({ id, containerId, item, onItemDelete }: TSortableI
         item.children && 'border-none',
       )}
     >
-      {item.children && (
-        <X
-          className="absolute top-0 right-0 w-4 h-4 m-2 cursor-pointer z-50"
-          onClick={() => onItemDelete(id)}
-        />
-      )}
-      {item.children && item.children.element}
+      {children}
     </motion.div>
   );
 };

@@ -1,11 +1,11 @@
 import React from 'react';
 
 import { SelectionSection } from '@app/_components/modal/widgets/selection/left/SelectionSection';
-import { TCell } from '@app/_components/modal/widgets/type';
 import {
   LISTING_DATA_SELECTIONS,
   WIDGETS_DATA_SELECTIONS,
 } from '@app/_constants/DATA_DISPLAY_SELECTION_LIST';
+import { TCell } from '@app/_providers/file';
 
 type TDataDisplaySelectionListProps = {
   items: Record<string, TCell[]>;

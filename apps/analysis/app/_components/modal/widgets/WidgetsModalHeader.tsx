@@ -7,7 +7,11 @@ import {
 } from '@app/_ui/Breadcrumb';
 import { Button } from '@app/_ui/Button';
 
-export const WidgetsModalHeader = () => {
+type TWidgetsModalHeaderProps = {
+  onApply: () => void;
+};
+
+export const WidgetsModalHeader = ({ onApply }: TWidgetsModalHeaderProps) => {
   return (
     <div className="flex justify-between items-center">
       <Breadcrumb>
@@ -23,7 +27,10 @@ export const WidgetsModalHeader = () => {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <Button className="bg-transparent border border-primary text-primary font-bold min-w-[12rem] p-6 hover:border-primary">
+      <Button
+        onClick={onApply}
+        className="bg-transparent border border-primary text-primary font-bold min-w-[12rem] p-6 hover:border-primary"
+      >
         Apply
       </Button>
     </div>

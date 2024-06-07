@@ -25,7 +25,7 @@ export const LargestRoiWidget = ({ largestRoi }: TLargestRoiWidgetProps) => {
         contentClassName="text-sm text-[#A7C3E9]"
       />
       <Text
-        className="font-sora text-xl absolute bottom-10 left-1/2 -translate-x-1/2"
+        className="font-sora text-xl absolute bottom-5 left-1/2 -translate-x-1/2"
         content={`${largestRoi.greaterThanOrEqualTo(0) ? '+' : '-'}${largestRoi
           .abs()
           .mul(100)

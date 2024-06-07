@@ -11,9 +11,6 @@ type TRightColumnContentProps = {
 };
 
 export const RightColumnContent = ({ performance }: TRightColumnContentProps) => {
-  const netProfit = new Decimal(performance.netProfit);
-  const initialCapital = new Decimal(performance.initialCapital);
-  const winRate = new Decimal(performance.winRate);
   const sharpeRatio = new Decimal(performance.sharpeRatio);
   const calmarRatio = new Decimal(performance.calmarRatio);
   const maxDrawdown = new Decimal(performance.maxDrawdown);
@@ -26,17 +23,7 @@ export const RightColumnContent = ({ performance }: TRightColumnContentProps) =>
   return (
     <Fragment>
       <ActionHeader className="mb-3" performance={performance} />
-      <WidgetsDisplay
-        data={{
-          netProfit,
-          initialCapital,
-          winRate,
-          maxDrawdown,
-          bestTrade,
-          largestRoi,
-          averageTradesPerDay,
-        }}
-      />
+      <WidgetsDisplay performance={performance} />
       <DataDetails
         details={{
           sharpeRatio,

@@ -1,3 +1,4 @@
+export * from './widget';
 export * from './total-return';
 export * from './win-rate';
 export * from './best-trade';
