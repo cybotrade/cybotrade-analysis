@@ -14,6 +14,7 @@ const WorkersProgress = ({ fileData, onProgressComplete }: TWorkersProgressProps
   const { onPermutationSelect, computeAllPermutations } = useBacktestAPI();
   useEffect(() => {
     if (!fileData) throw new Error('No File Data');
+
     computeAllPermutations();
     onPermutationSelect(fileData.permutations.keys().next().value);
   }, []);

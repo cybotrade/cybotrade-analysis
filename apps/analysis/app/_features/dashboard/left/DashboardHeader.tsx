@@ -10,6 +10,7 @@ import { useFileData } from '@app/_providers/file';
 
 export const DashboardHeader = () => {
   const { data } = useFileData();
+
   const { selectedBacktest } = useBacktestData();
   const { onPermutationSelect } = useBacktestAPI();
   const [selectedOption, setSelectedOption] = useState(selectedBacktest.id || '');
@@ -20,6 +21,7 @@ export const DashboardHeader = () => {
   };
   if (!data) throw new Error('No File Data');
   if (data.permutations.size === 0) throw new Error('No Permutations');
+
   return (
     <div className="font-sora flex w-full h-16 min-h-16 relative gap-2">
       <div className="relative rounded-xl w-full h-full bg-[#FFFFFF] border border-[#E1D9D6] p-4 flex justify-between items-center">

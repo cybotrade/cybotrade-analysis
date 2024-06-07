@@ -106,7 +106,7 @@ const FileDropzone = () => {
             <Case value="POST_UPLOAD">
               {data && (
                 <FilePostUpload file={data?.file} onAnalysis={() => onModeChange('ANALYSING')} />
-              )}{' '}
+              )}
             </Case>
             <Case value="ANALYSING">
               <KlineProgress
