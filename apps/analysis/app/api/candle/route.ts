@@ -1,7 +1,7 @@
-import { type KlineInterval, MainClient } from 'binance';
+import { type KlineInterval, USDMClient } from 'binance';
 import { NextResponse } from 'next/server';
 
-const client = new MainClient({});
+const client = new USDMClient({});
 
 export const GET = async (req: Request) => {
   const paramsString = req.url.split('?')[1];
