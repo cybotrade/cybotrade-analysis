@@ -204,39 +204,80 @@ export const calculatePerformance = ({
   parameters: { initialCapital: number; comission: number; riskFreeRate: number; fees?: number };
   tradeOrders?: { klineData: Kline[]; trades: ITrade[]; interval: Interval };
 }): PerformanceData => {
+  let zero = new Decimal(0);
   let interval = tradeOrders?.interval ?? Interval.OneDay;
   let intervalPriceChanges: Decimal[] = [];
   let klineData = tradeOrders?.klineData;
   let equityData: { value: number; time: UTCTimestamp }[] = [];
-  let geoUnrealizedPnlInfo: Decimal[] = [];
-  let geoCumulativeUnrealizedPnlInfo: Decimal[] = [];
-  let ariUnrealizedPnlInfo: Decimal[] = [];
-  let ariCumulativeUnrealizedPnlInfo: Decimal[] = [];
-  let globalEntryPrice: Decimal = new Decimal(0);
+  let sumOfAriUnrealizedPnlInfo: Decimal = zero;
+  let latestCumuUnrealizedPnl = zero;
+  let globalEntryPrice: Decimal = zero;
   let globalSide: OrderSide | null = null;
-  let position: Decimal = new Decimal(0);
-  let pnlList: Decimal[] = [];
-  let finalPnl = new Decimal(0);
-  let positionList: Decimal[] = [];
+  let position: Decimal = zero;
+  let pnlLength = 0;
+  let finalPnl = zero;
+  let prevAriPosition: Decimal = zero;
   let initialCapitalDec = new Decimal(initialCapital);
+  let totalTrades = tradeOrders!.trades.length;
+  let firstTradeTime = +tradeOrders!.trades[0].time;
+  let lastTradeTime = +tradeOrders!.trades[totalTrades - 1].time;
+
+  // Drawdowns
+  let maxDrawdown = zero;
+  let maxFromStart = zero;
+
+  // Pnls
+  let bestTradePnl = zero;
+  let worstTradePnl = zero;
+  let totalWinningTrades = 0;
+  let totalLosingTrades = 0;
+  let totalProfit = zero;
+  let totalLoss = zero;
+  let sumOfPnl = zero
+
+  let [winStreak, winCount] = [0, 0];
+  let [loseStreak, loseCount] = [0, 0];
+
+  let lastProcessedIndex = 0;
+
+  let stdDevM2 = zero;
+  let stdDevMean = zero;
+
   klineData?.map((kline, index, klineArr) => {
     let candleClosePrice = new Decimal(kline[4]);
     const candleOpenTime = kline[0];
     const candleCloseTime = kline[6];
-    const tradeOnCandle = tradeOrders?.trades.filter(
-      (trade) => +addIntervalTime(new Date(trade.time), interval).getTime() <= candleCloseTime && +addIntervalTime(new Date(trade.time), interval).getTime() >= candleOpenTime,
-    );
+
+    const tradeOnCandle = [];
+
+    // Iterate from last processed index to avoid reprocessing trades
+    for (let i = lastProcessedIndex; i < tradeOrders?.trades.length!; i++) {
+      const trade = tradeOrders?.trades[i];
+      const tradeTimeWithInterval = +addIntervalTime(new Date(trade?.time!), interval).getTime();
+
+      if (tradeTimeWithInterval > candleCloseTime) {
+        break;
+      }
+
+      if (tradeTimeWithInterval >= candleOpenTime && tradeTimeWithInterval <= candleCloseTime) {
+        tradeOnCandle.push(trade!);
+      }
+
+      lastProcessedIndex = i + 1; // Update the last processed index
+    }
     let previousPosition;
+    let prevAriCumUnrealizedPnl = latestCumuUnrealizedPnl;
+
     tradeOnCandle?.forEach((x) => {
       const { quantity, side, price, fees = 0 } = x;
 
       let current_side = side === 'buy' ? OrderSide.Buy : OrderSide.Sell;
       previousPosition = position;
 
-      let pnl = new Decimal(0);
+      let pnl = zero;
       let qty = new Decimal(+quantity);
       let tradePrice = new Decimal(+price);
-      if (globalEntryPrice.equals(new Decimal(0))) {
+      if (globalEntryPrice.equals(zero)) {
         globalEntryPrice = tradePrice;
         globalSide = current_side;
         position = current_side == OrderSide.Sell ? position.sub(qty) : qty;
@@ -260,18 +301,58 @@ export const calculatePerformance = ({
 
           if (qty.greaterThan(previousPosition.abs())) {
             globalEntryPrice = tradePrice;
-          } else if (qty.equals(new Decimal(0))) {
-            globalEntryPrice = new Decimal(0);
+          } else if (qty.equals(zero)) {
+            globalEntryPrice = zero;
           }
         }
 
-        if (!pnl.equals(new Decimal(0))) {
-          pnlList.push(pnl);
+        if (!pnl.equals(zero)) {
+
+          // PNL Calculations
+          // Best and worst trades
+          if (pnl.greaterThan(bestTradePnl))
+            bestTradePnl = pnl;
+          if (pnl.lessThan(worstTradePnl))
+            worstTradePnl = pnl;
+
+          // Win and lose counts
+          if (pnl.greaterThan(zero)) {
+            totalWinningTrades++;
+            totalProfit = totalProfit.add(pnl);
+          }
+          if (pnl.lessThan(zero)) {
+            totalLosingTrades++;
+            totalLoss = totalLoss.add(pnl);
+          }
+
+          // Winning and losing streaks
+          if (pnl.greaterThan(zero)) {
+            winCount += 1;
+
+            if (loseCount > loseStreak) {
+              loseStreak = loseCount;
+            }
+
+            loseCount = 0;
+          }
+          else if (pnl.lessThan(zero)) {
+            loseCount += 1;
+
+            if (winCount > winStreak) {
+              winStreak = winCount;
+            }
+            winCount = 0;
+          }
+
+          // sum of all Pnl
+          sumOfPnl = sumOfPnl.add(pnl);
+          pnlLength++;
           finalPnl = finalPnl.add(pnl);
         }
       }
       globalSide = position.greaterThanOrEqualTo(0) ? OrderSide.Buy : OrderSide.Sell;
-
+      // let index = tradeOrders?.trades.indexOf(x);
+      // tradeOrders?.trades.splice(index!);
     });
 
     let geometricUnrealizedPnl;
@@ -283,35 +364,42 @@ export const calculatePerformance = ({
         globalEntryPrice.sub(candleClosePrice).mul(position.abs());
     }
 
-    let priceChange = index > 0 ? candleClosePrice.div(new Decimal(+klineArr[index - 1][4])).sub(new Decimal(1)) : new Decimal(0);
+    let priceChange = index > 0 ? candleClosePrice.div(new Decimal(+klineArr[index - 1][4])).sub(new Decimal(1)) : zero;
     intervalPriceChanges.push(priceChange);
 
     // Geometric way of calculating unrealized pnl
-    geoUnrealizedPnlInfo.push(geometricUnrealizedPnl);
-    let prevGeoCumUnrealizedPnl =
-      geoCumulativeUnrealizedPnlInfo.length > 0
-        ? geoCumulativeUnrealizedPnlInfo[geoCumulativeUnrealizedPnlInfo.length - 1]
-        : new Decimal(0);
-    geoCumulativeUnrealizedPnlInfo.push(prevGeoCumUnrealizedPnl.add(geometricUnrealizedPnl));
+    // geoUnrealizedPnlInfo.push(geometricUnrealizedPnl);
+    // let prevGeoCumUnrealizedPnl =
+    //   geoCumulativeUnrealizedPnlInfo.length > 0
+    //     ? geoCumulativeUnrealizedPnlInfo[geoCumulativeUnrealizedPnlInfo.length - 1]
+    //     : zero;
+    // geoCumulativeUnrealizedPnlInfo.push(prevGeoCumUnrealizedPnl.add(geometricUnrealizedPnl));
 
-    let arimetricUnrealizedPnl = (
-      positionList.length > 0 ? positionList[positionList.length - 1] : new Decimal(0)
-    ).mul(priceChange);
+    let ariUnrealizedPnl = prevAriPosition.mul(priceChange);
     let arithmeticPosition = 0;
-    if (position.greaterThan(new Decimal(0))) {
+    if (position.greaterThan(zero)) {
       arithmeticPosition = 1;
-    } else if (position.lessThan(new Decimal(0))) {
+    } else if (position.lessThan(zero)) {
       arithmeticPosition = -1;
     }
-    positionList.push(new Decimal(arithmeticPosition));
+    prevAriPosition = new Decimal(arithmeticPosition);
 
-    // Atrihmetic way of calculating unrealized pnl
-    ariUnrealizedPnlInfo.push(arimetricUnrealizedPnl);
-    let prevAriCumUnrealizedPnl =
-      ariCumulativeUnrealizedPnlInfo.length > 0
-        ? ariCumulativeUnrealizedPnlInfo[ariCumulativeUnrealizedPnlInfo.length - 1]
-        : new Decimal(0);
-    ariCumulativeUnrealizedPnlInfo.push(prevAriCumUnrealizedPnl.add(arimetricUnrealizedPnl));
+    // Arithmetic way of calculating unrealized pnl
+    // ariUnrealizedPnlInfo.push(ariUnrealizedPnl);
+    sumOfAriUnrealizedPnlInfo = sumOfAriUnrealizedPnlInfo.add(ariUnrealizedPnl);
+    latestCumuUnrealizedPnl = prevAriCumUnrealizedPnl.add(ariUnrealizedPnl);
+
+    // Standard Deviation Calculation for arithmetic Sharpe
+    let delta = ariUnrealizedPnl.minus(stdDevMean);
+    stdDevMean = stdDevMean.add(delta.div(new Decimal(index).add(new Decimal(1))));
+    let delta2 = ariUnrealizedPnl.minus(stdDevMean);
+    stdDevM2 = stdDevM2.add(delta.mul(delta2));
+
+
+    maxFromStart = Decimal.max(maxFromStart, latestCumuUnrealizedPnl);
+    let drawdown = latestCumuUnrealizedPnl.minus(maxFromStart);
+    maxDrawdown = Decimal.min(maxDrawdown, drawdown);
+
 
     // This is to get the interval equity curve
     equityData.push({
@@ -319,32 +407,23 @@ export const calculatePerformance = ({
       time: (candleCloseTime / 1000) as UTCTimestamp,
     });
   });
+
   let averageTradesPerDay =
-    tradeOrders!.trades.length /
+    totalTrades /
     Math.round(
-      (+tradeOrders!.trades[tradeOrders!.trades.length - 1].time - +tradeOrders!.trades[0].time) /
+      (+lastTradeTime - firstTradeTime) /
       (1000 * 3600 * 24),
     );
-  let bestTradePnl = pnlList.length > 0 ? Decimal.max(...pnlList) : new Decimal(0);
-  let worstTradePnl = pnlList.length > 0 ? Decimal.min(...pnlList) : new Decimal(0);
-  let winningTrades = pnlList.filter((pnl) => pnl.greaterThan(0));
-  let losingTrades = pnlList.filter((pnl) => pnl.lessThan(0));
-  let totalProfit = winningTrades.reduce((acc, curr) => acc.add(curr), new Decimal(0));
-  let totalLoss = losingTrades.reduce((acc, curr) => acc.add(curr), new Decimal(0));
-  let totalWinningTrades = winningTrades.length;
-  let totalLosingTrades = losingTrades.length;
+
   let finalBalance = new Decimal(equityData[equityData.length - 1].value);
 
-  let drawdowns = ariCumulativeUnrealizedPnlInfo.map((currentValue, index) => {
-    const maxFromStart = Decimal.max(...ariCumulativeUnrealizedPnlInfo.slice(0, index + 1)); // Slice the array to get the sublist from 0 to index
-    return currentValue.minus(maxFromStart);
-  });
-  let maxDrawdown = Decimal.min(...drawdowns).abs();
-  let annualizedReturn = mean({ values: ariUnrealizedPnlInfo })
+  maxDrawdown = maxDrawdown.abs();
+  let avgAriUnrealizedPnl = sumOfAriUnrealizedPnlInfo.div(klineData!.length);
+  let annualizedReturn = avgAriUnrealizedPnl
     .mul(365)
     .mul(intervalForDays(interval));
 
-  let performance = {
+  let performanceResult = {
     // to calculate average total trade per day
     averageTradesPerDay: averageTradesPerDay,
 
@@ -356,34 +435,33 @@ export const calculatePerformance = ({
     totalLosingTrades,
     bestTradePnl,
     worstTradePnl,
-    averagePnl: mean({ values: pnlList }),
-    highestWinningStreak: streak(pnlList, (pnl) => pnl.greaterThan(0)),
-    highestLosingStreak: streak(pnlList, (pnl) => pnl.lessThan(0)),
-
+    averagePnl: sumOfPnl.div(pnlLength),
+    highestWinningStreak: winStreak,
+    highestLosingStreak: loseStreak,
     winRate:
-      pnlList.length === 0 ? new Decimal(0) : new Decimal(totalWinningTrades).div(pnlList.length),
+      pnlLength === 0 ? zero : new Decimal(totalWinningTrades).div(pnlLength),
     netProfit: finalBalance.sub(initialCapitalDec),
-    profitFactor: totalLoss.equals(0) ? new Decimal(0.0) : totalProfit.div(totalLoss.abs()),
+    profitFactor: totalLoss.equals(0) ? zero : totalProfit.div(totalLoss.abs()),
     totalProfit,
     totalLoss,
-    averageProfit: totalWinningTrades === 0 ? new Decimal(0) : totalProfit.div(totalWinningTrades),
-    averageLoss: totalLosingTrades === 0 ? new Decimal(0) : totalLoss.div(totalLosingTrades),
+    averageProfit: totalWinningTrades === 0 ? zero : totalProfit.div(totalWinningTrades),
+    averageLoss: totalLosingTrades === 0 ? zero : totalLoss.div(totalLosingTrades),
     maxDrawdown,
 
-    averageTradeDuration: new Decimal(0),
+    averageTradeDuration: zero,
     annualizedReturn,
-    sharpeRatio: calculateSharpeRatio({ intervalPnl: ariUnrealizedPnlInfo, interval }),
+    sharpeRatio: calculateSharpeRatioLight({ M2: stdDevM2, n: new Decimal(klineData!.length), meanPnl: avgAriUnrealizedPnl, interval }),
     calmarRatio: calculateCalmarRatio({ maxDrawdown, annualizedReturn }),
     roi:
       initialCapital === 0
-        ? new Decimal(0)
+        ? zero
         : new Decimal(finalBalance.sub(initialCapital)).div(initialCapital),
-    largestRoi: initialCapital === 0 ? new Decimal(0) : bestTradePnl.div(initialCapital),
-    smallestRoi: initialCapital === 0 ? new Decimal(0) : worstTradePnl.div(initialCapital),
+    largestRoi: initialCapital === 0 ? zero : bestTradePnl.div(initialCapital),
+    smallestRoi: initialCapital === 0 ? zero : worstTradePnl.div(initialCapital),
     equityData,
     intervalPriceChanges,
   };
-  return performance;
+  return performanceResult;
 };
 
 export const transformToClosedTrades = (inputTrades: ITrade[]) => {
@@ -455,6 +533,27 @@ export const calculateSharpeRatio = ({
   const standardDeviationValue = standardDeviation({ values: intervalPnl });
   const tradeInterval = new Decimal(intervalToDays(interval));
   const sharpeRatio = meanPNL
+    .div(standardDeviationValue)
+    .mul(new Decimal(365).div(tradeInterval).sqrt());
+
+  return sharpeRatio;
+};
+// sharpe ratio
+export const calculateSharpeRatioLight = ({
+  M2,
+  n,
+  meanPnl,
+  interval,
+}: {
+  M2: Decimal;
+  n: Decimal;
+  meanPnl: Decimal;
+  interval: Interval;
+}) => {
+  let variance = M2.div(n);
+  let standardDeviationValue = Decimal.sqrt(variance);
+  const tradeInterval = new Decimal(intervalToDays(interval));
+  const sharpeRatio = meanPnl
     .div(standardDeviationValue)
     .mul(new Decimal(365).div(tradeInterval).sqrt());
 
