@@ -10,11 +10,11 @@ export const fetchKline = async ({ symbol, interval, startTime, endTime }: Kline
   const params = new URLSearchParams({
     symbol: symbol,
     interval: interval,
-    start_time: String(startTime),
-    end_time: String(endTime),
+    startTime: String(startTime),
+    endTime: String(endTime),
   });
 
-  const response = await fetch(`/api/candle?${params}`, {
+  const response = await fetch(`https://api.binance.com/api/v3/klines?${params}`, {
     method: 'GET',
   });
   if (!response.ok) {
@@ -22,10 +22,14 @@ export const fetchKline = async ({ symbol, interval, startTime, endTime }: Kline
   }
 
   const data = await response.json();
-  return data;
+  return {
+    kline: data,
+    nextCursor:
+      data[data.length - 1] && data[data.length - 1][0] <= endTime! ? data.pop() : undefined,
+  };
 };
 
-export function useKlineInfiniteQuery(params: KlinesParams | null) {
+export function useKlineInfiniteQuery(params: KlinesParams) {
   return useInfiniteQuery({
     queryKey: ['candles', params?.symbol],
     queryFn: ({ pageParam = params?.startTime }) => {
@@ -36,12 +40,7 @@ export function useKlineInfiniteQuery(params: KlinesParams | null) {
     },
     initialPageParam: params?.startTime,
     getNextPageParam: (lastPage: Page, pages: Page[]) => {
-      if (!params) {
-        return undefined;
-      }
-      if (!lastPage) return undefined;
-      const nextCursor = lastPage.nextCursor;
-      if (nextCursor && nextCursor[0] >= params.endTime!) return undefined;
+      if (!params || !lastPage || !lastPage.nextCursor) return undefined;
       return Number(lastPage.nextCursor![0]);
     },
   });

@@ -23,8 +23,8 @@ export function useNewKline(
   const startTime = useRef(0);
 
   const endTime = useRef(0);
-  const params = useMemo<KlinesParams | null>(() => {
-    if (!fileData) return null;
+  const params = useMemo<KlinesParams>(() => {
+    if (!fileData) throw new Error('No File Data');
     return {
       interval: fileData.topics[0].interval as Interval,
       symbol: fileData.topics[0].symbol,
@@ -41,6 +41,7 @@ export function useNewKline(
       clearInterval(timerId.current);
       onFetchFailed('Failed to fetch');
     }
+
     if (data && data.pages.length > 0) {
       const lastPage = data.pages[data.pages.length - 1];
       const nextCursor = lastPage.nextCursor;
