@@ -14,10 +14,13 @@ type klineParams = {
 };
 
 const fetchkline = async (params: klineParams, controller: AbortController) => {
-  const response = await fetch('/api/candle?' + new URLSearchParams(params), {
-    method: 'GET',
-    signal: controller.signal,
-  });
+  const response = await fetch(
+    'https://api.binance.com/api/v3/klines?' + new URLSearchParams(params),
+    {
+      method: 'GET',
+      signal: controller.signal,
+    },
+  );
 
   if (!response.ok) {
     const res = await response.json();
