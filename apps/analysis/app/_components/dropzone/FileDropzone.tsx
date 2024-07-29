@@ -124,7 +124,7 @@ const FileDropzone = () => {
                 onProgressComplete={() =>
                   setTimeout(() => {
                     onModeChange('DONE_ANALYSING');
-                    router.push('/analysis/candle-chart');
+                    router.push('/overview/result-breakdown');
                   }, 1000)
                 }
               />
