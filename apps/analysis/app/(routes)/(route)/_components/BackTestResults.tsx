@@ -208,6 +208,13 @@ const BackTestResultsDrawer = ({
   }, [data, klineData, doneFetchingKline]);
   const resultContents = [
     {
+      value: 'result-breakdown',
+      label: 'Result Breakdown',
+      content: (
+        <ResultBreakdown fullPerformance={completeData} selectedBacktest={selectedBacktest} />
+      ),
+    },
+    {
       value: 'candle-chart',
       label: 'Candle Chart',
       content: <CandleChart backtestData={selectedBacktest} klineData={klineData ?? []} />,
@@ -222,13 +229,6 @@ const BackTestResultsDrawer = ({
           // klineData={klineData ?? []}
           // userSettings={userSettings}
         />
-      ),
-    },
-    {
-      value: 'result-breakdown',
-      label: 'Result Breakdown',
-      content: (
-        <ResultBreakdown fullPerformance={completeData} selectedBacktest={selectedBacktest} />
       ),
     },
     {
@@ -328,7 +328,7 @@ const BackTestResultsDrawer = ({
           selectedPermutation={selectedPermutation}
           onPermutationChange={(option) => setSelectedPermutation(option)}
         />
-        <Accordion type="multiple" defaultValue={['candle-chart']}>
+        <Accordion type="multiple" defaultValue={['result-breakdown']}>
           {resultContents.map((item) => (
             <AccordionItem value={item.value} data-accordion-item={item.value} key={item.value}>
               <AccordionTrigger className="rounded-xl border font-normal">
