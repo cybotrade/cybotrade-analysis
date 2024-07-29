@@ -2,7 +2,7 @@ import { Decimal } from 'decimal.js';
 
 import { calculatePerformance, pnl, transformToClosedTrades } from '../_lib/calculation';
 
-onmessage = (e) => {
+self.addEventListener('message', (e) => {
   const {
     kline,
     fileData: { permutations, topics, startTime, endTime },
@@ -69,5 +69,6 @@ onmessage = (e) => {
     result.push([id, data]);
   });
 
-  postMessage({ result: JSON.stringify(result) });
-};
+  self.postMessage({ result: JSON.stringify(result) });
+  self.close();
+});

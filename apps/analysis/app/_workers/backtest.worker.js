@@ -2,7 +2,7 @@ import { Decimal } from 'decimal.js';
 
 import { calculatePerformance, pnl, transformToClosedTrades } from '../_lib/calculation';
 
-onmessage = async (event) => {
+self.addEventListener('message', (event) => {
   const {
     fileData: { permutations, topics, startTime, endTime },
     permutationId,
@@ -14,7 +14,7 @@ onmessage = async (event) => {
   let parsedTrades = JSON.parse(permutations.get(permutationId)).trades;
   let symbols = Object.keys(parsedTrades);
 
-  postMessage({ type: 'PROCESSING', progress: 0.2 });
+  self.postMessage({ type: 'PROCESSING', progress: 0.2 });
 
   const data = [];
 
@@ -67,15 +67,14 @@ onmessage = async (event) => {
       },
     ]);
   }
-  postMessage({ type: 'PROCESSING', progress: 0.5 });
+  self.postMessage({ type: 'PROCESSING', progress: 0.5 });
 
-  setTimeout(
-    () =>
-      postMessage({
-        type: 'COMPLETE',
-        result: JSON.stringify(data),
-        progress: 0.7,
-      }),
-    2000,
-  );
-};
+  setTimeout(() => {
+    self.postMessage({
+      type: 'COMPLETE',
+      result: JSON.stringify(data),
+      progress: 0.7,
+    });
+    self.close();
+  }, 2000);
+});
