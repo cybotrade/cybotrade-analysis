@@ -10,7 +10,7 @@ export const SimulationsInput = ({ onSimulationsEnter }: TSimulationsInputProps)
   const [numSimulations, setNumSimulations] = useState(10);
 
   return (
-    <div className="w-fit border rounded-lg border-[#DFDFDF] p-4 flex justify-between items-center bg-white/90 dark:bg-[#392910]/90 text-black dark:text-white z-50">
+    <div className="absolute left-12 w-fit border rounded-lg border-[#DFDFDF] p-4 flex justify-between items-center bg-white/90 dark:bg-[#392910]/90 text-black dark:text-white z-50">
       <div className="flex items-center">
         <label className="mr-2">Number of Simulations:</label>
         <Input

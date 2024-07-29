@@ -18,8 +18,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }):
         <ClientProvider>
           <FileDataProvider>
             <BacktestDataProvider>
-              <div className="font-sans overflow-x-hidden">
-                <main className="absolute top-0 left-0 w-full h-full p-4">{children}</main>
+              <div className="font-sans">
+                <main className="absolute top-0 left-0 w-full h-full p-4 overflow-hidden">
+                  {children}
+                </main>
               </div>
             </BacktestDataProvider>
           </FileDataProvider>
