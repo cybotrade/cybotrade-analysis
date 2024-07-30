@@ -167,7 +167,7 @@ const BackTestResultsDrawer = ({
           comission: 0,
           initialCapital: 10000,
           riskFreeRate: 0.02,
-          fees: 0,
+          fees: userSettings.fees,
         },
       });
 
@@ -179,7 +179,7 @@ const BackTestResultsDrawer = ({
     });
 
     setCompleteData(data);
-  }, [klineData, debouncedDelimitor, debouncedSeparator, !doneFetchingKline]);
+  }, [klineData, debouncedDelimitor, debouncedSeparator, !doneFetchingKline, userSettings]);
 
   const filteredDatasets = useMemo(() => {
     if (!completeData || completeData.length === 0) return [];
@@ -278,6 +278,7 @@ const BackTestResultsDrawer = ({
       ),
     },
   ];
+
   return (
     <Sheet
       key={'1'}
@@ -287,22 +288,22 @@ const BackTestResultsDrawer = ({
       <SheetContent
         side={'right'}
         className="min-w-[75%] overflow-y-scroll overflow-x-clip"
-        // overlayChildren={
-        //   // <div
-        //   //   className={cn(
-        //   //     'absolute h-[58px] w-[58px] m-8 bottom-0 bg-white rounded-full border-2 border-primary-light p-4 shadow-xl hover:bg-primary duration-200',
-        //   //     settingDrawer.isOpen ? 'opacity-0' : 'opacity-100',
-        //   //   )}
-        //   //   onPointerDown={(e) => {
-        //   //     e.stopPropagation();
-        //   //     settingDrawer.open();
-        //   //   }}
-        //   // >
-        //   //   {/* <ChevronRight color="#E1C3A0" strokeWidth={2.5} className="h-5 w-5" /> */}
-        //   // </div>
-        // }
+        overlayChildren={
+          <div
+            className={cn(
+              'absolute h-[58px] w-[58px] m-8 bottom-0 bg-white rounded-full border-2 border-primary-light p-4 shadow-xl hover:bg-primary duration-200',
+              settingDrawer.isOpen ? 'opacity-0' : 'opacity-100',
+            )}
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              settingDrawer.open();
+            }}
+          >
+            <ChevronRight color="#E1C3A0" strokeWidth={2.5} className="h-5 w-5" />
+          </div>
+        }
       >
-        {/* <Sheet
+        <Sheet
           key={'2'}
           open={settingDrawer.isOpen}
           onOpenChange={() => (settingDrawer.isOpen ? settingDrawer.close() : settingDrawer.open())}
@@ -314,15 +315,9 @@ const BackTestResultsDrawer = ({
             overlayClassName="hidden"
             onInteractOutside={(e) => e.preventDefault()}
           >
-            <div
-              onClick={settingDrawer.close}
-              className="absolute z-50 h-[58px] w-[58px] mb-8 bottom-0 right-0 translate-x-1/2 bg-white rounded-full border-2 border-primary-light duration-200 flex items-center justify-center shadow-xl cursor-pointer hover:bg-primary"
-            >
-              <ChevronLeft color="#E1C3A0" strokeWidth={2.5} className="h=[20px]" />
-            </div>
             <SettingsForm onUpdate={onSettingsFormUpdate} values={userSettings} />
           </SheetContent>
-        </Sheet> */}
+        </Sheet>
         <SortHeader
           permutationOptions={permutationOptions}
           selectedPermutation={selectedPermutation}
