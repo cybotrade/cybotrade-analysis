@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import EntryForm from './EntryForm';
 
 export type SettingsValue = {
-  // initial_capital?: number;
+  initial_capital?: number;
   // order_size_unit?: string;
   // order_size_value?: string;
   // leverage?: string;

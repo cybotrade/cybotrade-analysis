@@ -196,10 +196,10 @@ export const returns = ({ values }: { values: Decimal[] }): Decimal[] =>
 
 // Calculate all the required performance data
 export const calculatePerformance = ({
-  parameters: { initialCapital, comission, riskFreeRate, fees },
+  parameters: { initialCapital, comission, riskFreeRate, globalFees = 0 },
   tradeOrders,
 }: {
-  parameters: { initialCapital: number; comission: number; riskFreeRate: number; fees?: number };
+  parameters: { initialCapital: number; comission: number; riskFreeRate: number; globalFees?: number };
   tradeOrders?: { klineData: Kline[]; trades: ITrade[]; interval: Interval };
 }): PerformanceData => {
   let zero = new Decimal(0);
@@ -240,6 +240,9 @@ export const calculatePerformance = ({
 
   let stdDevM2 = zero;
   let stdDevMean = zero;
+  let feeDec = new Decimal(globalFees / 100);
+  let feeMultiplierBuy = new Decimal(1).add(feeDec);
+  let feeMultiplierSell = new Decimal(1).sub(feeDec);
 
   klineData?.map((kline, index, klineArr) => {
     let candleClosePrice = new Decimal(kline[4]);
@@ -268,13 +271,19 @@ export const calculatePerformance = ({
 
     tradeOnCandle?.forEach((x) => {
       const { quantity, side, price, fees = 0 } = x;
-
       let current_side = side === 'buy' ? OrderSide.Buy : OrderSide.Sell;
       previousPosition = position;
 
       let pnl = zero;
       let qty = new Decimal(+quantity);
+      
       let tradePrice = new Decimal(+price);
+      if (current_side == OrderSide.Buy) {
+        tradePrice = tradePrice.mul(feeMultiplierBuy);
+      } else if (current_side == OrderSide.Sell) {
+        tradePrice = tradePrice.mul(feeMultiplierSell);
+      }
+
       if (globalEntryPrice.equals(zero)) {
         globalEntryPrice = tradePrice;
         globalSide = current_side;
@@ -293,10 +302,12 @@ export const calculatePerformance = ({
             .div(position.abs());
         } else if (current_side !== globalSide) {
           let minQty = Decimal.min(previousPosition.abs(), qty);
+
+
           if (current_side == OrderSide.Buy) {
-            pnl = globalEntryPrice.mul(minQty).sub(tradePrice.mul(minQty));
+            pnl = globalEntryPrice.sub(tradePrice).mul(minQty);
           } else if (current_side == OrderSide.Sell) {
-            pnl = tradePrice.mul(minQty).sub(globalEntryPrice.mul(minQty));
+            pnl = tradePrice.sub(globalEntryPrice).mul(minQty);
           }
 
           if (qty.greaterThan(previousPosition.abs())) {

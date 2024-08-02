@@ -61,8 +61,8 @@ const BackTestResultsDrawer = ({
 }: IBackTestResultsDrawer) => {
   const [userSettings, setUserSettings] = useState<SettingsValue>({
     initial_capital: 10000,
-    order_size_unit: 'usdt',
-    order_size_value: undefined,
+    // order_size_unit: 'usdt',
+    // order_size_value: undefined,
     // leverage: undefined,
     fees: undefined,
     // take_profit: [{ value: undefined }, { value: undefined }],
@@ -85,14 +85,14 @@ const BackTestResultsDrawer = ({
     const trades = selectedBacktest.trades.map((trade) => {
       return {
         ...trade,
-        quantity: userSettings.order_size_value
-          ? new Decimal(userSettings.order_size_value).div(trade.price).toNumber()
-          : trade.quantity,
+        // quantity: userSettings.order_size_value
+        //   ? new Decimal(userSettings.order_size_value).div(trade.price).toNumber()
+        //   : trade.quantity,
         fees: userSettings.fees ?? 0,
       };
     });
     return sortByTimestamp<ITrade>(trades);
-  }, [selectedBacktest, userSettings.order_size_value, userSettings.fees]);
+  }, [selectedBacktest, userSettings.fees]);
   const closedTrades = useMemo(
     () => (selectedBacktest ? transformToClosedTrades(selectedBacktest.trades) : []),
     [sortedTrades],
@@ -167,7 +167,7 @@ const BackTestResultsDrawer = ({
           comission: 0,
           initialCapital: 10000,
           riskFreeRate: 0.02,
-          fees: userSettings.fees,
+          globalFees: userSettings.fees,
         },
       });
 
@@ -226,8 +226,8 @@ const BackTestResultsDrawer = ({
         <EquityCurve
           fullPerformance={completeData}
           selectedBacktest={selectedBacktest}
-          // klineData={klineData ?? []}
-          // userSettings={userSettings}
+        // klineData={klineData ?? []}
+        // userSettings={userSettings}
         />
       ),
     },
