@@ -11,14 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import EntryForm from './EntryForm';
 
 export type SettingsValue = {
-  initial_capital?: number;
-  order_size_unit?: string;
-  order_size_value?: string;
-  leverage?: string;
+  // initial_capital?: number;
+  // order_size_unit?: string;
+  // order_size_value?: string;
+  // leverage?: string;
   fees?: number;
-  take_profit?: { value?: string }[];
-  stop_lost?: { value?: string }[];
-  entry?: { value?: string }[];
+  // take_profit?: { value?: string }[];
+  // stop_lost?: { value?: string }[];
+  // entry?: { value?: string }[];
 };
 
 const SettingsForm = ({
@@ -74,83 +74,6 @@ const SettingsForm = ({
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-2 gap-x-2 gap-y-4">
           <FormField
             control={form.control}
-            name="initial_capital"
-            render={({ field }) => (
-              <FormItem className="col-span-2">
-                <FormLabel className="text-black mb-0 text-base">Initial Capital</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="EXP. 1000 USDT"
-                    {...field}
-                    onChange={(v) => {
-                      const parsedValue = parseInt(v.target.value);
-                      form.setValue(
-                        'initial_capital',
-                        isNaN(parsedValue) ? undefined : parsedValue,
-                      );
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="order_size_unit"
-            render={({ field }) => (
-              <FormItem className="col-span-1">
-                <FormLabel className="text-black mb-0 text-base">Order Size (Unit)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="text-black dark:text-white">
-                      <SelectValue placeholder="Unit" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {[
-                      { key: 'usdt', value: 'USDT' },
-                      // { key: 'percentage', value: 'Percentage of total equity' },
-                    ].map(({ key, value }) => (
-                      <SelectItem key={key} value={key} className="cursor-pointer">
-                        {value}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="order_size_value"
-            render={({ field }) => (
-              <FormItem className="col-span-1">
-                <FormLabel className="text-black mb-0 text-base">Order Size (Value)</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {/* <FormField
-            control={form.control}
-            name="leverage"
-            render={({ field }) => (
-              <FormItem className="col-span-2">
-                <FormLabel className="text-black mb-0 text-base">Leverage</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          /> */}
-          <FormField
-            control={form.control}
             name="fees"
             render={({ field }) => (
               <FormItem className="col-span-2">
@@ -171,27 +94,7 @@ const SettingsForm = ({
               </FormItem>
             )}
           />
-          {/* <EntryForm<z.infer<typeof formSchema>>
-            label="TP (Take Profit)"
-            name="take_profit"
-            form={form}
-            className="col-span-2"
-            buttonText="Add Another TP"
-          />
-          <EntryForm<z.infer<typeof formSchema>>
-            label="SL (Stop Lost)"
-            name="stop_lost"
-            form={form}
-            className="col-span-2"
-            buttonText="Add Another SL"
-          />
-          <EntryForm<z.infer<typeof formSchema>>
-            label="Entry"
-            name="entry"
-            form={form}
-            className="col-span-2"
-            buttonText="Add Another Entry"
-          /> */}
+
           <Button type="submit" className="font-bold text-lg w-max" size="xl">
             Save Changes
           </Button>
