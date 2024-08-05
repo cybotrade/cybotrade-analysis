@@ -64,11 +64,16 @@ const BackTestResultsDrawer = ({
     // order_size_unit: 'usdt',
     // order_size_value: undefined,
     // leverage: undefined,
-    fees: undefined,
+    fees: 0,
     // take_profit: [{ value: undefined }, { value: undefined }],
     // stop_lost: [{ value: undefined }, { value: undefined }],
     // entry: [{ value: undefined }, { value: undefined }],
   });
+
+  const calculateFees = useMemo(
+    () => new Decimal(userSettings.fees!).div(100).toNumber(),
+    [userSettings.fees],
+  );
 
   const {
     backtestData,
@@ -88,7 +93,7 @@ const BackTestResultsDrawer = ({
         // quantity: userSettings.order_size_value
         //   ? new Decimal(userSettings.order_size_value).div(trade.price).toNumber()
         //   : trade.quantity,
-        fees: userSettings.fees ?? 0,
+        fees: userSettings.fees,
       };
     });
     return sortByTimestamp<ITrade>(trades);
@@ -167,7 +172,7 @@ const BackTestResultsDrawer = ({
           comission: 0,
           initialCapital: 10000,
           riskFreeRate: 0.02,
-          globalFees: userSettings.fees,
+          globalFees: calculateFees,
         },
       });
 
@@ -179,7 +184,7 @@ const BackTestResultsDrawer = ({
     });
 
     setCompleteData(data);
-  }, [klineData, debouncedDelimitor, debouncedSeparator, !doneFetchingKline, userSettings]);
+  }, [klineData, debouncedDelimitor, debouncedSeparator, !doneFetchingKline, calculateFees]);
 
   const filteredDatasets = useMemo(() => {
     if (!completeData || completeData.length === 0) return [];
@@ -226,8 +231,8 @@ const BackTestResultsDrawer = ({
         <EquityCurve
           fullPerformance={completeData}
           selectedBacktest={selectedBacktest}
-        // klineData={klineData ?? []}
-        // userSettings={userSettings}
+          // klineData={klineData ?? []}
+          // userSettings={userSettings}
         />
       ),
     },

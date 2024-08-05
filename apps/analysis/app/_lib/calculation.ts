@@ -199,7 +199,12 @@ export const calculatePerformance = ({
   parameters: { initialCapital, comission, riskFreeRate, globalFees = 0 },
   tradeOrders,
 }: {
-  parameters: { initialCapital: number; comission: number; riskFreeRate: number; globalFees?: number };
+  parameters: {
+    initialCapital: number;
+    comission: number;
+    riskFreeRate: number;
+    globalFees?: number;
+  };
   tradeOrders?: { klineData: Kline[]; trades: ITrade[]; interval: Interval };
 }): PerformanceData => {
   let zero = new Decimal(0);
@@ -276,7 +281,7 @@ export const calculatePerformance = ({
 
       let pnl = zero;
       let qty = new Decimal(+quantity);
-      
+
       let tradePrice = new Decimal(+price);
       if (current_side == OrderSide.Buy) {
         tradePrice = tradePrice.mul(feeMultiplierBuy);
@@ -302,7 +307,6 @@ export const calculatePerformance = ({
             .div(position.abs());
         } else if (current_side !== globalSide) {
           let minQty = Decimal.min(previousPosition.abs(), qty);
-
 
           if (current_side == OrderSide.Buy) {
             pnl = globalEntryPrice.sub(tradePrice).mul(minQty);

@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import React from 'react';
+import { Decimal } from 'decimal.js';
+import React, { useDeferredValue } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
@@ -33,7 +34,7 @@ const SettingsForm = ({
     order_size_unit: z.string().optional(),
     order_size_value: z.string().optional(),
     // leverage: z.string().optional(),
-    fees: z.number().optional(),
+    fees: z.number().min(0).optional(),
     // take_profit: z
     //   .array(
     //     z.object({
@@ -81,11 +82,12 @@ const SettingsForm = ({
                 <FormControl>
                   <Input
                     type="number"
+                    step="0.01"
                     placeholder=""
                     {...field}
-                    suffix={<div className="text-gray-500 text-sm">USDT</div>}
+                    suffix={<div className="text-gray-500 text-sm">%</div>}
                     onChange={(v) => {
-                      const parsedValue = parseInt(v.target.value);
+                      const parsedValue = parseFloat(v.target.value);
                       form.setValue('fees', isNaN(parsedValue) ? undefined : parsedValue);
                     }}
                   />
