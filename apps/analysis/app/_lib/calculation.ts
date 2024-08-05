@@ -245,7 +245,7 @@ export const calculatePerformance = ({
 
   let stdDevM2 = zero;
   let stdDevMean = zero;
-  let feeDec = new Decimal(globalFees / 100);
+  let feeDec = new Decimal(globalFees);
   let feeMultiplierBuy = new Decimal(1).add(feeDec);
   let feeMultiplierSell = new Decimal(1).sub(feeDec);
 
