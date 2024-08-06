@@ -4,10 +4,7 @@ import { Upload } from '@app/_assets/icons';
 
 const FilePreUpload = ({ getRootProps, getInputProps }: DropzoneState) => {
   return (
-    <div
-      {...getRootProps({ className: 'dropzone' })}
-      className="border border-primary border-dashed min-h-full flex justify-center items-center flex-col gap-4 p-7 rounded-md"
-    >
+    <div className="border border-primary border-dashed min-h-full flex justify-center items-center flex-col gap-4 p-7 rounded-md">
       <Upload />
       <div className="flex flex-col text-center gap-1">
         <p className="text-lg text-black">
