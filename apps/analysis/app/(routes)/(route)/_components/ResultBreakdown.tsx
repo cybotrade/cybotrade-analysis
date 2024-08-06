@@ -248,6 +248,29 @@ export const ResultBreakdown = ({ fullPerformance, selectedBacktest }: { fullPer
                   </h6>
                 </div>
               </div>
+              <div className="border border-t-0 border-[#DFDFDF]"></div>
+              <div className="flex justify-between items-center">
+                <div className="text-left">
+                  <h6 className="text-sm font-normal capitalize">Highest Win Streak</h6>
+                  <h6
+                    className={cn(
+                      'text-lg font-extrabold'
+                    )}
+                  >
+                    {performanceData.highestWinningStreak}
+                  </h6>
+                </div>
+                <div className="text-right">
+                  <h6 className="text-sm font-normal">Highest Lose Streak</h6>
+                  <h6
+                    className={cn(
+                      'text-lg font-extrabold',
+                    )}
+                  >
+                    {performanceData?.highestLosingStreak}
+                  </h6>
+                </div>
+              </div>
             </div>
           </div>
         </div>

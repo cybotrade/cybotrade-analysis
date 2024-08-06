@@ -2,11 +2,11 @@ import { type Kline } from 'binance';
 import { Decimal } from 'decimal.js';
 import { UTCTimestamp } from 'lightweight-charts';
 
+import { IEquityData } from '@app/(routes)/(route)/_components/EquityCurve';
 import { IClosedTrade, ITrade } from '@app/(routes)/(route)/type';
 import { Interval, OrderSide, addIntervalTime, intervalForDays } from '@app/_lib/utils';
 
 import { intervalToDays } from './utils';
-import { IEquityData } from '@app/(routes)/(route)/_components/EquityCurve';
 
 export type PerformanceData = {
   finalBalance: Decimal;
@@ -141,9 +141,7 @@ export const pnl = ({
  * @returns The mean of the series of numbers.
  */
 export const mean = ({ values }: { values: Decimal[] }): Decimal =>
-  values.length == 0
-    ? new Decimal(0)
-    : Decimal.sum(...values).div(values.length);
+  values.length == 0 ? new Decimal(0) : Decimal.sum(...values).div(values.length);
 
 /**
  * Calculate the standard deviation given a series of numbers. By default, the sample standard deviation is used.
@@ -198,10 +196,15 @@ export const returns = ({ values }: { values: Decimal[] }): Decimal[] =>
 
 // Calculate all the required performance data
 export const calculatePerformance = ({
-  parameters: { initialCapital, comission, riskFreeRate, fees },
+  parameters: { initialCapital, comission, riskFreeRate, globalFees = 0 },
   tradeOrders,
 }: {
-  parameters: { initialCapital: number; comission: number; riskFreeRate: number; fees?: number };
+  parameters: {
+    initialCapital: number;
+    comission: number;
+    riskFreeRate: number;
+    globalFees?: number;
+  };
   tradeOrders?: { klineData: Kline[]; trades: ITrade[]; interval: Interval };
 }): PerformanceData => {
   let zero = new Decimal(0);
@@ -233,7 +236,7 @@ export const calculatePerformance = ({
   let totalLosingTrades = 0;
   let totalProfit = zero;
   let totalLoss = zero;
-  let sumOfPnl = zero
+  let sumOfPnl = zero;
 
   let [winStreak, winCount] = [0, 0];
   let [loseStreak, loseCount] = [0, 0];
@@ -242,6 +245,9 @@ export const calculatePerformance = ({
 
   let stdDevM2 = zero;
   let stdDevMean = zero;
+  let feeDec = new Decimal(globalFees);
+  let feeMultiplierBuy = new Decimal(1).add(feeDec);
+  let feeMultiplierSell = new Decimal(1).sub(feeDec);
 
   klineData?.map((kline, index, klineArr) => {
     let candleClosePrice = new Decimal(kline[4]);
@@ -270,13 +276,19 @@ export const calculatePerformance = ({
 
     tradeOnCandle?.forEach((x) => {
       const { quantity, side, price, fees = 0 } = x;
-
       let current_side = side === 'buy' ? OrderSide.Buy : OrderSide.Sell;
       previousPosition = position;
 
       let pnl = zero;
       let qty = new Decimal(+quantity);
+
       let tradePrice = new Decimal(+price);
+      if (current_side == OrderSide.Buy) {
+        tradePrice = tradePrice.mul(feeMultiplierBuy);
+      } else if (current_side == OrderSide.Sell) {
+        tradePrice = tradePrice.mul(feeMultiplierSell);
+      }
+
       if (globalEntryPrice.equals(zero)) {
         globalEntryPrice = tradePrice;
         globalSide = current_side;
@@ -289,14 +301,17 @@ export const calculatePerformance = ({
         }
 
         if (current_side == globalSide) {
-          globalEntryPrice =
-            (globalEntryPrice.mul(previousPosition.abs()).add(tradePrice.mul(qty)).div(position.abs()));
+          globalEntryPrice = globalEntryPrice
+            .mul(previousPosition.abs())
+            .add(tradePrice.mul(qty))
+            .div(position.abs());
         } else if (current_side !== globalSide) {
           let minQty = Decimal.min(previousPosition.abs(), qty);
+
           if (current_side == OrderSide.Buy) {
-            pnl = globalEntryPrice.mul(minQty).sub(tradePrice.mul(minQty));
+            pnl = globalEntryPrice.sub(tradePrice).mul(minQty);
           } else if (current_side == OrderSide.Sell) {
-            pnl = tradePrice.mul(minQty).sub(globalEntryPrice.mul(minQty));
+            pnl = tradePrice.sub(globalEntryPrice).mul(minQty);
           }
 
           if (qty.greaterThan(previousPosition.abs())) {
@@ -307,13 +322,10 @@ export const calculatePerformance = ({
         }
 
         if (!pnl.equals(zero)) {
-
           // PNL Calculations
           // Best and worst trades
-          if (pnl.greaterThan(bestTradePnl))
-            bestTradePnl = pnl;
-          if (pnl.lessThan(worstTradePnl))
-            worstTradePnl = pnl;
+          if (pnl.greaterThan(bestTradePnl)) bestTradePnl = pnl;
+          if (pnl.lessThan(worstTradePnl)) worstTradePnl = pnl;
 
           // Win and lose counts
           if (pnl.greaterThan(zero)) {
@@ -334,8 +346,7 @@ export const calculatePerformance = ({
             }
 
             loseCount = 0;
-          }
-          else if (pnl.lessThan(zero)) {
+          } else if (pnl.lessThan(zero)) {
             loseCount += 1;
 
             if (winCount > winStreak) {
@@ -357,14 +368,15 @@ export const calculatePerformance = ({
 
     let geometricUnrealizedPnl;
     if (globalSide == OrderSide.Buy) {
-      geometricUnrealizedPnl =
-        candleClosePrice.sub(globalEntryPrice).mul(position.abs());
+      geometricUnrealizedPnl = candleClosePrice.sub(globalEntryPrice).mul(position.abs());
     } else {
-      geometricUnrealizedPnl =
-        globalEntryPrice.sub(candleClosePrice).mul(position.abs());
+      geometricUnrealizedPnl = globalEntryPrice.sub(candleClosePrice).mul(position.abs());
     }
 
-    let priceChange = index > 0 ? candleClosePrice.div(new Decimal(+klineArr[index - 1][4])).sub(new Decimal(1)) : zero;
+    let priceChange =
+      index > 0
+        ? candleClosePrice.div(new Decimal(+klineArr[index - 1][4])).sub(new Decimal(1))
+        : zero;
     intervalPriceChanges.push(priceChange);
 
     // Geometric way of calculating unrealized pnl
@@ -395,11 +407,9 @@ export const calculatePerformance = ({
     let delta2 = ariUnrealizedPnl.minus(stdDevMean);
     stdDevM2 = stdDevM2.add(delta.mul(delta2));
 
-
     maxFromStart = Decimal.max(maxFromStart, latestCumuUnrealizedPnl);
     let drawdown = latestCumuUnrealizedPnl.minus(maxFromStart);
     maxDrawdown = Decimal.min(maxDrawdown, drawdown);
-
 
     // This is to get the interval equity curve
     equityData.push({
@@ -409,19 +419,13 @@ export const calculatePerformance = ({
   });
 
   let averageTradesPerDay =
-    totalTrades /
-    Math.round(
-      (+lastTradeTime - firstTradeTime) /
-      (1000 * 3600 * 24),
-    );
+    totalTrades / Math.round((+lastTradeTime - firstTradeTime) / (1000 * 3600 * 24));
 
   let finalBalance = new Decimal(equityData[equityData.length - 1].value);
 
   maxDrawdown = maxDrawdown.abs();
   let avgAriUnrealizedPnl = sumOfAriUnrealizedPnlInfo.div(klineData!.length);
-  let annualizedReturn = avgAriUnrealizedPnl
-    .mul(365)
-    .mul(intervalForDays(interval));
+  let annualizedReturn = avgAriUnrealizedPnl.mul(365).mul(intervalForDays(interval));
 
   let performanceResult = {
     // to calculate average total trade per day
@@ -438,8 +442,7 @@ export const calculatePerformance = ({
     averagePnl: sumOfPnl.div(pnlLength),
     highestWinningStreak: winStreak,
     highestLosingStreak: loseStreak,
-    winRate:
-      pnlLength === 0 ? zero : new Decimal(totalWinningTrades).div(pnlLength),
+    winRate: pnlLength === 0 ? zero : new Decimal(totalWinningTrades).div(pnlLength),
     netProfit: finalBalance.sub(initialCapitalDec),
     profitFactor: totalLoss.equals(0) ? zero : totalProfit.div(totalLoss.abs()),
     totalProfit,
@@ -450,7 +453,12 @@ export const calculatePerformance = ({
 
     averageTradeDuration: zero,
     annualizedReturn,
-    sharpeRatio: calculateSharpeRatioLight({ M2: stdDevM2, n: new Decimal(klineData!.length), meanPnl: avgAriUnrealizedPnl, interval }),
+    sharpeRatio: calculateSharpeRatioLight({
+      M2: stdDevM2,
+      n: new Decimal(klineData!.length),
+      meanPnl: avgAriUnrealizedPnl,
+      interval,
+    }),
     calmarRatio: calculateCalmarRatio({ maxDrawdown, annualizedReturn }),
     roi:
       initialCapital === 0

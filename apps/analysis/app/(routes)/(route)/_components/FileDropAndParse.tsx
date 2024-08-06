@@ -62,7 +62,7 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({
   // const [analysingPercentage, setAnalysingPercentage] = useState(0);
   const [errorMessage, setErrorMessage] = useState('Failed');
   const [mode, setMode] = useState<
-    'PRE_UPLOAD' | 'UPLOADING' | 'POST_UPLOAD' | 'ANALYSING' | 'DONE_ANALYSING' | 'ERROR'
+    'PRE_UPLOAD' | 'UPLOADING' | 'ANALYSING' | 'DONE_ANALYSING' | 'ERROR'
   >('PRE_UPLOAD');
   const [file, setFile] = useState<File | undefined>();
   const [data, dispatch] = useReducer(reducer, {
@@ -176,7 +176,7 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({
       }, 10);
     }
     if (mode === 'UPLOADING' && uploadPercentage === 100) {
-      setMode('POST_UPLOAD');
+      handleAnalysis();
     }
   }, [mode, uploadPercentage]);
   // end remove
@@ -237,21 +237,6 @@ const FileDropAndParse: React.FC<FileDropZoneProps> = ({
             </p>
             <div className="text-xs text-brand-gray">{uploadPercentage}% | Second remaining</div>
             <ProgressBar percent={`${uploadPercentage}%`} />
-          </div>
-        );
-      case 'POST_UPLOAD':
-        return (
-          <div className="border border-primary min-h-full rounded-md flex flex-col justify-center items-center p-7 bg-[#FFEFDC] dark:bg-[#73501A] gap-4">
-            <div className="flex items-center gap-3">
-              <Attachment />
-              <div>
-                <p className="text-xl">{file?.name}</p>
-                <p className="text-xs text-brand-gray">{file?.size && file.size / 1000} kb</p>
-              </div>
-            </div>
-            <Button size="xl" onClick={handleAnalysis}>
-              Start Analysis
-            </Button>
           </div>
         );
       case 'ANALYSING':
