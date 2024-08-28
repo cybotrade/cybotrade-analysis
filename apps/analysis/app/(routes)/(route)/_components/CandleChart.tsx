@@ -13,7 +13,8 @@ import { useTheme } from 'next-themes';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 
-import { cn } from '@app/_lib/utils';
+import { IntervalsToolbar } from '@app/_components/chart/IntervalsToolbar';
+import { Interval, cn, intervalSince, intervalToSeconds } from '@app/_lib/utils';
 
 import { IBackTestData } from '../type';
 
@@ -215,6 +216,10 @@ export const CandleChart = ({
           color: resolvedTheme === 'dark' ? '#706C6C' : '#E2E2E2',
         },
       },
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: true,
+      },
     });
   }, [resolvedTheme]);
 
@@ -242,8 +247,46 @@ export const CandleChart = ({
     };
   }, [candleSeries, isTooltipVisible]);
 
+  const handleIntervalSelect = (interval: Interval) => {
+    if (!chart || !candleSeries) return;
+
+    if (!interval) {
+      candleSeries.setData(binanceKlineData);
+      return;
+    }
+
+    let nextIntervalTime = intervalSince(
+      +binanceKlineData[0].time,
+      +binanceKlineData[0].time,
+      interval,
+    );
+    let filteredKlineData = binanceKlineData.filter((tick) => {
+      if (+tick.time < nextIntervalTime) return false;
+
+      nextIntervalTime = intervalSince(
+        +tick.time + intervalToSeconds(interval)!,
+        +binanceKlineData[0].time,
+        interval,
+      );
+
+      return true;
+    });
+
+    candleSeries.setData(filteredKlineData);
+  };
   return (
-    <div className="h-96">
+    <div className="h-fit">
+      <IntervalsToolbar
+        intervals={[
+          Interval.TwoHour,
+          Interval.FourHour,
+          Interval.SixHour,
+          Interval.TwelveHour,
+          Interval.OneDay,
+          Interval.OneWeek,
+        ]}
+        onIntervalSelect={handleIntervalSelect}
+      />
       <div className="w-full h-full px-3 py-4" ref={chartContainerRef}>
         <div className="h-0">
           <div

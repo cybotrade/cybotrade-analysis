@@ -1,11 +1,13 @@
 import { Kline } from 'binance';
-import { ColorType, createChart } from 'lightweight-charts';
+import { ColorType, type ISeriesApi, createChart } from 'lightweight-charts';
 import type { IChartApi, UTCTimestamp } from 'lightweight-charts';
 import { FolderSearch } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
+import { IntervalsToolbar } from '@app/_components/chart/IntervalsToolbar';
 import { Loading } from '@app/_components/loading';
+import { Interval, intervalSince, intervalToSeconds } from '@app/_lib/utils';
 
 import { IBackTestData } from '../type';
 import { FullPerformance } from './BackTestResults';
@@ -19,8 +21,8 @@ export interface IEquityData {
 export const EquityCurve = ({
   fullPerformance,
   selectedBacktest, // klineData,
-  // userSettings,
-}: {
+} // userSettings,
+: {
   fullPerformance: FullPerformance[];
   selectedBacktest: IBackTestData;
   // klineData: Kline[];
@@ -31,6 +33,7 @@ export const EquityCurve = ({
   const [equityData, setEquityData] = useState<IEquityData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   let chart: IChartApi | null = null;
+  const [lineSeries, setLineSeries] = useState<ISeriesApi<'Area'> | undefined>();
 
   const mapEquityData = async () => {
     let performanceData = fullPerformance.find((x) => x.id === selectedBacktest.id);
@@ -75,7 +78,11 @@ export const EquityCurve = ({
         lineWidth: 3,
         lineType: 2,
       });
-      if (chart && newSeries) newSeries.setData(equityData);
+
+      if (chart && newSeries) {
+        newSeries.setData(equityData);
+        setLineSeries(newSeries);
+      }
 
       window.addEventListener('resize', handleResize);
 
@@ -86,6 +93,30 @@ export const EquityCurve = ({
     }
   }, [resolvedTheme === 'dark', equityData, selectedBacktest]);
 
+  const handleIntervalSelect = (interval: Interval) => {
+    if (!lineSeries) return;
+
+    if (!interval) {
+      lineSeries.setData(equityData);
+      return;
+    }
+
+    let nextIntervalTime = intervalSince(+equityData[0].time, +equityData[0].time, interval);
+    let filteredEquityData = equityData.filter((tick) => {
+      if (+tick.time < nextIntervalTime) return false;
+
+      nextIntervalTime = intervalSince(
+        +tick.time + intervalToSeconds(interval)!,
+        +equityData[0].time,
+        interval,
+      );
+
+      return true;
+    });
+
+    lineSeries.setData(filteredEquityData);
+  };
+
   if (isLoading)
     return (
       <div className="flex justify-center items-center h-96">
@@ -95,7 +126,18 @@ export const EquityCurve = ({
 
   return (
     <div className={`p-4 ${resolvedTheme === 'dark' ? 'dark' : ''}`}>
-      <div className="w-full h-96 rounded-xlflex items-center justify-center">
+      <IntervalsToolbar
+        intervals={[
+          Interval.TwoHour,
+          Interval.FourHour,
+          Interval.SixHour,
+          Interval.TwelveHour,
+          Interval.OneDay,
+          Interval.OneWeek,
+        ]}
+        onIntervalSelect={handleIntervalSelect}
+      />
+      <div className="w-full h-96 rounded-xl flex items-center justify-center">
         {equityData.length > 0 ? (
           <div className="pl-12 h-full w-full">
             <div ref={chartContainerRef} />
