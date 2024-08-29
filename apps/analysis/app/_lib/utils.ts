@@ -1,4 +1,12 @@
 import { type ClassValue, clsx } from 'clsx';
+import {
+  differenceInDays,
+  differenceInMilliseconds,
+  differenceInWeeks,
+  fromUnixTime,
+  hoursToSeconds,
+  minutesToSeconds,
+} from 'date-fns';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
@@ -255,4 +263,42 @@ export const addIntervalTime = (date: Date, interval: Interval) => {
       break;
   }
   return newDate;
+};
+
+export const intervalToSeconds = (interval: Interval) => {
+  switch (interval) {
+    case Interval.FifteenMinute:
+      return minutesToSeconds(15);
+    case Interval.OneHour:
+      return hoursToSeconds(1);
+    case Interval.TwoHour:
+      return hoursToSeconds(2);
+    case Interval.SixHour:
+      return hoursToSeconds(6);
+    case Interval.TwelveHour:
+      return hoursToSeconds(12);
+    case Interval.FourHour:
+      return hoursToSeconds(4);
+    case Interval.OneDay:
+      return hoursToSeconds(24);
+    case Interval.OneWeek:
+      return hoursToSeconds(24 * 7);
+    default:
+      return 1;
+  }
+};
+
+export const intervalSince = (to: number, since: number, interval: Interval) => {
+  let intervalInSeconds = intervalToSeconds(interval);
+
+  switch (true) {
+    case interval.toLowerCase().includes('h'):
+      return (differenceInMilliseconds(to, since) / intervalInSeconds) * intervalInSeconds + since;
+    case interval.toLowerCase().includes('d'):
+      return differenceInDays(fromUnixTime(to), fromUnixTime(since)) * intervalInSeconds + since;
+    case interval.toLowerCase().includes('w'):
+      return since + differenceInWeeks(fromUnixTime(to), fromUnixTime(since)) * intervalInSeconds;
+    default:
+      return 1;
+  }
 };
