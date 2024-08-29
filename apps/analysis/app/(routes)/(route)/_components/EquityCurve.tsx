@@ -32,7 +32,7 @@ export const EquityCurve = ({
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const [equityData, setEquityData] = useState<IEquityData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  let chart: IChartApi | null = null;
+  const [chart, setChart] = useState<IChartApi>();
   const [lineSeries, setLineSeries] = useState<ISeriesApi<'Area'> | undefined>();
 
   const mapEquityData = async () => {
@@ -49,7 +49,7 @@ export const EquityCurve = ({
     };
 
     if (chartContainerRef.current) {
-      chart = createChart(chartContainerRef.current, {
+      const chart = createChart(chartContainerRef.current, {
         layout: {
           background: {
             type: ColorType.Solid,
@@ -67,6 +67,9 @@ export const EquityCurve = ({
             color: 'rgba(0, 0, 0, 0.1)',
           },
         },
+        timeScale: {
+          minBarSpacing: 0,
+        },
       });
 
       const timeScale = chart.timeScale();
@@ -81,6 +84,7 @@ export const EquityCurve = ({
 
       if (chart && newSeries) {
         newSeries.setData(equityData);
+        setChart(chart);
         setLineSeries(newSeries);
       }
 
@@ -115,6 +119,7 @@ export const EquityCurve = ({
     });
 
     lineSeries.setData(filteredEquityData);
+    chart?.timeScale().fitContent();
   };
 
   if (isLoading)
